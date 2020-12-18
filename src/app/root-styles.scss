@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap');
+
+:root {
+  --x-black: #000;
+  --x-darkest-gray: #333;
+  --x-dark-gray: #404040;
+  --x-gray: #666;
+  --x-light-gray: #8D8D8D;
+  --x-lightest-gray: #D9D9D9;
+  --x-white: #FFF;
+
+  --x-green: #12A918;
+
+  --prime1: rgba(0, 0, 0, 0.5);
+
+}
+
+.xbg-light, .bg-input-bar {
+  background-color: var(--x-lightest-gray);
+}
+
+.xbg-med, .bg-header-bar {
+  background-color: var(--x-light-gray);
+}
+
+.xbg-dark, .bg-button {
+  background-color: var(--x-gray);
+  &:disabled {
+    background-color: var(--x-gray);
+    opacity: 0.8;
+    font-style: italic;
+  }
+}
+
+.xbg-darkest, .bg-button-dark {
+  background-color: var(--x-darkest-gray);
+  &:disabled {
+    background-color: var(--x-darkest-gray);
+    opacity: 0.8;
+    font-style: italic;
+  }
+}
+
+.xt-very-large {
+  font-size: 1.5em;
+}
+.xt-large {
+  font-size: 1.2em;
+}
+.xt-med {
+  font-size: 1em;
+}
+.xt-small {
+  font-size: .8em;
+}
+.xt-very-small {
+  font-size: .5em;
+}
+
+
+.xtext-white, .xtext-contrast {
+  color: var(--x-white);
+}
+.xtext-light, .xtext-form-label {
+  color: var(--x-light-gray);
+}
+.xtext-med {
+  color: var(--x-dark-gray);
+}
+.xtext-dark, .xtext-form-content {
+  color: var(--x-darkest-gray);
+}
+.xtext-darkest {
+  color: var(--x-black);
+}
+
+
+.rounded-top-left {
+  border-top-left-radius: 0.25rem;
+}
+.rounded-top-right {
+  border-top-right-radius: 0.25rem;
+}
+
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  background-color: var(--x-dark-gray) !important;
+  height: 100%;
+  margin: 0;
+}
+
+.main-content-row {
+  min-height: calc(100vh - 80px - 3rem);
+  font-family: 'Open Sans', sans-serif;
+}
+//
+//.box-shadow {
+//  border: 1px solid #DFDFDF;
+//  border-radius: 6px;
+//  box-shadow: 0 6px 22px 0 rgba(0, 0, 0, 0.1);
+//}
+//
+//.input-bar {
+//  display: grid;
+//  grid-template-columns: 3fr 4fr;
+//  padding: 5px 0 20px 0;
+//}
+//
+//.input-bar.hidden {
+//  visibility: hidden;
+//}
+
+
+.options-list input {
+  width: calc(100% - 60px);
+  margin: 0 40px 0 10px;
+}

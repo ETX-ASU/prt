@@ -1,0 +1,45 @@
+## WARNING! The front-end version of this file provides a backup of the schema in your repo.
+## HOWEVER, in order to work with AWS "amplify push" calls, you MUST manually copy this file
+## into your amplify/backend/api/project-name/ directory before calling "amplify push"
+
+type QuizQuestion {
+  questionText: String!
+  answerOptions: [String]
+  correctAnswerIndex: Int
+  progressPointsForCompleting: Int
+  gradePointsForCorrectAnswer: Int
+}
+
+type Assignment @model {
+  id: ID!
+  courseId: ID
+  ownerId: ID!
+  title: String!
+  summary: String
+  image: String
+  isLinkedToLms: Boolean
+  lineItemId: String
+  lockOnDate: AWSTimestamp
+  isLockedOnSubmission: Boolean
+  isUseAutoScore: Boolean
+  isUseAutoSubmit: Boolean
+  toolAssignmentData: ToolAssignmentData
+}
+
+type Homework @model {
+  id: ID!
+  assignmentId: ID!
+  studentOwnerId: ID!
+  beganOnDate: AWSTimestamp
+  submittedOnDate: AWSTimestamp
+  isLocked: Boolean
+  toolHomeworkData: ToolHomeworkData
+}
+
+type ToolAssignmentData {
+  quizQuestions: [QuizQuestion]
+}
+
+type ToolHomeworkData {
+  quizAnswers: [Int]
+}

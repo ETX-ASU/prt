@@ -1,0 +1,39 @@
+
+.collapsed {
+  height: 5px;
+}
+
+.collapsed .col label {
+  opacity: 0;
+  height: 0px;
+}
+
+.no-click-thru {
+  z-index: 15;
+}
+
+.grade-bar-row {
+  border: 1px solid var(--x-lightest-gray);
+  border-top: none;
+  border-bottom: none;
+}
+
+.grade-bar-bottom-row {
+  border: 1px solid var(--x-lightest-gray);
+  border-top: none;
+}
+
+.toggle-opts-btn:hover {
+  background-color: purple;
+}
+
+.grade-bar-nav-btn {
+  cursor: pointer;
+
+  &:hover {
+    color: var(--x-darkest-gray);
+  }
+  &:active {
+    color: var(--x-light-gray);
+  }
+}

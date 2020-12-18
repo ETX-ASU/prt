@@ -1,0 +1,44 @@
+.add-question-btn {
+  display: inline-block;
+  background-color: var(--x-darkest-gray);
+  width: 24px;
+  height: 24px;
+  border-radius: 0.25rem;
+  cursor: pointer;
+
+  &:after {
+    content: '+';
+    color: var(--x-white);
+    font-weight: bold;
+  }
+
+  &:hover {
+    background-color: var(--x-dark-gray);
+  }
+  &:active {
+    border: 1px solid white;
+    background-color: var(--x-dark-gray);
+  }
+}
+
+.quiz-question {
+  legend {
+    font-size: 1.2em;
+    text-decoration: underline;
+  }
+  div.form-check {
+    .selected-indicator {
+      font-weight: bold;
+      color: black;
+      margin-right: -20px;
+      position: relative;
+      float: left;
+      right: 15px;
+    }
+    label.reviewed-answer.checked {
+      font-weight: bold;
+      color: black;
+    }
+  }
+}
+
