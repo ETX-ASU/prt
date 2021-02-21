@@ -20,12 +20,15 @@ export const createAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubric {
+          rankNames
+          rankPoints
+        }
+        originId
+        roundNum
+        allocations {
+          assessorId
+          homeworkId
         }
       }
       createdAt
@@ -52,12 +55,15 @@ export const updateAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubric {
+          rankNames
+          rankPoints
+        }
+        originId
+        roundNum
+        allocations {
+          assessorId
+          homeworkId
         }
       }
       createdAt
@@ -84,12 +90,15 @@ export const deleteAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubric {
+          rankNames
+          rankPoints
+        }
+        originId
+        roundNum
+        allocations {
+          assessorId
+          homeworkId
         }
       }
       createdAt
@@ -110,7 +119,16 @@ export const createHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft
+        allocatedHomeworkIds
       }
       createdAt
       updatedAt
@@ -130,7 +148,16 @@ export const updateHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft
+        allocatedHomeworkIds
       }
       createdAt
       updatedAt
@@ -150,7 +177,16 @@ export const deleteHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft
+        allocatedHomeworkIds
       }
       createdAt
       updatedAt

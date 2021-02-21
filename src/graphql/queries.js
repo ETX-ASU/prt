@@ -17,12 +17,15 @@ export const getAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubric {
+          rankNames
+          rankPoints
+        }
+        originId
+        roundNum
+        allocations {
+          assessorId
+          homeworkId
         }
       }
       createdAt
@@ -50,6 +53,10 @@ export const listAssignments = /* GraphQL */ `
         isLockedOnSubmission
         isUseAutoScore
         isUseAutoSubmit
+        toolAssignmentData {
+          originId
+          roundNum
+        }
         createdAt
         updatedAt
       }
@@ -67,7 +74,16 @@ export const getHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft
+        allocatedHomeworkIds
       }
       createdAt
       updatedAt
@@ -89,7 +105,9 @@ export const listHomeworks = /* GraphQL */ `
         submittedOnDate
         isLocked
         toolHomeworkData {
-          quizAnswers
+          draftContent
+          criterionRatingsOnDraft
+          allocatedHomeworkIds
         }
         createdAt
         updatedAt

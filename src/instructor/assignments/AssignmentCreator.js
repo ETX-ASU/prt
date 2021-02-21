@@ -13,12 +13,14 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import HeaderBar from "../../app/components/HeaderBar";
 import ToggleSwitch from "../../app/components/ToggleSwitch";
 
-import QuizCreator from "../../tool/QuizCreator";
+import DraftSessionCreator from "../../tool/DraftSessionCreator";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {reportError} from "../../developer/DevUtils";
 import {createAssignmentInLms, handleConnectToLMS} from "../../lmsConnection/RingLeader";
 import {calcMaxScoreForAssignment} from "../../tool/ToolUtils";
 
+
+const tempRankNames = ['Excellent', 'Good', 'Fair', 'Poor'];
 const emptyAssignment = {
   id: '',
   ownerId: '',
@@ -32,18 +34,17 @@ const emptyAssignment = {
   isUseAutoScore: true,
   isUseAutoSubmit: false,
 
-  // This data is specific to the tool (Quiz tool data is just an array of questions & answers)
   toolAssignmentData: {
-    quizQuestions: [{
-      questionText: '',
-      answerOptions: ['', ''],
-      correctAnswerIndex: 0,
-      progressPointsForCompleting: 1,
-      gradePointsForCorrectAnswer: 10
-    }]
+    rubric: {
+      rankNames: tempRankNames,
+      rankPoints: [5, 3, 0],
+      criteria: [{name:'1st Criterion', weight:0, rankSummaries:tempRankNames.map(rn => `describe what counts as ${rn}`)}]
+    },
+    originId: '',
+    roundNum: 0,
+    allocations: []
   }
 };
-
 
 function AssignmentCreator() {
 	const dispatch = useDispatch();
@@ -63,7 +64,12 @@ function AssignmentCreator() {
       lockOnDate: (formData.isLockedOnDate) ? moment(formData.lockOnDate).valueOf() : 0
     });
 
-    try {
+    console.log("INPUT DATA: ", inputData);
+
+
+    // Temporarily disabled for development and testing
+
+    /*try {
       const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});
       if (window.isDevMode && result) {
         setActiveModal({type:MODAL_TYPES.confirmAssignmentSaved, id:assignmentId});
@@ -72,14 +78,14 @@ function AssignmentCreator() {
       }
     } catch (error) {
       reportError(error, `We're sorry. There was a problem saving your new assignment.`);
-    }
+    }*/
   }
 
   function toggleUseAutoScore(e) {
     setFormData({...formData, isUseAutoScore: !formData.isUseAutoScore, isUseAutoSubmit:false});
   }
 
-  function handleQuizChanges(toolAssignmentData) {
+  function handleRubricChanges(toolAssignmentData) {
     setFormData({...formData, toolAssignmentData});
   }
 
@@ -114,7 +120,7 @@ function AssignmentCreator() {
 	return (
     <Fragment>
       {activeModal && renderModal()}
-      <HeaderBar title='Create New Assignment - Proxy'>
+      <HeaderBar title='Create New Assignment - PRTv2'>
         <Button onClick={() => setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning})} className='mr-2'>Cancel</Button>
         <Button onClick={handleSubmitBtn}>Create</Button>
       </HeaderBar>
@@ -163,7 +169,7 @@ function AssignmentCreator() {
         </Container>
 
         {/*The assignment data collected here is specific to the tool, while the above assignment data is used in every tool*/}
-        <QuizCreator isUseAutoScore={formData.isUseAutoScore} toolAssignmentData={formData.toolAssignmentData} updateToolAssignmentData={handleQuizChanges}/>
+        <DraftSessionCreator isUseAutoScore={formData.isUseAutoScore} toolAssignmentData={formData.toolAssignmentData} updateToolAssignmentData={handleRubricChanges}/>
       </form>
     </Fragment>
   )

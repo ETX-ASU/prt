@@ -138,7 +138,7 @@ function AssignmentNewOrDupe() {
 	return (
 		<Fragment>
       {activeModal && renderModal()}
-      <HeaderBar title='Create New Assignment - Proxy' canCancel={false} canSave={false} >
+      <HeaderBar title='Create New Assignment - PRTv2' canCancel={false} canSave={false} >
         <Button disabled className='mr-2'>Cancel</Button>
         <Button disabled>Update</Button>
       </HeaderBar>
