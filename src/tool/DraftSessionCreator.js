@@ -1,5 +1,6 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useEffect} from 'react';
 import {Container, Row, Col, Button} from 'react-bootstrap';
+import { v4 as uuid } from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import { faTrash, faPlus } from '@fortawesome/free-solid-svg-icons'
@@ -11,27 +12,61 @@ library.add(faTrash, faPlus);
 
 // TOOL-DEV: You will provide your own component to act as a UI for creating your tool's specific assignment data
 function DraftSessionCreator(props) {
-  const {isUseAutoScore, updateToolAssignmentData, toolAssignmentData, isLimitedEditing} = props;
+  const {updateToolAssignmentData, toolAssignmentData, isLimitedEditing} = props;
   const rubric = toolAssignmentData.rubric;
 
+  useEffect(() => {
+    if (!rubric.criteria.length) handleAddCriterion();
+  }, [rubric.criteria.length])
 
-  function handleRankChange(e) {
+
+  function handleRankChange(e, rankNum, propName) {
+    const ranks = rubric.ranks.slice();
+    ranks[rankNum][propName] = e.target.value;
+    updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, ranks}});
   }
 
-  function handleAddRank(e) {
+  function handleAddRank() {
+    const ranks = rubric.ranks.concat([{name:`Quality Rank #${rubric.ranks.length+1}`, points:0}]);
+    const criteria = rubric.criteria.map( c => ({
+      id: uuid(),
+      name: c.name,
+      weight: c.weight,
+      rankSummaries: c.rankSummaries.concat([''])
+    }));
+    updateToolAssignmentData({...toolAssignmentData, rubric:{ranks, criteria}});
   }
 
-  function handleDeleteRank(e) {
+  function handleDeleteRank(rankNum) {
+    const ranks = rubric.ranks.slice();
+    ranks.splice(rankNum, 1);
+    const criteria = rubric.criteria.map( c => {
+      let rankSummaries = c.rankSummaries.slice();
+      rankSummaries.splice(rankNum, 1);
+      return {
+        name: c.name,
+        weight: c.weight,
+        rankSummaries
+      }
+    });
+
+    updateToolAssignmentData({...toolAssignmentData, rubric:{ranks, criteria}});
   }
 
-
-  function handleAddCriterionButton(e) {
+  function handleAddCriterion() {
     const criteria = rubric.criteria.slice();
     criteria.push({
-      name: `Criterion #${criteria.length+1}`,
+      id: uuid(),
+      name: '',
       weight: 0,
-      rankSummaries: rubric.rankNames.map(() => '')
+      rankSummaries: rubric.ranks.map(() => '')
     });
+    updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, criteria}});
+  }
+
+  function handleDeleteCriterion(criteriaNum) {
+    const criteria = rubric.criteria.slice();
+    criteria.splice(criteriaNum, 1);
     updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, criteria}});
   }
 
@@ -52,63 +87,86 @@ function DraftSessionCreator(props) {
   }
 
 
-  function renderRankForm(rankName, rNum) {
+  function renderRankForm(rankNum) {
     return(
-      <Row key={rNum} className='m-2 form-inline align-items-center'>
+      <Row key={rubric.ranks[rankNum].id} className='m-2 form-inline align-items-center'>
         <Col>
           <div className='input-group'>
-            <label className='ml-2 mr-2' htmlFor={`rank${rNum}-name`}><h3 className='subtext'>{rNum+1})</h3></label>
-            <input id={`rank${rNum}-name`}
+            <label className='ml-2 mr-2' htmlFor={`rank${rankNum}-name`}><h3 className='subtext'>{rankNum+1})</h3></label>
+            <input id={`rank${rankNum}-name`}
                    type='text'
                    disabled={isLimitedEditing}
                    className={'form-control'}
-                   onChange={e => handleRankChange(e, rNum, 'rankName')}
+                   onChange={e => handleRankChange(e, rankNum,'name')}
                    placeholder={``}
-                   defaultValue={rankName} />
+                   defaultValue={rubric.ranks[rankNum].name} />
+            <div className='input-group-append'>
+              <div className='input-group-text form-control'>
+                <input className="form-check-inline" type="number"
+                       disabled={isLimitedEditing}
+                       onChange={e => handleRankChange(e, rankNum, 'points')}
+                       defaultValue={rubric.ranks[rankNum].points}
+                       min={0} max={1000} />
+                pts
+              </div>
+            </div>
+            <Button className='ml-2 btn xbg-dark'
+                    disabled={isLimitedEditing}
+                    onClick={() => handleDeleteRank(rankNum)}>
+              <FontAwesomeIcon className='btn-icon mr-0' icon={faTrash} />
+            </Button>
           </div>
         </Col>
       </Row>
     )
   }
 
-  function renderCriteriaForm(cNum) {
-    const criterionData = rubric.criteria[cNum];
+  function renderCriteriaForm(criteriaNum) {
+    const criterionData = rubric.criteria[criteriaNum];
+
     return (
-      <Fragment key={cNum}>
+      <Fragment key={criterionData.id}>
         <Container className='mt-4'>
-          <Row className='m-2 border-bottom'>
+          <Row className='m-2'>
             <Col>
-              <div className='input-group w-100 pb-3'>
-                <label htmlFor={`crit${cNum}-name`} className='mr-0' style={{width:'calc(100% - 108px'}}>
-                  <h3>Criterion #{cNum+1} Name</h3>
-                  <input id={`crit${cNum}-name`}
-                         disabled={isLimitedEditing}
-                         className={'form-control'}
-                         onChange={e => handleNameChange(e, cNum, 'name')}
-                         placeholder={`Provide text for Question #${cNum+1}`}
-                         defaultValue={criterionData.name} />
-                </label>
+              <div className='input-group pb-3 mt-4'>
+                <label htmlFor={`crit${criteriaNum}-name`} style={{width: 'calc(100% - 108px'}}/>
+                <h3>Criterion #{criteriaNum+1} Name</h3>
+                <input id={`crit${criteriaNum}-name`}
+                       disabled={isLimitedEditing}
+                       className={'form-control ml-2'}
+                       onChange={e => handleNameChange(e, criteriaNum, 'name')}
+                       placeholder={`Criterion #${criteriaNum+1}`}
+                       defaultValue={criterionData.name} />
+                <div className='input-group-append'>
+                  <Button className='ml-2 btn xbg-dark'
+                          disabled={isLimitedEditing}
+                          onClick={() => handleDeleteCriterion(criteriaNum)}>
+                    <FontAwesomeIcon className='btn-icon mr-0' icon={faTrash} />
+                  </Button>
+                </div>
               </div>
             </Col>
           </Row>
 
           <Row className='m-2'>
-            <Col className={'col-12'}>
+            <Col className={'col-3'}/>
+            <Col className={'col-9'}>
               <div className={'form-group'}>
-                <label><h3>Rank Descriptions</h3></label>
+                <h4 className='pl-2 w-100 mb-1'>Describe what makes this criterion qualify as:</h4>
               </div>
             </Col>
           </Row>
 
           {/*TODO: use something besides index for the key*/}
-          {criterionData.rankSummaries.map((summary, index) =>
-            <Row key={index} className='m-2 form-inline align-items-center'>
+          {criterionData.rankSummaries.map((summary, rankNum) =>
+            <Row key={rubric.ranks[rankNum].id} className='m-2 form-inline align-items-center'>
               <Col>
-                <div className='input-group'>
-                  <label className='ml-2 mr-2' htmlFor={`data-crit${cNum}-a${index}`}><h3 className='subtext'>{index+1})</h3></label>
-                  <input type='text' className='form-control' id={`data-crit${cNum}-a${index}`}
-                         onChange={e => handleRankSummariesChange(e, cNum, index)} value={summary}
-                         placeholder={`Description of ${criterionData.name} qualities that should be scored as ${rubric.rankNames[index]}`}/>
+                <div className='input-group text-right'>
+                  <label className='ml-2 mr-2 w-25 text-right' htmlFor={`data-crit${criteriaNum}-a${rankNum}`}><h3 className='subtext w-100'>{rubric.ranks[rankNum].name}: </h3></label>
+                  <input type='text' className='form-control' id={`data-crit${criteriaNum}-a${rankNum}`}
+                         onChange={e => handleRankSummariesChange(e, criteriaNum, rankNum)} value={summary}
+                         placeholder={`Description of ${criterionData.name} qualities that should be scored as ${rubric.ranks[rankNum].name}`}/>
                 </div>
               </Col>
             </Row>
@@ -124,7 +182,7 @@ function DraftSessionCreator(props) {
       <h2 className='mb-3'>Rubric</h2>
 
 
-      {rubric.rankNames.map((rankName, rNum) => renderRankForm(rankName, rNum))}
+      {rubric.ranks.map((r, rankNum) => renderRankForm(rankNum))}
 
       <Row className='mt-3 mb-5'>
         <Col className='text-center'>
@@ -142,7 +200,7 @@ function DraftSessionCreator(props) {
       <Row className='mt-3 mb-5'>
         <Col className='text-center'>
           <h3 className={'subtext'}>
-            <Button disabled={isLimitedEditing} className='align-middle rounded-circle xbg-dark p-0 m-2' style={{width:'40px', height:'40px'}} onClick={handleAddCriterionButton}>
+            <Button disabled={isLimitedEditing} className='align-middle rounded-circle xbg-dark p-0 m-2' style={{width:'40px', height:'40px'}} onClick={handleAddCriterion}>
               <FontAwesomeIcon className='btn-icon mr-0' icon={faPlus} />
             </Button>
             Add another criterion

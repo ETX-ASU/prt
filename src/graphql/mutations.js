@@ -20,10 +20,6 @@ export const createAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        rubric {
-          rankNames
-          rankPoints
-        }
         originId
         roundNum
         allocations {
@@ -55,10 +51,6 @@ export const updateAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        rubric {
-          rankNames
-          rankPoints
-        }
         originId
         roundNum
         allocations {
@@ -90,10 +82,6 @@ export const deleteAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        rubric {
-          rankNames
-          rankPoints
-        }
         originId
         roundNum
         allocations {
@@ -122,12 +110,18 @@ export const createHomework = /* GraphQL */ `
         draftContent
         commentsOnDraft {
           id
+          reviewerId
           tagNum
           content
           commentRating
           criterionNum
         }
-        criterionRatingsOnDraft
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
         allocatedHomeworkIds
       }
       createdAt
@@ -151,12 +145,18 @@ export const updateHomework = /* GraphQL */ `
         draftContent
         commentsOnDraft {
           id
+          reviewerId
           tagNum
           content
           commentRating
           criterionNum
         }
-        criterionRatingsOnDraft
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
         allocatedHomeworkIds
       }
       createdAt
@@ -180,12 +180,18 @@ export const deleteHomework = /* GraphQL */ `
         draftContent
         commentsOnDraft {
           id
+          reviewerId
           tagNum
           content
           commentRating
           criterionNum
         }
-        criterionRatingsOnDraft
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
         allocatedHomeworkIds
       }
       createdAt

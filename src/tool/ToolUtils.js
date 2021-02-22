@@ -18,7 +18,7 @@ export function calcMaxScoreForAssignment(assignment) {
 export function getNewToolHomeworkDataForAssignment(assignment) {
   // TOOL-DEV: Use your own code here to receive toolAssignmentData and use it create a new "blank" instance of the assignment
   // (This is the student's homework before the student has done any work on it.)
-  return Object.assign({}, EMPTY_HOMEWORK, {quizAnswers:Array(assignment.toolAssignmentData.quizQuestions.length).fill[-1]});
+  return Object.assign({}, EMPTY_HOMEWORK);
 }
 
 export function calcPercentCompleted(assignment, homework) {

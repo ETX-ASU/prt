@@ -20,9 +20,15 @@ import {createAssignmentInLms, handleConnectToLMS} from "../../lmsConnection/Rin
 import {calcMaxScoreForAssignment} from "../../tool/ToolUtils";
 
 
-const tempRankNames = ['Excellent', 'Good', 'Fair', 'Poor'];
+const tempRanks = [
+  {id:uuid(), name:'Excellent', points:10},
+  {id:uuid(), name:'Good', points:7},
+  {id:uuid(), name:'Fair', points:3},
+  {id:uuid(), name:'Poor', points:0}
+];
+
 const emptyAssignment = {
-  id: '',
+  id: uuid(),
   ownerId: '',
   title: '',
   summary: '',
@@ -36,9 +42,8 @@ const emptyAssignment = {
 
   toolAssignmentData: {
     rubric: {
-      rankNames: tempRankNames,
-      rankPoints: [5, 3, 0],
-      criteria: [{name:'1st Criterion', weight:0, rankSummaries:tempRankNames.map(rn => `describe what counts as ${rn}`)}]
+      ranks: tempRanks,
+      criteria: []
     },
     originId: '',
     roundNum: 0,
@@ -69,7 +74,7 @@ function AssignmentCreator() {
 
     // Temporarily disabled for development and testing
 
-    /*try {
+    try {
       const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});
       if (window.isDevMode && result) {
         setActiveModal({type:MODAL_TYPES.confirmAssignmentSaved, id:assignmentId});
@@ -78,10 +83,10 @@ function AssignmentCreator() {
       }
     } catch (error) {
       reportError(error, `We're sorry. There was a problem saving your new assignment.`);
-    }*/
+    }
   }
 
-  function toggleUseAutoScore(e) {
+  function toggleUseAutoScore() {
     setFormData({...formData, isUseAutoScore: !formData.isUseAutoScore, isUseAutoSubmit:false});
   }
 

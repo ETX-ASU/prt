@@ -17,10 +17,6 @@ export const getAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        rubric {
-          rankNames
-          rankPoints
-        }
         originId
         roundNum
         allocations {
@@ -77,12 +73,18 @@ export const getHomework = /* GraphQL */ `
         draftContent
         commentsOnDraft {
           id
+          reviewerId
           tagNum
           content
           commentRating
           criterionNum
         }
-        criterionRatingsOnDraft
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
         allocatedHomeworkIds
       }
       createdAt
@@ -106,7 +108,6 @@ export const listHomeworks = /* GraphQL */ `
         isLocked
         toolHomeworkData {
           draftContent
-          criterionRatingsOnDraft
           allocatedHomeworkIds
         }
         createdAt
