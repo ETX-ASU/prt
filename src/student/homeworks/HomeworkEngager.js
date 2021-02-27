@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from 'react';
+import React, {Fragment, useCallback, useState} from 'react';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
 import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
@@ -15,6 +15,7 @@ import ConfirmationModal from "../../app/components/ConfirmationModal";
 import QuizViewerAndEngager from "../../tool/QuizViewerAndEngager";
 import {sendAutoGradeToLMS} from "../../lmsConnection/RingLeader";
 import {calcAutoScore, calcMaxScoreForAssignment} from "../../tool/ToolUtils";
+import DraftWriter from "../../tool/DraftWriter";
 
 library.add(faCheck, faTimes);
 
@@ -86,8 +87,9 @@ function HomeworkEngager(props) {
     await props.refreshHandler();
   }
 
-  function handleHomeworkDataChange(data) {
-	  setToolHomeworkData(data);
+  const handleHomeworkDataChange = (value) => {
+	  console.log("-------- updateToolHomeworkData");
+	  setToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
   }
 
   function autoSave() {
@@ -131,12 +133,12 @@ function HomeworkEngager(props) {
         </Container>
 
         <Container className='pb-5'>
-          <QuizViewerAndEngager
+          <DraftWriter
             isReadOnly={false}
             isShowCorrect={false}
             toolAssignmentData={assignment.toolAssignmentData}
             toolHomeworkData={toolHomeworkData}
-            updateToolHomeworkData={handleHomeworkDataChange}
+            handleContentUpdated={handleHomeworkDataChange}
             triggerAutoSave={autoSave} />
         </Container>
 

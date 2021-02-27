@@ -44,8 +44,7 @@ function StudentDashboard() {
 			    id: uuid(),
           beganOnDate: moment().valueOf(),
           studentOwnerId: activeUser.id,
-          assignmentId: assignment.id,
-          toolHomeworkData: {quizAnswers:Array(assignment.toolAssignmentData.quizQuestions.length).fill(-1)}
+          assignmentId: assignment.id
 			  });
         const resultHomework = await API.graphql({query: createHomework, variables: {input: freshHomework}});
         console.warn("Successful in creating homework for this student");

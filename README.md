@@ -1,4 +1,8 @@
-# Boilerplate Template
+# PRTv2 - Peer Review Tool 2.0
+
+
+
+## Based on Boiler Template:
 
 Use this template to quickly get your React based frontend working with a graphql backend and lti compatible.
 
