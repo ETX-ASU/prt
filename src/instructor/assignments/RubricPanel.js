@@ -1,5 +1,5 @@
 import React, {Fragment, useEffect, useState} from 'react';
-import {Tabs, Tab, Button, Col, Container, Row} from "react-bootstrap";
+import {Tabs, Tab, Button, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
@@ -9,6 +9,7 @@ import {v4 as uuid} from "uuid";
 library.add(faPlus, faEyeSlash);
 
 const MAX_NUM_CRITERIA = 10;
+const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricPanel(props) {
   const {rubric} = props;
@@ -16,6 +17,7 @@ function RubricPanel(props) {
   const shownCriteria = (props.isEditMode) ? deepCopy(rubric.criteria) : rubric.criteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);;
   const shownRanks = (props.isEditMode) ? deepCopy(rubric.ranks) : rubric.ranks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const [curTabId, setCurTabId] = useState(shownCriteria[0].id);
+
 
   function onToggleVisibility() {
     const curCrit = shownCriteria.find(c => c.id === curTabId);
@@ -35,11 +37,15 @@ function RubricPanel(props) {
     setCurTabId(dupedCriterion.id);
   }
 
-  function onDelete(cNum) {
+  function onDelete() {
     const alteredCriteria = deepCopy(shownCriteria);
     const index = alteredCriteria.findIndex(c => c.id === curTabId);
     const nextId = (index) ? alteredCriteria[index-1].id : alteredCriteria[index+1].id;
+
+    const replaceVisibility = (alteredCriteria[index].isVisible && shownCriteria.filter(c => c.isVisible).length <= MIN_NUM_ACTIVE_CRITERIA);
     alteredCriteria.splice(index, 1);
+
+    if (replaceVisibility) alteredCriteria.find(c => !c.isVisible).isVisible = true;
     props.onRubricChanged({...rubric, criteria:alteredCriteria});
     setCurTabId(nextId);
   }
@@ -58,16 +64,31 @@ function RubricPanel(props) {
   function isVisibilityToggleDisabled(crit) {
     const totalVisible = shownCriteria.filter(c => c.isVisible).length;
     console.log(`totalVisible`, totalVisible);
-    return (crit.isVisible && totalVisible <= 1);
+    return (crit.isVisible && totalVisible <= MIN_NUM_ACTIVE_CRITERIA);
+  }
+
+  function getWeightPercentage(crit) {
+    if (!crit.isVisible) return 0;
+    const trueShownCriteria = shownCriteria.filter(c => c.isVisible);
+    return Math.round(100 * crit.weight/trueShownCriteria.reduce((acc, c) => acc + c.weight, 0));
   }
 
   return (
     <Fragment>
       <Row>
-        <Tabs activeKey={curTabId} onSelect={(k) => setCurTabId(k)} id="criterion-tab">
-          {shownCriteria.map(criterion =>
-            <Tab key={criterion.id} eventKey={criterion.id} title={criterion.name} >
-              <Container className='xbg-light p-2 rubrics-panel'>
+        <Tab.Container activeKey={curTabId} onSelect={(k) => setCurTabId(k)} id="criterion-tab" transition={false}>
+          <Nav>
+            {shownCriteria.map(crit =>
+              <NavItem key={crit.id}>
+                {crit.isVisible && <NavLink key={crit.id} eventKey={crit.id} className='hidden-criterion'><span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}</NavLink>}
+                {!crit.isVisible && <NavLink key={crit.id} eventKey={crit.id}><FontAwesomeIcon className='tab-icon ml-1 mr-1' icon={faEyeSlash} /> | {crit.name}</NavLink>}
+              </NavItem>)
+            }
+          </Nav>
+          <Tab.Content>
+            {shownCriteria.map(criterion =>
+            <Tab.Pane key={criterion.id} eventKey={criterion.id} title={criterion.name} className={`${!criterion.isVisible ? 'hidden-criterion' : ''}`}>
+              <Container className={`p-2 rubrics-panel ${!criterion.isVisible ? 'hidden-criterion' : ''}`} >
                 <Row className={'p-0 m-0'}>
                   <div className='criterion-name-label'>Name</div>
                   <div className='criterion-name m-1'>
@@ -76,7 +97,7 @@ function RubricPanel(props) {
                   </div>
                   <div className='grade-weight-label'>Grade Weight</div>
                   <div className='grade-weight m-1'>
-                    <input type='number' min={0} max={100} value={criterion.weight} onChange={(e) => props.onCriterionPropChanged(criterion, 'weight', e.target.value)} />
+                    <input type='number' min={0} max={100} value={criterion.weight} onChange={(e) => props.onCriterionPropChanged(criterion, 'weight', parseInt(e.target.value))} />
                   </div>
                   <span className='vl' />
                   <Button
@@ -100,21 +121,27 @@ function RubricPanel(props) {
                 </Row>
                 <Row className='w-100 pt-1 m-0 ranks-row' >
                   {shownRanks.map((rank, rNum) =>
-                    (rank.isVisible) && <Col key={rNum} className='rank-col p-0'>
-                      <div className='rank-summary w-100 bg-white'>
-                        <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}</div>
-                        <textarea
-                            className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block'
-                            value={criterion.rankSummaries[rNum]}
-                            onChange={e => onSummaryChange(e, criterion, rNum)} />
-                      </div>
-                    </Col>
+                      (rank.isVisible || props.isEditMode) &&
+                      <Col key={rNum} className={`rank-col p-0 ${rNum === props.activeDraggedRankIndex ? 'dragged-rank-match' : ''}`}>
+                      {/*<Col key={rNum} className={`rank-col p-0`}>*/}
+                        <div className={`rank-summary w-100 bg-white ${!rank.isVisible ? 'mark-as-hidden' : ''}`}>
+                          <div className='hidden-marker'>
+                            <FontAwesomeIcon className='hidden-indicator' icon={faEyeSlash} />
+                          </div>
+                          <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}</div>
+                          <textarea
+                              className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block'
+                              value={criterion.rankSummaries[rNum]}
+                              onChange={e => onSummaryChange(e, criterion, rNum)} />
+                        </div>
+                      </Col>
                   )}
                 </Row>
               </Container>
-            </Tab>
-          )}
-        </Tabs>
+            </Tab.Pane>)
+            }
+          </Tab.Content>
+        </Tab.Container>
         <Button disabled={props.isLimitedEditing || shownCriteria.length >= MAX_NUM_CRITERIA}
             className='add-criterion-btn rounded-circle xbg-dark p-0 m-0'
             style={{width:'24px', height:'24px'}}

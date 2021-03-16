@@ -53,6 +53,7 @@ export function calcAutoScore(assignment, homework) {
 
 
 export function generateDefaultRubric() {
+  console.log("generateDefaultRubric");
   let defaultRubric = Object.assign({}, EMPTY_RUBRIC);
   defaultRubric.criteria[0] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:0, name:'Tasty'});
   defaultRubric.criteria[0].rankSummaries = ['I ate my own fingers just to get more of the flavor', 'Induces compulsive eating.', "I would eat this.", "I wouldn't eat this if I had a choice.", "I'd drink dumpster juice before eating that again. \n" +

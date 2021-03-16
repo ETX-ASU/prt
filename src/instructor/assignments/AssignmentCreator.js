@@ -17,7 +17,7 @@ import DraftSessionCreator from "../../tool/DraftSessionCreator";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {reportError} from "../../developer/DevUtils";
 import {createAssignmentInLms, handleConnectToLMS} from "../../lmsConnection/RingLeader";
-import {calcMaxScoreForAssignment} from "../../tool/ToolUtils";
+import {calcMaxScoreForAssignment, generateDefaultRubric} from "../../tool/ToolUtils";
 
 
 const tempRanks = [
@@ -55,52 +55,13 @@ function AssignmentCreator() {
   const dispatch = useDispatch();
   const activeUser = useSelector(state => state.app.activeUser);
   const courseId = useSelector(state => state.app.courseId);
-  const [formData, setFormData] = useState(emptyAssignment);
+  const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric: generateDefaultRubric()}
+  const [formData, setFormData] = useState({...emptyAssignment, toolAssignmentData:defaultToolAssignmentData});
   const [activeModal, setActiveModal] = useState(null);
 
   async function handleSubmitBtn() {
     if (!formData.title) return;
 
-// const emptyAssignment = {
-//   id: uuid(),
-//   ownerId: '',
-//   title: '',
-//   summary: '',
-//   image: '',
-//   isLinkedToLms: false,
-//   lineItemId: '',
-//   isLockedOnSubmission: true,
-//   lockOnDate: 0,
-//   isUseAutoScore: true,
-//   isUseAutoSubmit: false,
-//
-//   toolAssignmentData: {
-//     rubric: {
-//       ranks: tempRanks,
-//       criteria: []
-//     },
-//     originId: '',
-//     roundNum: 0,
-//     allocations: []
-//   }
-// };
-//
-// const emptyCriterion = {
-//   id: uuid(),
-//   name: '',
-//   rankSummaries: '',
-//   weight: 1,
-//   orderNum: 0,
-//   isVisible: true
-// }
-//
-// const emptyRank = {
-//   id: '',
-//   name: '',
-//   points: 1,
-//   orderNum: 0,
-//   isVisible: true
-// }
     const assignmentId = uuid();
     const inputData = Object.assign({}, formData, {
       id: assignmentId,
