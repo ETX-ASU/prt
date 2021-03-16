@@ -7,12 +7,17 @@
   --x-gray: #666;
   --x-light-gray: #8D8D8D;
   --x-lightest-gray: #D9D9D9;
+  --x-ultralight-gray: #F0F0F0;
   --x-white: #FFF;
 
   --x-green: #12A918;
 
   --prime1: rgba(0, 0, 0, 0.5);
 
+}
+
+.xbg-ultralight {
+  background-color: var(--x-ultralight-gray);
 }
 
 .xbg-light, .bg-input-bar {
@@ -27,7 +32,7 @@
   background-color: var(--x-gray);
   &:disabled {
     background-color: var(--x-gray);
-    opacity: 0.8;
+    opacity: 0.5;
     font-style: italic;
   }
 }
@@ -36,7 +41,7 @@
   background-color: var(--x-darkest-gray);
   &:disabled {
     background-color: var(--x-darkest-gray);
-    opacity: 0.8;
+    opacity: 0.5;
     font-style: italic;
   }
 }

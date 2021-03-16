@@ -145,4 +145,5 @@ function App() {
 		</Container>
 	);
 }
+
 export default hasValidSession(aws_exports) ? App :  null;

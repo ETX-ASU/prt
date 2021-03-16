@@ -52,15 +52,55 @@ const emptyAssignment = {
 };
 
 function AssignmentCreator() {
-	const dispatch = useDispatch();
-	const activeUser = useSelector(state => state.app.activeUser);
-	const courseId = useSelector(state => state.app.courseId);
-	const [formData, setFormData] = useState(emptyAssignment);
+  const dispatch = useDispatch();
+  const activeUser = useSelector(state => state.app.activeUser);
+  const courseId = useSelector(state => state.app.courseId);
+  const [formData, setFormData] = useState(emptyAssignment);
   const [activeModal, setActiveModal] = useState(null);
 
   async function handleSubmitBtn() {
     if (!formData.title) return;
 
+// const emptyAssignment = {
+//   id: uuid(),
+//   ownerId: '',
+//   title: '',
+//   summary: '',
+//   image: '',
+//   isLinkedToLms: false,
+//   lineItemId: '',
+//   isLockedOnSubmission: true,
+//   lockOnDate: 0,
+//   isUseAutoScore: true,
+//   isUseAutoSubmit: false,
+//
+//   toolAssignmentData: {
+//     rubric: {
+//       ranks: tempRanks,
+//       criteria: []
+//     },
+//     originId: '',
+//     roundNum: 0,
+//     allocations: []
+//   }
+// };
+//
+// const emptyCriterion = {
+//   id: uuid(),
+//   name: '',
+//   rankSummaries: '',
+//   weight: 1,
+//   orderNum: 0,
+//   isVisible: true
+// }
+//
+// const emptyRank = {
+//   id: '',
+//   name: '',
+//   points: 1,
+//   orderNum: 0,
+//   isVisible: true
+// }
     const assignmentId = uuid();
     const inputData = Object.assign({}, formData, {
       id: assignmentId,
@@ -70,10 +110,7 @@ function AssignmentCreator() {
     });
 
     console.log("INPUT DATA: ", inputData);
-
-
     // Temporarily disabled for development and testing
-
     try {
       const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});
       if (window.isDevMode && result) {
@@ -96,6 +133,11 @@ function AssignmentCreator() {
 
   function handleReturnToCreateOrDupe() {
     setActiveModal(null);
+    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.createOrDupeAssignment))
+  }
+
+  function handleReturnToLms() {
+    setActiveModal(null);
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.returnToLmsScreen))
   }
 
@@ -114,9 +156,9 @@ function AssignmentCreator() {
       case MODAL_TYPES.confirmAssignmentSaved:
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'} buttons={[
-            {name: 'Continue', onClick: handleReturnToCreateOrDupe},
+            {name: 'Continue', onClick: handleReturnToLms},
           ]}>
-            <p>Assignment has been saved! In order to access it, use this assignmentId: ${activeModal.id}</p>
+            <p>Assignment has been saved! In order to access it, use this assignmentId: {activeModal.id}</p>
           </ConfirmationModal>
         );
     }
@@ -142,10 +184,10 @@ function AssignmentCreator() {
               <label htmlFor='dataTitle'><h3>Title</h3></label>
               <input id='dataTitle' className={'form-control'} onChange={e => setFormData({...formData, 'title': e.target.value})} defaultValue={formData.title} />
             </div>
-            <div className={'form-group'}>
-              <label htmlFor='dataSummary'><h3>Summary<span className='aside'> - Optional</span></h3></label>
-              <textarea id='dataSummary' className={'form-control'} onChange={e => setFormData({...formData, 'summary': e.target.value})} defaultValue={formData.summary}/>
-            </div>
+            {/*<div className={'form-group'}>*/}
+            {/*  <label htmlFor='dataSummary'><h3>Summary<span className='aside'> - Optional</span></h3></label>*/}
+            {/*  <textarea id='dataSummary' className={'form-control'} onChange={e => setFormData({...formData, 'summary': e.target.value})} defaultValue={formData.summary}/>*/}
+            {/*</div>*/}
           </Col>
         </Row>
         <Row className={'ml-2'}>
@@ -174,7 +216,8 @@ function AssignmentCreator() {
         </Container>
 
         {/*The assignment data collected here is specific to the tool, while the above assignment data is used in every tool*/}
-        <DraftSessionCreator isUseAutoScore={formData.isUseAutoScore} toolAssignmentData={formData.toolAssignmentData} updateToolAssignmentData={handleRubricChanges}/>
+        <DraftSessionCreator isUseAutoScore={formData.isUseAutoScore} toolAssignmentData={formData.toolAssignmentData}
+          updateToolAssignmentData={handleRubricChanges}/>
       </form>
     </Fragment>
   )

@@ -1,4 +1,6 @@
 import {EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
+import {EMPTY_CRITERION, EMPTY_RUBRIC} from "./constants";
+import {v4 as uuid} from "uuid";
 
 
 export function getHomeworkStatus(gradeData, homework) {
@@ -47,4 +49,20 @@ export function calcAutoScore(assignment, homework) {
 
   // TODO: Need to write routine to autograde critiques and/or writing sessions
   return 0;
+}
+
+
+export function generateDefaultRubric() {
+  let defaultRubric = Object.assign({}, EMPTY_RUBRIC);
+  defaultRubric.criteria[0] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:0, name:'Tasty'});
+  defaultRubric.criteria[0].rankSummaries = ['I ate my own fingers just to get more of the flavor', 'Induces compulsive eating.', "I would eat this.", "I wouldn't eat this if I had a choice.", "I'd drink dumpster juice before eating that again. \n" +
+  "\n" +
+  "And now I'm going to throw a lot of text into this description in order to see how it handles the scrolling. In fact. I'm going to copy an paste this thing to kingdom come now that I think about it.\n" +
+  "\n" +
+  "I mean, heck. Why not? Just git er done, right?"]
+  defaultRubric.criteria[1] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:1, name:'Sticky'});
+  defaultRubric.criteria[1].rankSummaries =  ["It's like eating a rodent glue trap", "Good substitute for Elmer's", "Makes a nice mess", "More oily than sticky", "Petrolium Jelly is sticks better than this."]
+  defaultRubric.criteria[2] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:2, name:'Filling'});
+  defaultRubric.criteria[2].rankSummaries =  ["Filling like a neutron star", "I can't walk after eating it", "Filling like a bag of rocks", "Barely noticed I ate it", "Filling only if you're a cockroach and you had a snack just a few minutes ago."]
+  return defaultRubric;
 }
