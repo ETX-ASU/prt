@@ -6,6 +6,7 @@ import {library} from "@fortawesome/fontawesome-svg-core";
 import {faTrash, faPlus, faEye, faCopy, faEllipsisV, faEyeSlash} from '@fortawesome/free-solid-svg-icons'
 import RubricPanel from "../instructor/assignments/RubricPanel";
 import {deepCopy} from "../app/utils/deepCopy";
+import {PHASE_TYPES} from "./constants";
 library.add(faTrash, faPlus, faEllipsisV, faEyeSlash);
 
 
@@ -13,9 +14,10 @@ library.add(faTrash, faPlus, faEllipsisV, faEyeSlash);
 const MIN_NUM_ACTIVE_RANKS = 2;
 
 // TOOL-DEV: You will provide your own component to act as a UI for creating your tool's specific assignment data
-function DraftSessionCreator(props) {
+function AssignmentPhaseCreator(props) {
   const {updateToolAssignmentData, toolAssignmentData, isLimitedEditing} = props;
   const {rubric} = toolAssignmentData;
+  const phaseType = (toolAssignmentData.roundNum%2) ? PHASE_TYPES.draft : PHASE_TYPES.reviewSession;
 
   const [activeDropZoneIndex, setActiveDropZoneIndex] = useState(-1);
   const [activeDraggedRankIndex, setActiveDraggedRankIndex] = useState(-1);
@@ -169,4 +171,4 @@ function DraftSessionCreator(props) {
 
 }
 
-export default DraftSessionCreator;
+export default AssignmentPhaseCreator;

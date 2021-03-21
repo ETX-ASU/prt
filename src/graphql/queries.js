@@ -19,6 +19,8 @@ export const getAssignment = /* GraphQL */ `
       toolAssignmentData {
         originId
         roundNum
+        minReviewsRequired
+        minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId
@@ -52,6 +54,8 @@ export const listAssignments = /* GraphQL */ `
         toolAssignmentData {
           originId
           roundNum
+          minReviewsRequired
+          minPeersBeforeAllocating
         }
         createdAt
         updatedAt

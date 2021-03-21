@@ -58,7 +58,7 @@
   }
 
   .switch [type="checkbox"] + label span.isDisabled:last-child {
-    background: var(--x-light-gray)!important;
+    background: var(--x-light-gray) !important;
   }
 
   .switch [type="checkbox"]:checked + label span:last-child::before {
@@ -70,4 +70,33 @@
     height: 14px;
     left: 8px;
   }
+
+  &.small {
+    .switch span:last-child {
+      width: 36px;
+      height: 20px;
+      //border-radius: 10px;
+    }
+
+    .switch span:last-child::before{
+      width: 15px;
+      height: 15px;
+      top: 2px;
+      left: 2px;
+    }
+
+    .switch span:last-child::after {
+      //width: 16px;
+      //height: 16px;
+      right: 8px;
+    }
+
+    .switch [type="checkbox"]:checked + label span:last-child::before {
+      transform: translateX(17px);
+    }
+    .switch [type="checkbox"]:checked + label span:last-child::after {
+      left: 8px;
+    }
+  }
+
 }

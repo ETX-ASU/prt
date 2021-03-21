@@ -1,4 +1,8 @@
-import {deepCopy} from "../app/utils/deepCopy";
+
+export const PHASE_TYPES = {
+  draftWriting: 'draft',
+  reviewSession: 'reviewSession'
+}
 
 export const EMPTY_TOOL_HOMEWORK_DATA = {
   draftContent: '',

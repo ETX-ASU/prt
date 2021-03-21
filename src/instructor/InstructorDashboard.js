@@ -34,8 +34,8 @@ function InstructorDashboard() {
 					{(activeUiScreenMode === UI_SCREEN_MODES.createOrDupeAssignment) && !assignmentId &&
 					<AssignmentNewOrDupe />
 					}
-					{(activeUiScreenMode === UI_SCREEN_MODES.createAssignment) &&
-					<AssignmentCreator />
+					{(activeUiScreenMode === UI_SCREEN_MODES.createAssignment || activeUiScreenMode === UI_SCREEN_MODES.addNewRound) &&
+					<AssignmentCreator isRootAssignment={activeUiScreenMode === UI_SCREEN_MODES.viewAssignment}/>
 					}
 				</Col>
 			</Row>

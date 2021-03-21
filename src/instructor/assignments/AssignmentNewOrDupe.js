@@ -113,7 +113,7 @@ function AssignmentNewOrDupe() {
     const details = getTargetDetails();
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.addNewRound));
 
-    try {
+/*    try {
       const inputData = Object.assign({}, selectedTargetAssignment, {
         title: `${selectedTargetAssignment.title} - ${details.roundName}`,
         lineItemId: '',
@@ -126,6 +126,8 @@ function AssignmentNewOrDupe() {
           rubric: selectedTargetAssignment.toolAssignmentData.rubric,
           originId: selectedTargetAssignment.id,
           roundNum: details.roundNum + 1,
+          minReviewsRequired: 3,
+          minPeersBeforeAllocating: 6,
           allocations: []
         }
       });
@@ -140,8 +142,8 @@ function AssignmentNewOrDupe() {
         await handleConnectToLMS(inputData);
       }
     } catch (error) {
-    reportError(error, `We're sorry. There was a problem saving your new assignment round.`);
-    }
+      reportError(error, `We're sorry. There was a problem saving your new assignment round.`);
+    }*/
   }
 
 

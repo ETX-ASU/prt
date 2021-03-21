@@ -22,6 +22,8 @@ export const createAssignment = /* GraphQL */ `
       toolAssignmentData {
         originId
         roundNum
+        minReviewsRequired
+        minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId
@@ -53,6 +55,8 @@ export const updateAssignment = /* GraphQL */ `
       toolAssignmentData {
         originId
         roundNum
+        minReviewsRequired
+        minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId
@@ -84,6 +88,8 @@ export const deleteAssignment = /* GraphQL */ `
       toolAssignmentData {
         originId
         roundNum
+        minReviewsRequired
+        minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId

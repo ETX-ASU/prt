@@ -8,7 +8,7 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import "./assignments.scss";
 import HeaderBar from "../../app/components/HeaderBar";
 import ToggleSwitch from "../../app/components/ToggleSwitch";
-import DraftSessionCreator from "../../tool/DraftSessionCreator";
+import AssignmentPhaseCreator from "../../tool/AssignmentPhaseCreator";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faExclamationTriangle} from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
@@ -170,7 +170,7 @@ function AssignmentEditor() {
           }
         </Container>
 
-        <DraftSessionCreator
+        <AssignmentPhaseCreator
           isLimitedEditing={isLimitedEditing}
           isUseAutoScore={formData.isUseAutoScore}
           toolAssignmentData={formData.toolAssignmentData}

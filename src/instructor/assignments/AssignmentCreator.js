@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 import {API} from 'aws-amplify';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
@@ -13,7 +13,7 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import HeaderBar from "../../app/components/HeaderBar";
 import ToggleSwitch from "../../app/components/ToggleSwitch";
 
-import DraftSessionCreator from "../../tool/DraftSessionCreator";
+import AssignmentPhaseCreator from "../../tool/AssignmentPhaseCreator";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {reportError} from "../../developer/DevUtils";
 import {createAssignmentInLms, handleConnectToLMS} from "../../lmsConnection/RingLeader";
@@ -47,17 +47,35 @@ const emptyAssignment = {
     },
     originId: '',
     roundNum: 0,
+    minReviewsRequired: 3,
+    minPeersBeforeAllocating: 6,
     allocations: []
   }
 };
 
-function AssignmentCreator() {
+function AssignmentCreator(props) {
   const dispatch = useDispatch();
   const activeUser = useSelector(state => state.app.activeUser);
   const courseId = useSelector(state => state.app.courseId);
-  const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric: generateDefaultRubric()}
+
+  // let defaultToolAssignmentData;
+  // if (props.isRootAssignment) {
+const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric: generateDefaultRubric()}
+  // } else {
+  //
+  // }
+
   const [formData, setFormData] = useState({...emptyAssignment, toolAssignmentData:defaultToolAssignmentData});
   const [activeModal, setActiveModal] = useState(null);
+
+  // // run this once on mount
+  // useEffect(() => {
+  //   // if this is the Root Assignment, set formData to use generated default rubric
+  //
+  //   // else fetch the toolAssignmentData from the originAssignment (root assignment)
+  //     // once fetched, set the formData to use this origin data.
+  // }, [])
+
 
   async function handleSubmitBtn() {
     if (!formData.title) return;
@@ -145,19 +163,13 @@ function AssignmentCreator() {
               <label htmlFor='dataTitle'><h3>Title</h3></label>
               <input id='dataTitle' className={'form-control'} onChange={e => setFormData({...formData, 'title': e.target.value})} defaultValue={formData.title} />
             </div>
-            {/*<div className={'form-group'}>*/}
-            {/*  <label htmlFor='dataSummary'><h3>Summary<span className='aside'> - Optional</span></h3></label>*/}
-            {/*  <textarea id='dataSummary' className={'form-control'} onChange={e => setFormData({...formData, 'summary': e.target.value})} defaultValue={formData.summary}/>*/}
-            {/*</div>*/}
           </Col>
         </Row>
         <Row className={'ml-2'}>
-          <Col className='col-6'>
+          <Col className='col-12'>
             <label><h3>Autoscore</h3></label>
-          </Col>
-          <Col className='col-6 d-flex flex-row-reverse'>
-            <div className="custom-control custom-switch" style={{top: `6px`}}>
-              <ToggleSwitch id='dataUseAutoscore' value={formData.isUseAutoScore} handleToggle={toggleUseAutoScore} />
+            <div className="custom-control custom-switch d-inline-block" style={{top: `3px`}}>
+              <ToggleSwitch small={true} id='dataUseAutoscore' value={formData.isUseAutoScore} handleToggle={toggleUseAutoScore} />
             </div>
           </Col>
         </Row>
@@ -177,7 +189,7 @@ function AssignmentCreator() {
         </Container>
 
         {/*The assignment data collected here is specific to the tool, while the above assignment data is used in every tool*/}
-        <DraftSessionCreator isUseAutoScore={formData.isUseAutoScore} toolAssignmentData={formData.toolAssignmentData}
+        <AssignmentPhaseCreator isUseAutoScore={formData.isUseAutoScore} toolAssignmentData={formData.toolAssignmentData}
           updateToolAssignmentData={handleRubricChanges}/>
       </form>
     </Fragment>
