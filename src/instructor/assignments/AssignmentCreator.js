@@ -13,11 +13,12 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import HeaderBar from "../../app/components/HeaderBar";
 import ToggleSwitch from "../../app/components/ToggleSwitch";
 
-import AssignmentPhaseCreator from "../../tool/AssignmentPhaseCreator";
+import RootPhaseSettings from "../../tool/RootPhaseSettings";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {reportError} from "../../developer/DevUtils";
 import {createAssignmentInLms, handleConnectToLMS} from "../../lmsConnection/RingLeader";
 import {calcMaxScoreForAssignment, generateDefaultRubric} from "../../tool/ToolUtils";
+import BasicAssignmentSettings from "./BasicAssignmentSettings";
 
 
 const tempRanks = [
@@ -41,10 +42,8 @@ const emptyAssignment = {
   isUseAutoSubmit: false,
 
   toolAssignmentData: {
-    rubric: {
-      ranks: tempRanks,
-      criteria: []
-    },
+    rubricRanks: tempRanks,
+    rubricCriteria: [],
     originId: '',
     roundNum: 0,
     minReviewsRequired: 3,
@@ -53,28 +52,13 @@ const emptyAssignment = {
   }
 };
 
-function AssignmentCreator(props) {
+function AssignmentCreator() {
   const dispatch = useDispatch();
   const activeUser = useSelector(state => state.app.activeUser);
   const courseId = useSelector(state => state.app.courseId);
-
-  // let defaultToolAssignmentData;
-  // if (props.isRootAssignment) {
-const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric: generateDefaultRubric()}
-  // } else {
-  //
-  // }
-
+  const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubricCriteria: generateDefaultRubric().criteria, rubricRanks:generateDefaultRubric().ranks}
   const [formData, setFormData] = useState({...emptyAssignment, toolAssignmentData:defaultToolAssignmentData});
   const [activeModal, setActiveModal] = useState(null);
-
-  // // run this once on mount
-  // useEffect(() => {
-  //   // if this is the Root Assignment, set formData to use generated default rubric
-  //
-  //   // else fetch the toolAssignmentData from the originAssignment (root assignment)
-  //     // once fetched, set the formData to use this origin data.
-  // }, [])
 
 
   async function handleSubmitBtn() {
@@ -88,9 +72,11 @@ const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric
       lockOnDate: (formData.isLockedOnDate) ? moment(formData.lockOnDate).valueOf() : 0
     });
 
+
     console.log("INPUT DATA: ", inputData);
     // Temporarily disabled for development and testing
     try {
+      if (window.isDevMode) inputData.lineItemId = (`FAKE-${uuid()}`);
       const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});
       if (window.isDevMode && result) {
         setActiveModal({type:MODAL_TYPES.confirmAssignmentSaved, id:assignmentId});
@@ -100,14 +86,6 @@ const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric
     } catch (error) {
       reportError(error, `We're sorry. There was a problem saving your new assignment.`);
     }
-  }
-
-  function toggleUseAutoScore() {
-    setFormData({...formData, isUseAutoScore: !formData.isUseAutoScore, isUseAutoSubmit:false});
-  }
-
-  function handleRubricChanges(toolAssignmentData) {
-    setFormData({...formData, toolAssignmentData});
   }
 
   function handleReturnToCreateOrDupe() {
@@ -143,6 +121,7 @@ const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric
     }
   }
 
+
 	return (
     <Fragment>
       {activeModal && renderModal()}
@@ -152,45 +131,8 @@ const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubric
       </HeaderBar>
 
       <form>
-        <Container className='mt-2 ml-2 mr-2 mb-4'>
-        <Row className={'mt-4 mb-4'}>
-          <Col><h2>Basic Assignment Details</h2></Col>
-        </Row>
-
-        <Row className={'ml-2'}>
-          <Col className={'col-12'}>
-            <div className={'form-group'}>
-              <label htmlFor='dataTitle'><h3>Title</h3></label>
-              <input id='dataTitle' className={'form-control'} onChange={e => setFormData({...formData, 'title': e.target.value})} defaultValue={formData.title} />
-            </div>
-          </Col>
-        </Row>
-        <Row className={'ml-2'}>
-          <Col className='col-12'>
-            <label><h3>Autoscore</h3></label>
-            <div className="custom-control custom-switch d-inline-block" style={{top: `3px`}}>
-              <ToggleSwitch small={true} id='dataUseAutoscore' value={formData.isUseAutoScore} handleToggle={toggleUseAutoScore} />
-            </div>
-          </Col>
-        </Row>
-        {formData.isUseAutoScore &&
-        <Row className={'ml-2'}>
-          <Col>
-            <p>
-            <span className='mr-2'>
-              <input type={'checkbox'}
-                onChange={e => setFormData({...formData, isUseAutoSubmit: e.target.checked})}
-                checked={formData.isUseAutoSubmit} />
-            </span>
-            Auto-submit score to LMS when student submits their assignment</p>
-          </Col>
-        </Row>
-        }
-        </Container>
-
-        {/*The assignment data collected here is specific to the tool, while the above assignment data is used in every tool*/}
-        <AssignmentPhaseCreator isUseAutoScore={formData.isUseAutoScore} toolAssignmentData={formData.toolAssignmentData}
-          updateToolAssignmentData={handleRubricChanges}/>
+        <BasicAssignmentSettings formData={formData} setFormData={setFormData} />
+        <RootPhaseSettings formData={formData} setFormData={setFormData} />
       </form>
     </Fragment>
   )

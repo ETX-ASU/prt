@@ -20,6 +20,20 @@ export const createAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
+        rubricRanks {
+          name
+          points
+          isVisible
+          orderNum
+        }
+        rubricCriteria {
+          id
+          orderNum
+          isVisible
+          name
+          rankSummaries
+          weight
+        }
         originId
         roundNum
         minReviewsRequired
@@ -53,6 +67,20 @@ export const updateAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
+        rubricRanks {
+          name
+          points
+          isVisible
+          orderNum
+        }
+        rubricCriteria {
+          id
+          orderNum
+          isVisible
+          name
+          rankSummaries
+          weight
+        }
         originId
         roundNum
         minReviewsRequired
@@ -86,6 +114,20 @@ export const deleteAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
+        rubricRanks {
+          name
+          points
+          isVisible
+          orderNum
+        }
+        rubricCriteria {
+          id
+          orderNum
+          isVisible
+          name
+          rankSummaries
+          weight
+        }
         originId
         roundNum
         minReviewsRequired

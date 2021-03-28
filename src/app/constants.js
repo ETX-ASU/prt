@@ -4,10 +4,12 @@ export const APP_NAMESPACE = 'QUIZ_APP'; // Change this to name of tool
 
 
 export const MODAL_TYPES = {
+  confirmNewAssignmentPhaseCreated: "confirmNewAssignmentPhaseCreated",
   confirmAssignmentDuped: "confirmAssignmentDuped",
   confirmAssignmentRoundCreated: "confirmAssignmentRoundCreated",
   confirmAssignmentRecovered: "confirmAssignmentRecovered",
   cancelNewAssignmentEditsWarning: "cancelNewAssignmentEditsWarning",
+  cancelPhaseEditsWarning: "cancelPhaseEditsWarning",
   cancelDupedAssignmentEditsWarning: "cancelDupedAssignmentEditsWarning",
   confirmAssignmentSaved: "confirmAssignmentSaved",
   confirmHomeworkSubmitted: "confirmHomeworkSubmitted",
@@ -32,7 +34,7 @@ export const UI_SCREEN_MODES = {
   createOrDupeAssignment: 'UI_SCREEN_MODES.createOrDupeAssignment',
   createAssignment: 'UI_SCREEN_MODES.createAssignment',
   dupeAssignment: 'UI_SCREEN_MODES.dupeAssignment',
-  addNewRound: 'UI_SCREEN_MODES.addNewRound',
+  createNewAssignmentPhase: 'UI_SCREEN_MODES.createNewAssignmentPhase',
   viewAssignment: 'UI_SCREEN_MODES.viewAssignment',
   editAssignment: 'UI_SCREEN_MODES.editAssignment',
   reviewHomework: 'UI_SCREEN_MODES.reviewHomework',

@@ -4,12 +4,11 @@ import {useDispatch, useSelector} from "react-redux";
 import { v4 as uuid } from "uuid";
 
 import {
-  createAssignment as createAssignmentMutation,
   createAssignment,
   updateAssignment
 } from '../../graphql/mutations';
 import {UI_SCREEN_MODES, MODAL_TYPES} from "../../app/constants";
-import {editDupedAssignment, setActiveUiScreenMode} from "../../app/store/appReducer";
+import {editAssignmentPhase, editDupedAssignment, setActiveUiScreenMode} from "../../app/store/appReducer";
 import "./assignments.scss";
 
 import {Container, Row, Button, Col} from "react-bootstrap";
@@ -37,13 +36,13 @@ function AssignmentNewOrDupe() {
   const activeUser = useSelector(state => state.app.activeUser);
   const courseId = useSelector(state => state.app.courseId);
 
-  const [assignments, setAssignments] = useState([]);
+  const [allAssignments, setAllAssignments] = useState([]);
   const [nonStrandedAssignments, setNonStrandedAssignments] = useState([]);
   const [strandedAssignments, setStrandedAssignments] = useState([]);
   const [isFetchingAssignments, setIsFetchingAssignments] = useState(true);
   const [activeModal, setActiveModal] = useState(null);
   const [selectedDupeAssignment, setSelectedDupeAssignment] = useState(null);
-  const [selectedTargetAssignment, setSelectedTargetAssignment] = useState(null);
+  const [selectedRootAssignment, setSelectedRootAssignment] = useState(null);
 
   const [choice, setChoice] = useState('');
 
@@ -61,28 +60,29 @@ function AssignmentNewOrDupe() {
 
       do {
         const assignmentQueryResults = await API.graphql(graphqlOperation(listAssignments,
-          {
-            filter: {ownerId: {eq: activeUser.id}},
-            nextToken: nextTokenVal
-          }));
+            {filter:{ownerId:{eq:activeUser.id}}, nextToken:nextTokenVal}));
         nextTokenVal = assignmentQueryResults.data.listAssignments.nextToken;
         allAssignments.push(...assignmentQueryResults.data.listAssignments.items);
       } while (nextTokenVal);
 
       if (window.isDevMode) console.log("------> assignmentIds: ", allAssignments.map(a => a.id));
-      setAssignments(allAssignments);
+      setAllAssignments(allAssignments);
       const stranded = allAssignments.filter(a => a.lineItemId === '');
       setStrandedAssignments(stranded);
+      // const counts = getOriginPhaseCounts(allAssignments);
+
+      // TODO: An origin assignment with a subsequent phase assignment that is stranded can NOT have a new phase created
+      // until that phase is deleted or recovered
 
       if (allAssignments.length) {
         const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: allAssignments[0].id}));
         setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
-        const nonStrandeds = allAssignments.filter((a) => !!a.lineItemId);
+        const nonStrandeds = allAssignments.filter((a) => (!!a.lineItemId && !a.toolAssignmentData.originId));
 
-        // TODO: when showing options for a target assignment, filter out any previous rounds. That is, only show original
+        // TODO: when showing options for a target assignment, filter out any previous rounds. That is, only show root assignments
 
         setNonStrandedAssignments(nonStrandeds);
-        if (nonStrandeds.length) setSelectedTargetAssignment(nonStrandeds[0]);
+        if (nonStrandeds.length) setSelectedRootAssignment(nonStrandeds[0]);
       }
 
       setIsFetchingAssignments(false);
@@ -91,9 +91,26 @@ function AssignmentNewOrDupe() {
     }
   }
 
+  function getOriginPhaseCounts(all) {
+    return all.reduce((acc, a) => {
+      let originId = a.toolAssignmentData.originId || a.id;
+      if (acc[originId] === -1 || !a.lineItemId) {
+        acc[originId] = -1;
+      } else {
+        acc[originId] = (!acc[originId] || (a.toolAssignmentData.roundNum > acc[originId])) ? a.toolAssignmentData.roundNum : acc[originId];
+      }
+      return acc;
+    }, {})
+  }
+
   function closeModalAndEditDuped(dupedAssignmentData) {
     setActiveModal(null);
     dispatch(editDupedAssignment(dupedAssignmentData));
+  }
+
+  function closeModalAndEditPhase(phaseAssignmentData) {
+    setActiveModal(null);
+    dispatch(editAssignmentPhase(phaseAssignmentData));
   }
 
   async function handleDupeSelectionMade() {
@@ -102,20 +119,18 @@ function AssignmentNewOrDupe() {
     setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
   }
 
-  async function handleTargetSelectionMade() {
+  async function handleRootSelectionMade() {
     const selectedId = document.getElementById('targetAssignmentSelector').value;
     const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: selectedId}));
-    setSelectedTargetAssignment(assignmentQueryResults.data.getAssignment);
+    setSelectedRootAssignment(assignmentQueryResults.data.getAssignment);
   }
 
+  async function handleAddAssignmentPhase(e) {
+    const rootDetails = getRootAssignmentDetails();
 
-  async function handleAddNewRound(e) {
-    const details = getTargetDetails();
-    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.addNewRound));
-
-/*    try {
-      const inputData = Object.assign({}, selectedTargetAssignment, {
-        title: `${selectedTargetAssignment.title} - ${details.roundName}`,
+    try {
+      const inputData = Object.assign({}, selectedRootAssignment, {
+        title: `${selectedRootAssignment.title} - ${rootDetails.roundName}`,
         lineItemId: '',
         isLinkedToLms: false,
         id: uuid(),
@@ -123,9 +138,8 @@ function AssignmentNewOrDupe() {
         courseId,
         lockOnDate: 0,
         toolAssignmentData: {
-          rubric: selectedTargetAssignment.toolAssignmentData.rubric,
-          originId: selectedTargetAssignment.id,
-          roundNum: details.roundNum + 1,
+          originId: selectedRootAssignment.id,
+          roundNum: rootDetails.roundNum + 1,
           minReviewsRequired: 3,
           minPeersBeforeAllocating: 6,
           allocations: []
@@ -135,17 +149,15 @@ function AssignmentNewOrDupe() {
       delete inputData.updatedAt;
 
       // Temporarily disabled for development and testing
-      const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});
-      if (window.isDevMode && result) {
-        setActiveModal({type:MODAL_TYPES.confirmAssignmentSaved, id:inputData.id});
-      } else {
-        await handleConnectToLMS(inputData);
-      }
+      const result = await API.graphql({query: createAssignment, variables: {input: inputData}})
+      setActiveModal({
+        type:MODAL_TYPES.confirmNewAssignmentPhaseCreated,
+        data: [selectedRootAssignment.title, result.data.createAssignment]
+      });
     } catch (error) {
-      reportError(error, `We're sorry. There was a problem saving your new assignment round.`);
-    }*/
+      reportError(error, `We're sorry. There was a problem creating your ${selectedRootAssignment.title} assignment round.`);
+    }
   }
-
 
   async function handleDupeAssignment(e) {
     try {
@@ -181,31 +193,26 @@ function AssignmentNewOrDupe() {
     }
   }
 
-
-  // async function handleAddAssignmentRound(e) {
-  //   // const isReviewSession = !(selectedTargetAssignment.toolAssignmentData.roundNum % 2);
-  //   dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.addNewRound));
-  // }
-
-
   function handleCreateAssignment(e) {
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.createAssignment));
   }
 
-  function handleReturnToLms() {
-    setActiveModal(null);
-    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.returnToLmsScreen))
-  }
-
   function renderModal() {
     switch (activeModal.type) {
+      case MODAL_TYPES.confirmNewAssignmentPhaseCreated:
+        return (
+          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Phase Saved'}
+              buttons={[{name:'Edit New Assignment Phase', onClick:() => closeModalAndEditPhase(activeModal.data[1])}]}>
+            {(activeModal.data[0].lineItemId)
+              ? <p>Your {activeModal.data[0]} assignment has been saved and it is now accessible in your LMS.</p>
+              : <p>You will now be taken to a screen so you can edit your {activeModal.data[0].title} assignment settings.</p>
+            }
+          </ConfirmationModal>
+        );
       case MODAL_TYPES.confirmAssignmentDuped:
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'}
-                             buttons={[{
-                               name: 'Edit Duplicated Assignment',
-                               onClick: () => closeModalAndEditDuped(activeModal.data[1])
-                             }]}>
+              buttons={[{name:'Edit Duplicated Assignment', onClick:() => closeModalAndEditDuped(activeModal.data[1])}]}>
             {(activeModal.data[0].lineItemId)
               ? <p>A new assignment called Copy of {activeModal.data[0]} has been saved! It is now accessible in your
                 LMS.</p>
@@ -216,10 +223,7 @@ function AssignmentNewOrDupe() {
       case MODAL_TYPES.confirmAssignmentRecovered:
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'}
-                             buttons={[{
-                               name: 'Edit Recovered Assignment',
-                               onClick: () => closeModalAndEditDuped(activeModal.data[1])
-                             }]}>
+              buttons={[{name:'Edit Recovered Assignment', onClick:() => closeModalAndEditDuped(activeModal.data[1])}]}>
             <p>Your assignment "{activeModal.data[0]}" has been recovered. You will now be taken to a screen so you can
               edit and customize this recovered assignment.</p>
           </ConfirmationModal>
@@ -227,54 +231,38 @@ function AssignmentNewOrDupe() {
     }
   }
 
-  function getTargetDetails() {
+  function getRootAssignmentDetails() {
+    const originPhaseCounts = getOriginPhaseCounts(allAssignments);
     let roundNamePrefix = ['1st', '2nd', '3rd', '4th', '5th'];
-    let roundNum = selectedTargetAssignment.toolAssignmentData.roundNum || 0;
+    let roundNum = originPhaseCounts[selectedRootAssignment.id] || 0;
     let isNextRoundAReviewSession = (!(roundNum%2));
     let totalDraftRounds = Math.floor(roundNum/2) + 1;
     let totalReviewRounds = totalDraftRounds - 1 + (roundNum%2);
-    let roundName = (isNextRoundAReviewSession) ? `Review of ${roundNamePrefix[totalReviewRounds]}` : `${roundNamePrefix[totalDraftRounds]} Draft`;
+    let roundName = (isNextRoundAReviewSession) ? `${roundNamePrefix[totalDraftRounds - 1]} Draft Review` : `${roundNamePrefix[totalDraftRounds]} Draft`;
     return ({roundNum, roundName, isNextRoundAReviewSession, totalDraftRounds, totalReviewRounds})
   }
 
   function getNewRoundSummary() {
-    let details = getTargetDetails();
+    let details = getRootAssignmentDetails();
 
-    const draftRoundNames = ['1st', '1st and 2nd', '1st, 2nd, and 3rd', '1st, 2nd, 3rd, and 4th', '1st, 2nd, 3rd, 4th, and 5th'];
-    const reviewRoundNames = ['1st', '1st and 2nd', '1st, 2nd, and 3rd', '1st, 2nd, 3rd, and 4th', '1st, 2nd, 3rd, 4th, and 5th'];
+    const draftRoundNames = ['no', '1st', '1st and 2nd', '1st, 2nd, and 3rd', '1st, 2nd, 3rd, and 4th', '1st, 2nd, 3rd, 4th, and 5th'];
+    const reviewRoundNames = ['no', '1st', '1st and 2nd', '1st, 2nd, and 3rd', '1st, 2nd, 3rd, and 4th', '1st, 2nd, 3rd, 4th, and 5th'];
 
     if (details.roundNum === 0) return (<p>
-      The {selectedTargetAssignment.title} assignment currently only has the initial 1st draft round. That means you can
-      assign this new round as a peer review session of {selectedTargetAssignment.title}.
+      The {selectedRootAssignment.title} assignment currently only has the initial 1st draft round. That means you can
+      assign this new round as a peer review session of {selectedRootAssignment.title}.
     </p>);
     if (details.roundNum > 1 && details.isNextRoundAReviewSession) return (<p>
-      The {selectedTargetAssignment.title} assignment is currently linked to {draftRoundNames[details.totalDraftRounds]} round
+      The {selectedRootAssignment.title} assignment is currently linked to {draftRoundNames[details.totalDraftRounds]} round
       written drafts and {reviewRoundNames[details.totalReviewRounds]} review rounds. That means this target assignment's next
       round is a Peer Review Session of the previously created draft #{details.totalDraftRounds}.
     </p>);
     return (<p>
-      The {selectedTargetAssignment.title} assignment is currently linked to {draftRoundNames[details.totalDraftRounds]} round
-      written drafts and {reviewRoundNames[details.totalReviewRounds]} review rounds. That means this target assignment is ready
-      for a draft #{details.totalDraftRounds+1} to be created.
+      The {selectedRootAssignment.title} assignment is currently linked to {draftRoundNames[details.totalDraftRounds]} drafts and
+      a {reviewRoundNames[details.totalReviewRounds]} draft review session. That means this target assignment is ready
+      for draft #{details.totalDraftRounds+1} to be created.
     </p>);
   }
-
-  // if (!isFetchingAssignments && !nonStrandedAssignments.length) return (
-  //   <Fragment>
-  //     <HeaderBar title='Create New Assignment - PRTv2' canCancel={false} canSave={false}>
-  //       <Button disabled className='mr-2'>Cancel</Button>
-  //     </HeaderBar>
-  //
-  //     <Container className='m-2'>
-  //       <Row>
-  //         <Col>
-  //           <h4 className='mt-2'>You must have at least 1 existing assignment before you can create an additional draft or review
-  //             session round.</h4>
-  //         </Col>
-  //       </Row>
-  //     </Container>
-  //   </Fragment>
-  // )
 
   return (
     <Fragment>
@@ -297,9 +285,9 @@ function AssignmentNewOrDupe() {
           <Row>
             <Col>
               <h3 className={'mt-3 mb-2'}>Create new round</h3>
-              <p>Select target assignment.</p>
+              <p>Select origin assignment.</p>
               <div className="form-group">
-                <select onChange={handleTargetSelectionMade} className="form-control" id="targetAssignmentSelector" disabled={!assignments.length}>
+                <select onChange={handleRootSelectionMade} className="form-control" id="targetAssignmentSelector" disabled={!allAssignments.length}>
                   {nonStrandedAssignments.map((a, i) =>
                     <option key={i} value={a.id}>{a.title}</option>
                   )}
@@ -317,9 +305,9 @@ function AssignmentNewOrDupe() {
               <Container className={'p-4'}>
                 <Row className={'mt-auto'}>
                   <Col className={'xbg-light text-center p-2'}>
-                    <Button className='align-middle' onClick={handleAddNewRound} disabled={!assignments.length}>
+                    <Button className='align-middle' onClick={handleAddAssignmentPhase} disabled={!allAssignments.length}>
                       <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                      {!(selectedTargetAssignment.toolAssignmentData.roundNum % 2) ? 'Create Peer Review Session' : 'Create New Draft'}
+                      {(selectedRootAssignment.toolAssignmentData.roundNum%2 === 0) ? 'Create New Draft' : 'Create Peer Review Session'}
                     </Button>
                   </Col>
                 </Row>
@@ -337,12 +325,12 @@ function AssignmentNewOrDupe() {
               <p>Choose an existing assignment, duplicate it, then customize it.</p>
               <div className="form-group">
                 <select onChange={handleDupeSelectionMade} className="form-control" id="dupeAssignmentSelector"
-                        disabled={!assignments.length}>
-                  {assignments.map((a, i) =>
+                        disabled={!allAssignments.length}>
+                  {allAssignments.map((a, i) =>
                     <option key={i} value={a.id}>{!a.lineItemId && '*'}{a.title}</option>
                   )}
                 </select>
-                {!assignments.length &&
+                {!allAssignments.length &&
                 <h4>*You must have at least 1 existing assignment before you can duplicate anything.</h4>
                 }
               </div>
@@ -356,9 +344,9 @@ function AssignmentNewOrDupe() {
               <Container className={'p-4'}>
                 <Row className={'mt-auto'}>
                   <Col className={'xbg-light text-center p-2'}>
-                    <Button className='align-middle' onClick={handleDupeAssignment} disabled={!assignments.length}>
+                    <Button className='align-middle' onClick={handleDupeAssignment} disabled={!allAssignments.length}>
                       <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                      {(!assignments.length || selectedDupeAssignment?.lineItemId) ? 'Duplicate' : 'Recover'}
+                      {(!allAssignments.length || selectedDupeAssignment?.lineItemId) ? 'Duplicate' : 'Recover'}
                     </Button>
                   </Col>
                 </Row>
@@ -462,7 +450,7 @@ function AssignmentNewOrDupe() {
                 <Row className={'mt-auto'}>
                   <Col className={'xbg-light text-center p-2'}>
                     <Button className='align-middle' onClick={() => setChoice(ASSIGNMENT_CHOICE.duplicate)}
-                            disabled={!assignments.length}>
+                            disabled={!allAssignments.length}>
                       <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
                       Duplicate or Recover
                     </Button>

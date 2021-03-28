@@ -1,5 +1,5 @@
 import React from "react";
-import "./editor-styles.scss";
+import "./RteStyles.scss";
 import { Quill } from "react-quill";
 
 // Custom Undo button icon component for Quill editor. You can import it directly

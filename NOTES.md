@@ -1,5 +1,16 @@
+## BUG FIXING
 
 # Next steps.
+
+1. When an "added phase" is created, we create it in the DB with new id and associated default data, then we take
+   the instructor to the "edit assignment" page. (It's like the dupe process.) From there, the instructor makes changes
+   and saves it.
+      1. Both the Boiler's AssignmentCreator.js and AssignmentEditor.js incorporate the PhaseCreator.js which shows the UI
+      for creating either a RootAssignment, ReviewSessionPhase, or DraftPhase. It holds the "MainSettings" editor which include
+      the assignment Title, AutoScore & AutoScoreAutoSubmit settings.   
+         1. RootAssignment has: RubricEditor & DraftEditor
+         2. ReviewSessionPhase has: ReviewSettingsEditor
+         3. DraftPhase has: DraftEditor
 
 1. When teacher hits the "Create Peer Review Session" this should route them through the "Instructor Dashboard"
    to show them a "ReviewSessionCreator" screen OR "AdditionalDraftCreator" screen. (The AssignmentCreator screen
@@ -73,7 +84,7 @@
 ## Current instructor flow:
 
 1. From `AssignmentNewOrDupe.js` selects creates new assignment. That takes us to:
-2. `AssignmentCreator.js` renders the ToolAssignmentData form from `AssignmentPhaseCreator.js`
+2. `AssignmentCreator.js` renders the ToolAssignmentData form from `RootPhaseSettings.js`
     1. On mount/first creation we need to call `generateDefaultRubric()` (step 3 above) to set
     the initial values for the rubric
 3. That renders `RubricPanel.js` and that further renders each `CriterionViewerEditor.js` (used

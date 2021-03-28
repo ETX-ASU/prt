@@ -10,22 +10,16 @@ import {PHASE_TYPES} from "./constants";
 library.add(faTrash, faPlus, faEllipsisV, faEyeSlash);
 
 
-// toolAssignmentData.rubric.criteria[] => replaces toolAssignmentData.quizQuesions
+// toolAssignmentData.rubricCriteria[] => replaces toolAssignmentData.quizQuesions
 const MIN_NUM_ACTIVE_RANKS = 2;
 
 // TOOL-DEV: You will provide your own component to act as a UI for creating your tool's specific assignment data
-function AssignmentPhaseCreator(props) {
-  const {updateToolAssignmentData, toolAssignmentData, isLimitedEditing} = props;
-  const {rubric} = toolAssignmentData;
-  const phaseType = (toolAssignmentData.roundNum%2) ? PHASE_TYPES.draft : PHASE_TYPES.reviewSession;
-
+function RootPhaseSettings(props) {
+  const {setFormData, isLimitedEditing, formData, formData:{toolAssignmentData}} = props;
+  const {rubricRanks, rubricCriteria} = toolAssignmentData;
   const [activeDropZoneIndex, setActiveDropZoneIndex] = useState(-1);
   const [activeDraggedRankIndex, setActiveDraggedRankIndex] = useState(-1);
-  const [orderedRanks, setOrderedRanks] = useState(rubric.ranks.sort((a,b) => a.orderNum - b.orderNum));
-
-  const critsCopy = deepCopy(rubric.criteria);
-  console.log("origCrits", rubric.criteria);
-  console.log("critsCopy", critsCopy);
+  const [orderedRanks, setOrderedRanks] = useState(rubricRanks.sort((a,b) => a.orderNum - b.orderNum));
 
   // Save a copy of the rubric upon initialization, otherwise drag-n-drop triggers re-render and data goes out of sync
   useEffect(() => {
@@ -33,27 +27,31 @@ function AssignmentPhaseCreator(props) {
   }, [])
 
   useEffect(() => {
-    setOrderedRanks(rubric.ranks.sort((a,b) => a.orderNum - b.orderNum));
-  }, [rubric.ranks]);
+    setOrderedRanks(rubricRanks.sort((a,b) => a.orderNum - b.orderNum));
+  }, [rubricRanks]);
+
+  function updateToolAssignmentData(toolAssignmentData) {
+    setFormData({...formData, toolAssignmentData});
+  }
 
   function handleRankPropChanged(e, rankNum, propName) {
-    const ranks = deepCopy(rubric.ranks);
+    const ranks = deepCopy(rubricRanks);
     ranks[rankNum][propName] = e.target.value;
-    updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, ranks}});
+    updateToolAssignmentData({...toolAssignmentData, rubricRanks:ranks});
   }
 
   function onCriterionPropChanged(criterion, propName, newValue) {
-    const criteria = deepCopy(rubric.criteria);
+    const criteria = deepCopy(rubricCriteria);
     criteria.find(c => c.id === criterion.id)[propName] = newValue;
-    updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, criteria}});
+    updateToolAssignmentData({...toolAssignmentData, rubricCriteria:criteria});
   }
 
-  function onRubricChanged(newValue) {
-    updateToolAssignmentData({...toolAssignmentData, rubric:newValue});
+  function onRubricCriteriaChanged(propName, newValue) {
+    updateToolAssignmentData({...toolAssignmentData, rubricCriteria:newValue});
   }
 
   function onAddCriterion() {
-    const criteria = deepCopy(rubric.criteria);
+    const criteria = deepCopy(rubricCriteria);
     const id = uuid();
     criteria.push({
       id: id,
@@ -63,33 +61,33 @@ function AssignmentPhaseCreator(props) {
       orderNum: criteria.length,
       isVisible: true
     });
-    updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, criteria}});
+    updateToolAssignmentData({...toolAssignmentData, rubricCriteria:criteria});
     return id;
   }
 
   function onToggleRankVisibility(index) {
     console.log("rank visibility toggled");
-    const ranks = deepCopy(rubric.ranks);
+    const ranks = deepCopy(rubricRanks);
     ranks[index].isVisible = !ranks[index].isVisible;
-    updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, ranks}});
+    updateToolAssignmentData({...toolAssignmentData, rubricRanks:ranks});
   }
 
   function onDropped(e) {
     const idx = e.dataTransfer.getData('rankIndex');
-    let ranks = deepCopy(rubric.ranks);
+    let ranks = deepCopy(rubricRanks);
     console.log(`dropped rank ${ranks[idx].name} onto zone ${activeDropZoneIndex}`);
     setActiveDropZoneIndex(-1);
     setActiveDraggedRankIndex(-1);
     ranks[idx].orderNum = activeDropZoneIndex - 0.5;
     ranks.sort((a,b) => a.orderNum - b.orderNum);
     ranks = ranks.map((rank, i) => ({...rank, orderNum:i}));
-    updateToolAssignmentData({...toolAssignmentData, rubric:{...rubric, ranks}});
+    updateToolAssignmentData({...toolAssignmentData, rubricRanks:ranks});
   }
 
   function onDragStarted(e, rankIndex) {
     setActiveDraggedRankIndex(rankIndex);
     e.dataTransfer.setData('rankIndex', rankIndex);
-    console.log(`started dragging rank ${rubric.ranks[rankIndex].name}`);
+    console.log(`started dragging rank ${rubricRanks[rankIndex].name}`);
   }
 
   function isRankVisToggleDisabled(rank) {
@@ -153,15 +151,16 @@ function AssignmentPhaseCreator(props) {
       <h3 className='mt-2 mb-2'>Rubric Criteria</h3>
       <Row className='m-0'>
         <Col>
-          {!!rubric.criteria.length &&
+          {!!rubricCriteria.length &&
             <RubricPanel
-                onRubricChanged={onRubricChanged}
-                activeDraggedRankIndex={activeDraggedRankIndex}
-                rubric={rubric}
-                isEditMode={true}
-                isLimitedEditing={isLimitedEditing}
-                onAddCriterion={onAddCriterion}
-                onCriterionPropChanged={onCriterionPropChanged}
+              onRubricCriteriaChanged={onRubricCriteriaChanged}
+              activeDraggedRankIndex={activeDraggedRankIndex}
+              rubricRanks={rubricRanks}
+              rubricCriteria={rubricCriteria}
+              isEditMode={true}
+              isLimitedEditing={isLimitedEditing}
+              onAddCriterion={onAddCriterion}
+              onCriterionPropChanged={onCriterionPropChanged}
             />
           }
         </Col>
@@ -171,4 +170,4 @@ function AssignmentPhaseCreator(props) {
 
 }
 
-export default AssignmentPhaseCreator;
+export default RootPhaseSettings;

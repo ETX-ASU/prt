@@ -7,6 +7,7 @@ export const SET_CURRENTLY_REVIEWED_STUDENT_ID = APP_NAMESPACE+'.SET_CURRENTLY_R
 export const SET_GRADES_DATA = APP_NAMESPACE+'.SET_GRADES_DATA';
 export const SET_ACTIVE_UI_SCREEN_MODE = APP_NAMESPACE+'.SET_ACTIVE_UI_SCREEN_MODE';
 export const EDIT_DUPED_ASSIGNMENT = APP_NAMESPACE+'.EDIT_DUPED_ASSIGNMENT';
+export const EDIT_ASSIGNMENT_PHASE = APP_NAMESPACE+'.EDIT_ASSIGNMENT_PHASE';
 export const ADD_HOMEWORKS_DATA = APP_NAMESPACE+'.ADD_HOMEWORKS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
@@ -32,6 +33,13 @@ export function setAssignmentData(assignment) {
 export function editDupedAssignment(assignment) {
   return {
     type: EDIT_DUPED_ASSIGNMENT,
+    assignment
+  }
+}
+
+export function editAssignmentPhase(assignment) {
+  return {
+    type: EDIT_ASSIGNMENT_PHASE,
     assignment
   }
 }
@@ -122,6 +130,9 @@ function appReducer(currentState = defaultState, action) {
 
     case EDIT_DUPED_ASSIGNMENT:
       return Object.assign({}, currentState, {assignment: action.assignment, activeUiScreenMode: UI_SCREEN_MODES.dupeAssignment})
+
+    case EDIT_ASSIGNMENT_PHASE:
+      return Object.assign({}, currentState, {assignment: action.assignment, activeUiScreenMode: UI_SCREEN_MODES.editAssignment})
 
     case SET_CURRENTLY_REVIEWED_STUDENT_ID:
       return Object.assign({}, currentState, {currentlyReviewedStudentId: action.currentlyReviewedStudentId});

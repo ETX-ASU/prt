@@ -12,10 +12,10 @@ const MAX_NUM_CRITERIA = 10;
 const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricPanel(props) {
-  const {rubric} = props;
+  const {rubricCriteria, rubricRanks} = props;
   // Note: In instructor/edit mode, ALL criteria and ranks are shown even when they are marked to be hidden from students
-  const shownCriteria = (props.isEditMode) ? deepCopy(rubric.criteria) : rubric.criteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);;
-  const shownRanks = (props.isEditMode) ? deepCopy(rubric.ranks) : rubric.ranks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
+  const shownCriteria = (props.isEditMode) ? deepCopy(rubricCriteria) : rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);;
+  const shownRanks = (props.isEditMode) ? deepCopy(rubricRanks) : rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const [curTabId, setCurTabId] = useState(shownCriteria[0].id);
 
 
@@ -33,7 +33,7 @@ function RubricPanel(props) {
     dupedCriterion.id = uuid();
     dupedCriterion.name += ' Copy';
     alteredCriteria.splice(index+1, 0, dupedCriterion);
-    props.onRubricChanged({...rubric, criteria:alteredCriteria});
+    props.onRubricCriteriaChanged(alteredCriteria);
     setCurTabId(dupedCriterion.id);
   }
 
@@ -46,7 +46,7 @@ function RubricPanel(props) {
     alteredCriteria.splice(index, 1);
 
     if (replaceVisibility) alteredCriteria.find(c => !c.isVisible).isVisible = true;
-    props.onRubricChanged({...rubric, criteria:alteredCriteria});
+    props.onRubricCriteriaChanged(alteredCriteria);
     setCurTabId(nextId);
   }
 

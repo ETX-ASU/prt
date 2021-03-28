@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactQuill from "react-quill";
 import {EMPTY_HOMEWORK} from "../app/constants";
-import EditorToolbar, { modules, formats } from "./EditorToolbar";
+import EditorToolbar, { modules, formats } from "./RteToolbar";
 import "react-quill/dist/quill.snow.css";
-import "./editor-styles.scss";
+import "./RteStyles.scss";
 
 
 

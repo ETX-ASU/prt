@@ -116,11 +116,19 @@ function App() {
       const assignment = assignmentQueryResults.data.getAssignment;
       if (!assignment?.id) reportError('', `We're sorry. There was an error fetching the assignment. Provided assignmentId from URL strand does not match any existing DB assignment.`);
 
-      dispatch(setAssignmentData(assignment));
+			// TODO: If this is NOT the origin assignment, we must copy in the origin assignment's Rubric Data
+			if (assignment.toolAssignmentData.originId) {
+				const originResults = await API.graphql(graphqlOperation(getAssignment, {id:assignment.toolAssignmentData.originId}));
+				const originToolData = originResults.data.getAssignment.toolAssignmentData;
+				assignment.toolAssignmentData.rubricCriteria = originToolData.rubricCriteria;
+				assignment.toolAssignmentData.rubricRanks = originToolData.rubricRanks;
+			}
+
+			dispatch(setAssignmentData(assignment));
 
       // If the item we fetched doesn't have a lineItemId, we take the one we have and add it to assignment in the DB
       // This way, it can't be used again
-      if (assignment.id && !assignment.lineItemId && lineItemId) {
+			if (assignment.id && !assignment.lineItemId && lineItemId) {
         const inputData = Object.assign({}, assignment, {lineItemId});
         delete inputData.createdAt;
         delete inputData.updatedAt;
