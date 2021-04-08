@@ -1,14 +1,3 @@
-## WARNING! The front-end version of this file provides a backup of the schema in your repo.
-## HOWEVER, in order to work with AWS "amplify push" calls, you MUST manually copy this file
-## into your amplify/backend/api/project-name/ directory before calling "amplify push"
-
-type QuizQuestion {
-  questionText: String!
-  answerOptions: [String]
-  correctAnswerIndex: Int
-  progressPointsForCompleting: Int
-  gradePointsForCorrectAnswer: Int
-}
 
 type Assignment @model {
   id: ID!
@@ -26,7 +15,9 @@ type Assignment @model {
   toolAssignmentData: ToolAssignmentData
 }
 
-type Homework @model {
+type Homework @model
+@key(name:"minHomeworkIdsBySubmittedDate", fields:["assignmentId", "submittedOnDate"], queryField:"minHomeworkIdsBySubmittedDate")
+@key(name:"fullHomeworkByAsmntAndStudentId", fields:["assignmentId", "studentOwnerId"], queryField:"fullHomeworkByAsmntAndStudentId") {
   id: ID!
   assignmentId: ID!
   studentOwnerId: ID!
@@ -36,10 +27,75 @@ type Homework @model {
   toolHomeworkData: ToolHomeworkData
 }
 
-type ToolAssignmentData {
-  quizQuestions: [QuizQuestion]
+
+# ===================================================== RUBRIC
+type Rank {
+  name: String
+  points: Int
+  isVisible: Boolean
+  orderNum: Int
 }
 
+type Criterion {
+  id: ID!
+  orderNum: Int
+  isVisible: Boolean
+  name: String # Name for this criterion. Example: Compelling Argument, Logicallly Sound, Structure, Grammer & Spelling, etc.
+  rankSummaries: [String] # description of what qualifies as Excellent, Good, Average, etc.
+  weight: Int # number indicating what percentage of grade should come from this criterion
+}
+
+# ===================================================== ASSIGNMENT
+
+type ToolAssignmentData {
+  rubricRanks: [Rank]
+  rubricCriteria: [Criterion]
+  sequenceIds: [ID] # list of ids for previous rounds. Empty array means this is origin assignment. If this = [A, B] then A is origin, B is 1st draft review, and THIS is 2nd draft
+  minReviewsRequired: Int # number of reviews each student should give
+  minPeersBeforeAllocating: Int # number of peers that must have turned in work before allocation can begin
+  allocations: [Allocation]
+}
+
+type Allocation {
+  assessorId: ID! # id of student who must provide a review/assessment for
+  homeworkId: ID! # id of homework this student must assess
+  beganOnDate: AWSTimestamp
+  submittedOnDate: AWSTimestamp
+}
+
+
+# ===================================================== HOMEWORK
+# Homework A is owned by student A. However, comments on homework A might be owned by students B, C, & D. Therefore, we
+# must NOT delete homework A, even if student A leaves the class, because B, C & D depend on Homework A for their grades.
 type ToolHomeworkData {
-  quizAnswers: [Int]
+  draftContent: String # this is the actual essay content. (Might eventually be a url). It is NULL "" if it is a REVIEW round.
+  commentsOnDraft: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
+  criterionRatingsOnDraft: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
+}
+
+type CriterionQualityScore {
+  id: ID!
+  reviewerId: ID!
+  ratingGiven: Int
+  criterionNum: Int! # index of criterion (within rubric's rubric.criteria[] array that the comment is related to (-1 if a general comment)
+}
+
+# An individual review comment about a specific draft
+type Comment {
+  id: ID!
+  reviewerId: ID!
+  tagNum: Int # number shown to help track the comment
+  content: String # the actual comment
+  location: DocLocation
+  commentRating: Int # 1-5 stars indicating helpfulness of the comment. 0 = unscored.
+  criterionNum: Int! # index of criterion (within rubric's rubric.criteria[] array that the comment is related to (-1 if a general comment)
+}
+
+# Where in the document the comment is placed/refers to
+type DocLocation {
+  isWholeDocument: Boolean # TRUE if the comment isn't about a specific point in the document
+  startCharNum: Int
+  endCharNum: Int
+  x: Int
+  y: Int # value of 0 means it is a document-wide comment
 }

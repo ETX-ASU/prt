@@ -2,11 +2,13 @@ import {APP_NAMESPACE, SORT_BY, UI_SCREEN_MODES} from "../constants";
 
 export const SET_SESSION_DATA = APP_NAMESPACE+'.SET_SESSION_DATA';
 export const SET_ASSIGNMENT_DATA = APP_NAMESPACE+'.SET_ASSIGNMENT_DATA';
+export const SET_DRAFTS_TO_BE_REVIEWED_BY_USER = APP_NAMESPACE+'.SET_DRAFTS_TO_BE_REVIEWED_BY_USER';
 export const SET_DISPLAY_ORDER = APP_NAMESPACE+'.SET_DISPLAY_ORDER';
 export const SET_CURRENTLY_REVIEWED_STUDENT_ID = APP_NAMESPACE+'.SET_CURRENTLY_REVIEWED_STUDENT_ID';
 export const SET_GRADES_DATA = APP_NAMESPACE+'.SET_GRADES_DATA';
 export const SET_ACTIVE_UI_SCREEN_MODE = APP_NAMESPACE+'.SET_ACTIVE_UI_SCREEN_MODE';
 export const EDIT_DUPED_ASSIGNMENT = APP_NAMESPACE+'.EDIT_DUPED_ASSIGNMENT';
+export const EDIT_ASSIGNMENT_PHASE = APP_NAMESPACE+'.EDIT_ASSIGNMENT_PHASE';
 export const ADD_HOMEWORKS_DATA = APP_NAMESPACE+'.ADD_HOMEWORKS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
@@ -35,6 +37,21 @@ export function editDupedAssignment(assignment) {
     assignment
   }
 }
+
+export function editAssignmentPhase(assignment) {
+  return {
+    type: EDIT_ASSIGNMENT_PHASE,
+    assignment
+  }
+}
+
+export function setDraftsToBeReviewedByUser(draftsToBeReviewedByUser) {
+  return {
+    type: SET_DRAFTS_TO_BE_REVIEWED_BY_USER,
+    draftsToBeReviewedByUser
+  }
+}
+
 
 export function setActiveUiScreenMode(activeUiScreenMode) {
   return {
@@ -93,6 +110,7 @@ const defaultState = {
   assignment: {},
   members: [],
   homeworks: [],
+  draftsToBeReviewedByUser: [],
   grades: [],
   currentlyReviewedStudentId: '',
   activeUiScreenMode: '',
@@ -112,6 +130,9 @@ function appReducer(currentState = defaultState, action) {
     case ADD_HOMEWORKS_DATA:
       return Object.assign({}, currentState, {homeworks:[...currentState.homeworks, ...action.homeworks]});
 
+    case SET_DRAFTS_TO_BE_REVIEWED_BY_USER:
+      return Object.assign({}, currentState, {draftsToBeReviewedByUser: action.draftsToBeReviewedByUser});
+
     case SET_SESSION_DATA:
       return Object.assign({}, currentState, {
         activeUser:action.activeUser,
@@ -122,6 +143,9 @@ function appReducer(currentState = defaultState, action) {
 
     case EDIT_DUPED_ASSIGNMENT:
       return Object.assign({}, currentState, {assignment: action.assignment, activeUiScreenMode: UI_SCREEN_MODES.dupeAssignment})
+
+    case EDIT_ASSIGNMENT_PHASE:
+      return Object.assign({}, currentState, {assignment: action.assignment, activeUiScreenMode: UI_SCREEN_MODES.editAssignment})
 
     case SET_CURRENTLY_REVIEWED_STUDENT_ID:
       return Object.assign({}, currentState, {currentlyReviewedStudentId: action.currentlyReviewedStudentId});

@@ -17,12 +17,28 @@ export const getAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubricRanks {
+          name
+          points
+          isVisible
+          orderNum
+        }
+        rubricCriteria {
+          id
+          orderNum
+          isVisible
+          name
+          rankSummaries
+          weight
+        }
+        sequenceIds
+        minReviewsRequired
+        minPeersBeforeAllocating
+        allocations {
+          assessorId
+          homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -50,6 +66,11 @@ export const listAssignments = /* GraphQL */ `
         isLockedOnSubmission
         isUseAutoScore
         isUseAutoSubmit
+        toolAssignmentData {
+          sequenceIds
+          minReviewsRequired
+          minPeersBeforeAllocating
+        }
         createdAt
         updatedAt
       }
@@ -67,7 +88,21 @@ export const getHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          reviewerId
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
       }
       createdAt
       updatedAt
@@ -89,7 +124,75 @@ export const listHomeworks = /* GraphQL */ `
         submittedOnDate
         isLocked
         toolHomeworkData {
-          quizAnswers
+          draftContent
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const minHomeworkIdsBySubmittedDate = /* GraphQL */ `
+  query MinHomeworkIdsBySubmittedDate(
+    $assignmentId: ID
+    $submittedOnDate: ModelIntKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelHomeworkFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    minHomeworkIdsBySubmittedDate(
+      assignmentId: $assignmentId
+      submittedOnDate: $submittedOnDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        assignmentId
+        studentOwnerId
+        beganOnDate
+        submittedOnDate
+        isLocked
+        toolHomeworkData {
+          draftContent
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
+  query FullHomeworkByAsmntAndStudentId(
+    $assignmentId: ID
+    $studentOwnerId: ModelIDKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelHomeworkFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    fullHomeworkByAsmntAndStudentId(
+      assignmentId: $assignmentId
+      studentOwnerId: $studentOwnerId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        assignmentId
+        studentOwnerId
+        beganOnDate
+        submittedOnDate
+        isLocked
+        toolHomeworkData {
+          draftContent
         }
         createdAt
         updatedAt

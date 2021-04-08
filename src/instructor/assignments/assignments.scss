@@ -59,3 +59,297 @@
     color: var(--x-black);
   }
 }
+
+
+.nav {
+  height: 30px;
+  padding: 0;
+  margin: 0;
+
+  .nav-item {
+    margin-bottom: -1px;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+    font-size: 13px;
+    border: 1px solid var(--x-lightest-gray);
+    border-bottom: none;
+
+    .tab-percent {
+      font-size: 11px;
+      opacity: 0.75;
+    }
+
+    a {
+      color: var(--x-darkest-gray);
+      padding: 0.325rem 0.75rem;
+
+      &.active {
+        font-weight: bold;
+        background-color: var(--x-lightest-gray);
+        border: none;
+      }
+    }
+  }
+}
+
+.nav-item.nav-link {
+  font-size: 13px;
+  border: 1px solid var(--x-lightest-gray);
+  border-bottom: none;
+  padding: 0.5rem;
+
+  &.active {
+    font-weight: bold;
+    background-color: var(--x-lightest-gray);
+    border: none;
+  }
+}
+
+.add-criterion-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.tab-content {
+  width: 100%;
+}
+
+
+.vl {
+  border-left: 2px solid var(--x-gray);
+  height: 28px;
+  margin: 8px 8px 0px 8px;
+}
+
+.criterion-settings-btn {
+  height: 32px;
+  width: 32px;
+  margin: 6px 6px 0 2px;
+}
+
+
+.ranks-panel {
+  background-color: var(--x-ultralight-gray);
+  margin: 0 0 1rem 0;
+  padding: 0.5rem 0;
+
+  .drop-sliver {
+    padding: 0;
+    margin: 0;
+    width: 0.4rem;
+    position: relative;
+  }
+
+  &.dragging-active {
+    .drop-sliver {
+      background-color: lightblue;
+
+      &.active-drop-zone {
+        background-color: mediumblue;
+      }
+    }
+  }
+
+  .rank-card {
+    display: inline-block;
+    width: calc(20% - 0.5rem);
+    margin: 0;
+    border-left: 5px solid var(--x-gray);
+    font-size: 12px;
+    background-color: var(--x-lightest-gray);
+
+    .card-handle {
+      padding: 0;
+      margin: 0 0 0 0.4rem;
+      display: inline-block;
+      width: calc(12% - 0.4rem);
+
+      svg {
+        width: 40%;
+        height: 50px;
+        color: var(--x-light-gray);
+        opacity: 0.5;
+      }
+    }
+
+    .card-content {
+      display: inline-block;
+      width: 88%;
+      padding: 0;
+      margin: 0;
+    }
+
+    .rank-name {
+      font-size: 10px;
+
+      input {
+        font-weight: bold;
+        text-transform: uppercase;
+        height: 35px;
+        width: 100%;
+      }
+    }
+
+    .rank-points {
+      width: calc(100% - 35px - 0.75rem);
+      display: inline-block;
+      font-size: 12px;
+
+      input {
+        height: 35px;
+        width: 100%;
+        font-size: 14px;
+
+        &::-webkit-inner-spin-button {
+          opacity: 1;
+          height: 28px;
+        }
+      }
+    }
+
+    .rank-visibility-btn {
+      width: 32px;
+      height: 32px;
+      margin: 0.0rem 0 0.25rem 0.125rem;
+    }
+  }
+}
+
+
+.rubrics-panel {
+  height: calc(100% - 1.5em);
+  background-color: var(--x-lightest-gray);
+
+  &.hidden-criterion {
+    background-color: var(--x-light-gray);
+  }
+
+  .grade-weight-label, .criterion-name-label {
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 14px;
+    display: inline-block;
+    width: 45px;
+    margin: 0.35rem 0 0 0.25rem;
+  }
+  .criterion-name-label {
+    line-height: 28px;
+    width: 34px;
+  }
+
+  .grade-weight input {
+    height: 35px;
+    font-size: 14px;
+
+    &::-webkit-inner-spin-button {
+      opacity: 1;
+      height: 28px;
+    }
+  }
+
+  .criterion-name input {
+    height: 35px;
+    font-size: 14px;
+  }
+
+  .ranks-row {
+    height: 100%;
+
+    .rank-col {
+      font-size: 10px;
+
+      .rank-summary {
+        background-color: white;
+        border: 1px solid var(--x-gray);
+        border-left: none;
+        height: 100%;
+
+        .rank-title {
+          display: inline-block;
+          font-weight: bold;
+          text-transform: uppercase;
+          background-color: aliceblue;
+          border-bottom: 1px solid var(--x-lightest-gray);
+        }
+
+        textarea.rank-text {
+          border: none;
+          width: 100%;
+          height: calc(100% - 1.75rem);
+          overflow-y: auto;
+          resize: none;
+          cursor: auto;
+
+          &:focus {
+            //outline: none !important;
+            outline-color: var(--x-black);
+            outline-style: dotted;
+            //border-color: var(--x-ultralight-gray);
+            box-shadow: none;
+          }
+
+          &::-webkit-scrollbar-track {
+            border-radius: 5px;
+            background-color: var(--x-ultralight-gray);
+          }
+
+          &::-webkit-scrollbar {
+            width: 6px;
+            background-color: var(--x-ultralight-gray);
+          }
+
+          &::-webkit-scrollbar-thumb {
+            border-radius: 5px;
+            background-color: var(--x-light-gray);
+          }
+        }
+
+        .hidden-marker {
+          display: none;
+          position: absolute;
+          padding-top: 2.25rem;
+          width: 100%;
+          height: 100%;
+          background-color: var(--x-light-gray);
+          opacity: 0.25;
+          color: white;
+          text-align: center;
+          vertical-align: middle;
+
+          .hidden-indicator {
+            display: inline-block;
+            width: 100px;
+            height: 100px;
+            opacity: 0.75;
+          }
+        }
+
+        &.mark-as-hidden .hidden-marker {
+          display: block;
+        }
+      }
+
+      &.dragged-rank-match {
+        .hidden-marker {
+          display: block;
+          background-color: goldenrod;
+
+          .hidden-indicator {
+            opacity: 0;
+          }
+        }
+
+        .mark-as-hidden .hidden-marker .hidden-indicator {
+          opacity: 0.75;
+        }
+      }
+
+      &:first-of-type .rank-summary {
+        border-left: 1px solid var(--x-gray);
+      }
+    }
+  }
+}
+
+

@@ -8,13 +8,17 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import "./assignments.scss";
 import HeaderBar from "../../app/components/HeaderBar";
 import ToggleSwitch from "../../app/components/ToggleSwitch";
-import QuizCreator from "../../tool/QuizCreator";
+import RootPhaseSettings from "../../tool/RootPhaseSettings";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faExclamationTriangle} from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {reportError} from "../../developer/DevUtils";
 import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
 import { v4 as uuid } from "uuid";
+import BasicAssignmentSettings from "./BasicAssignmentSettings";
+import DraftPhaseSettings from "../../tool/DraftPhaseSettings";
+import ReviewPhaseSettings from "../../tool/ReviewPhaseSettings";
+import {deepCopy} from "../../app/utils/deepCopy";
 
 
 function AssignmentEditor() {
@@ -24,11 +28,20 @@ function AssignmentEditor() {
   const isLimitedEditing = useSelector(state => Boolean(state.app.homeworks?.length));
   const [activeModal, setActiveModal] = useState(null);
 
-  async function handleCancelBtn() {
+  // const phaseType = (formData.toolAssignmentData.roundNum%2) ? PHASE_TYPES.draft : PHASE_TYPES.reviewSession;
+
+  async function handleCancelBtn(e) {
     if (!urlAssignmentId) {
       setActiveModal({type: MODAL_TYPES.cancelDupedAssignmentEditsWarning});
     } else {
-      setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning});
+      if (!formData.toolAssignmentData.sequenceIds?.length) {
+        setActiveModal({
+          type: MODAL_TYPES.cancelNewAssignmentEditsWarning,
+          data: [formData.title]
+        });
+      } else {
+        returnToViewAssignmentScreen(e);
+      }
     }
   }
 
@@ -36,9 +49,15 @@ function AssignmentEditor() {
     // TODO: Bonus. Add mechanism to verify or perhaps create an undo mechanism, so maybe record previous state here before API call?
     if (!formData.title) return;
 
-    const inputData = Object.assign({}, formData);
+    const inputData = deepCopy(formData);
     delete inputData.createdAt;
     delete inputData.updatedAt;
+
+    // Don't copy any rubric data to non-origin assignments
+    if (inputData.toolAssignmentData.sequenceIds?.length) {
+      inputData.toolAssignmentData.rubricCriteria = null;
+      inputData.toolAssignmentData.rubricRanks = null;
+    }
 
     try {
       await API.graphql({query: updateAssignmentMutation, variables: {input: inputData}});
@@ -46,7 +65,18 @@ function AssignmentEditor() {
       reportError(error, `We're sorry. An error occurred while trying to update the edits to your assignment. Please wait a moment and try again.`);
     }
 
-    if (!urlAssignmentId) {
+    const isOrigin = (!formData.toolAssignmentData.sequenceIds.length);
+    if (isOrigin) setActiveModal({
+      type: MODAL_TYPES.cancelPhaseEditsWarning,
+      data: [formData.title]
+    });
+    if (!isOrigin) setActiveModal({
+      type: MODAL_TYPES.cancelNewAssignmentEditsWarning,
+      data: [formData.title]
+    });
+
+
+    if (!inputData.lineItemId) {
       await handleConnectToLMS(inputData);
       if (window.isDevMode) {
         inputData.lineItemId = (`FAKE-${uuid()}`);
@@ -58,16 +88,6 @@ function AssignmentEditor() {
       dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
     }
   }
-
-
-  function toggleUseAutoScore(e) {
-    setFormData({...formData, isUseAutoScore: !formData.isUseAutoScore, isUseAutoSubmit: false});
-  }
-
-  function handleQuizChanges(toolAssignmentData) {
-    setFormData({...formData, toolAssignmentData});
-  }
-
 
   function returnToNewOrDupeAssignmentScreen(e) {
     setActiveModal(null);
@@ -95,10 +115,10 @@ function AssignmentEditor() {
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Cancel Editing Assignment'} buttons={[
             {name:'Cancel', onClick:returnToViewAssignmentScreen},
-            {name:'Continue Creating', onClick: () => setActiveModal(null)},
+            {name:'Continue Editing', onClick: () => setActiveModal(null)},
           ]}>
             <p>Do you want to cancel editing this assignment or continue?</p>
-            <p>Canceling will loose any changes you may have made to this assignment.</p>
+            <p>Canceling will loose any changes you may have made to your {activeModal.data[0]} assignment.</p>
           </ConfirmationModal>
         )
     }
@@ -107,10 +127,12 @@ function AssignmentEditor() {
   return (
     <Fragment>
       {activeModal && renderModal()}
+
       <HeaderBar title={`Edit: ${formData.title}`} >
         <Button onClick={handleCancelBtn} className='mr-2'>Cancel</Button>
         <Button onClick={handleUpdateBtn}>Update</Button>
       </HeaderBar>
+
       {isLimitedEditing &&
       <Row className='m-4 p-0 alert alert-warning' role='alert'>
         <Col className={'alert-block p-3 text-center'}>
@@ -121,60 +143,28 @@ function AssignmentEditor() {
         </Col>
       </Row>
       }
+
       <form>
-        <Container className='mt-2 ml-2 mr-2 mb-4'>
-          <Row className={'mt-4 mb-4'}>
-            <Col><h2>Basic Assignment Details</h2></Col>
-          </Row>
-
-          <Row className={'ml-2'}>
-            <Col className={'col-12'}>
-              <div className={'form-group'}>
-                <label htmlFor='dataTitle'><h3>Title</h3></label>
-                <input id='dataTitle' className={'form-control'}
-                       onChange={e => setFormData({...formData, 'title': e.target.value})}
-                       defaultValue={formData.title}/>
-              </div>
-              <div className={'form-group'}>
-                <label htmlFor='dataSummary'><h3>Summary<span className='aside'> - Optional</span></h3></label>
-                <textarea id='dataSummary' className={'form-control'}
-                          onChange={e => setFormData({...formData, 'summary': e.target.value})}
-                          defaultValue={formData.summary}/>
-              </div>
-            </Col>
-          </Row>
-          <Row className={'ml-2'}>
-            <Col className='col-6'>
-              <label><h3>Autoscore</h3></label>
-            </Col>
-            <Col className='col-6 d-flex flex-row-reverse'>
-              <div className="custom-control custom-switch" style={{top: `6px`}}>
-                <ToggleSwitch disabled={isLimitedEditing} value={formData.isUseAutoScore}
-                              handleToggle={toggleUseAutoScore}/>
-              </div>
-            </Col>
-          </Row>
-          {formData.isUseAutoScore &&
-          <Row className={'ml-2'}>
-            <Col>
-              <p>
-            <span className='mr-2'>
-              <input type={'checkbox'}
-                     disabled={isLimitedEditing}
-                     onChange={e => setFormData({...formData, isUseAutoSubmit: e.target.checked})}
-                     checked={formData.isUseAutoSubmit}/>
-            </span>
-                Auto-submit score to LMS when student submits their assignment</p>
-            </Col>
-          </Row>
-          }
-        </Container>
-
-        <QuizCreator
+        <BasicAssignmentSettings
+          formData={formData}
+          setFormData={setFormData}
           isLimitedEditing={isLimitedEditing}
-          isUseAutoScore={formData.isUseAutoScore}
-          toolAssignmentData={formData.toolAssignmentData}
-          updateToolAssignmentData={handleQuizChanges}/>
+        />
+
+        {(formData.toolAssignmentData.sequenceIds.length === 0) && <RootPhaseSettings
+          formData={formData}
+          setFormData={setFormData}
+          isLimitedEditing={isLimitedEditing} />}
+
+        {(formData.toolAssignmentData.sequenceIds.length%2 === 0) && <DraftPhaseSettings
+          formData={formData}
+          setFormData={setFormData}
+          isLimitedEditing={isLimitedEditing} />}
+
+        {(formData.toolAssignmentData.sequenceIds.length%2 === 1) && <ReviewPhaseSettings
+          formData={formData}
+          setFormData={setFormData}
+          isLimitedEditing={isLimitedEditing} />}
       </form>
     </Fragment>
   )

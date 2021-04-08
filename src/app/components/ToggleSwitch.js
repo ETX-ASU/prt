@@ -3,7 +3,7 @@ import "./ToggleSwitch.scss";
 
 function ToggleSwitch(props) {
   return (
-    <div className="toggle-switch">
+    <div className={`toggle-switch ${props.small ? 'small' : ''}`}>
       <div className="switch">
         <div>
           <input type="checkbox" id={`cbox-autoscore`} disabled={props.disabled} checked={props.value} onChange={props.handleToggle} />

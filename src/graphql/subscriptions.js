@@ -17,12 +17,28 @@ export const onCreateAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubricRanks {
+          name
+          points
+          isVisible
+          orderNum
+        }
+        rubricCriteria {
+          id
+          orderNum
+          isVisible
+          name
+          rankSummaries
+          weight
+        }
+        sequenceIds
+        minReviewsRequired
+        minPeersBeforeAllocating
+        allocations {
+          assessorId
+          homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -46,12 +62,28 @@ export const onUpdateAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubricRanks {
+          name
+          points
+          isVisible
+          orderNum
+        }
+        rubricCriteria {
+          id
+          orderNum
+          isVisible
+          name
+          rankSummaries
+          weight
+        }
+        sequenceIds
+        minReviewsRequired
+        minPeersBeforeAllocating
+        allocations {
+          assessorId
+          homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -75,12 +107,28 @@ export const onDeleteAssignment = /* GraphQL */ `
       isUseAutoScore
       isUseAutoSubmit
       toolAssignmentData {
-        quizQuestions {
-          questionText
-          answerOptions
-          correctAnswerIndex
-          progressPointsForCompleting
-          gradePointsForCorrectAnswer
+        rubricRanks {
+          name
+          points
+          isVisible
+          orderNum
+        }
+        rubricCriteria {
+          id
+          orderNum
+          isVisible
+          name
+          rankSummaries
+          weight
+        }
+        sequenceIds
+        minReviewsRequired
+        minPeersBeforeAllocating
+        allocations {
+          assessorId
+          homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -98,7 +146,21 @@ export const onCreateHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          reviewerId
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
       }
       createdAt
       updatedAt
@@ -115,7 +177,21 @@ export const onUpdateHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          reviewerId
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
       }
       createdAt
       updatedAt
@@ -132,7 +208,21 @@ export const onDeleteHomework = /* GraphQL */ `
       submittedOnDate
       isLocked
       toolHomeworkData {
-        quizAnswers
+        draftContent
+        commentsOnDraft {
+          id
+          reviewerId
+          tagNum
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft {
+          id
+          reviewerId
+          ratingGiven
+          criterionNum
+        }
       }
       createdAt
       updatedAt

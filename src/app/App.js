@@ -116,11 +116,21 @@ function App() {
       const assignment = assignmentQueryResults.data.getAssignment;
       if (!assignment?.id) reportError('', `We're sorry. There was an error fetching the assignment. Provided assignmentId from URL strand does not match any existing DB assignment.`);
 
-      dispatch(setAssignmentData(assignment));
+			// TODO: If this is NOT the origin assignment, we must copy in the origin assignment's Rubric Data
+			const roundNum = assignment.toolAssignmentData.sequenceIds.length;
+			if (roundNum) {
+				const originId = assignment.toolAssignmentData.sequenceIds[0];
+				const originResults = await API.graphql(graphqlOperation(getAssignment, {id:originId}));
+				const originToolData = originResults.data.getAssignment.toolAssignmentData;
+				assignment.toolAssignmentData.rubricCriteria = originToolData.rubricCriteria;
+				assignment.toolAssignmentData.rubricRanks = originToolData.rubricRanks;
+			}
+
+			dispatch(setAssignmentData(assignment));
 
       // If the item we fetched doesn't have a lineItemId, we take the one we have and add it to assignment in the DB
       // This way, it can't be used again
-      if (assignment.id && !assignment.lineItemId && lineItemId) {
+			if (assignment.id && !assignment.lineItemId && lineItemId) {
         const inputData = Object.assign({}, assignment, {lineItemId});
         delete inputData.createdAt;
         delete inputData.updatedAt;
@@ -135,7 +145,7 @@ function App() {
 	}
 
 	return (
-		<Container className="app mt-4 mb-5 p-0">
+		<Container className="app mt-4 mb-0 p-0 h-100">
 			<Row className='main-content-row'>
 				{!activeUser?.id && <LoadingIndicator msgClasses='xtext-white' loadingMsg='LOADING'/>}
 				{activeUser.activeRole === ROLE_TYPES.dev && <DevUtilityDashboard />}
@@ -145,4 +155,5 @@ function App() {
 		</Container>
 	);
 }
+
 export default hasValidSession(aws_exports) ? App :  null;

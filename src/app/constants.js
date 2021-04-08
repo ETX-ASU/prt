@@ -4,9 +4,12 @@ export const APP_NAMESPACE = 'QUIZ_APP'; // Change this to name of tool
 
 
 export const MODAL_TYPES = {
+  confirmNewAssignmentPhaseCreated: "confirmNewAssignmentPhaseCreated",
   confirmAssignmentDuped: "confirmAssignmentDuped",
+  confirmAssignmentRoundCreated: "confirmAssignmentRoundCreated",
   confirmAssignmentRecovered: "confirmAssignmentRecovered",
   cancelNewAssignmentEditsWarning: "cancelNewAssignmentEditsWarning",
+  cancelPhaseEditsWarning: "cancelPhaseEditsWarning",
   cancelDupedAssignmentEditsWarning: "cancelDupedAssignmentEditsWarning",
   confirmAssignmentSaved: "confirmAssignmentSaved",
   confirmHomeworkSubmitted: "confirmHomeworkSubmitted",
@@ -28,12 +31,15 @@ export const SORT_BY = {
 
 export const UI_SCREEN_MODES = {
   editHomework: 'UI_SCREEN_MODES.editHomework',
+  showStudentDashboard: 'UI_SCREEN_MODES.studentDashboard',
   createOrDupeAssignment: 'UI_SCREEN_MODES.createOrDupeAssignment',
   createAssignment: 'UI_SCREEN_MODES.createAssignment',
   dupeAssignment: 'UI_SCREEN_MODES.dupeAssignment',
+  createNewAssignmentPhase: 'UI_SCREEN_MODES.createNewAssignmentPhase',
   viewAssignment: 'UI_SCREEN_MODES.viewAssignment',
   editAssignment: 'UI_SCREEN_MODES.editAssignment',
   reviewHomework: 'UI_SCREEN_MODES.reviewHomework',
+  assessPeerHomework: 'UI_SCREEN_MODES.assessPeerHomework',
   devUtilityDashboard: 'UI_SCREEN_MODES.devUtilityDashboard',
   assignmentSelectorTool: 'UI_SCREEN_MODES.assignmentSelectorTool',
   returnToLmsScreen: 'UI_SCREEN_MODES.returnToLmsScreen'
@@ -49,6 +55,13 @@ export const EMPTY_HOMEWORK = {
   isLocked: false
 };
 
+
+
+export const ALLOCATION_MESSAGES = {
+  notEnoughSubmissions: `Not enough peers have submitted their work for reviews to begin being assigned yet. Please come back soon and check again regularly.`,
+  userDidNotSubmit: `You cannot review peers until you have completed and submitted a draft of your own. Complete the previous draft creation assignment first, then come back to participate in this peer review session assignment.`,
+
+}
 
 
 // NOTE: These constant names and values listed below MUST MATCH LTI constants
@@ -88,5 +101,15 @@ export const ACTIVITY_PROGRESS = {
   Completed: 'Completed',
 }
 
+export const DRAFT_BTN_LABELS = {
+  FullyGraded: 'View Submission',
+  Submitted: 'View Submission',
+  InProgress: 'Continue Draft',
+  NotBegun: 'Begin Draft',
+};
 
-
+export const PEER_REVIEW_BTN_LABELS = {
+  Submitted: 'See Feedback',
+  InProgress: 'Continue Review',
+  NotBegun: 'Begin Review',
+};

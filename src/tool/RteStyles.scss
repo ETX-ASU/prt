@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+.text-editor {
+  margin: 0 0;
+  height: 50vh;
+
+  &.no-bar {
+    #toolbar {
+      display: none;
+    }
+  }
+
+  .quill {
+    height: 100%;
+
+    .ql-container {
+      height: 100%;
+    }
+  }
+}
+.ql-editor {
+  min-height: 100px;
+}
+
+.comments-panel {
+  height: auto;
+
+  .comment-buttons {
+    display: inline;
+    width: fit-content;
+
+    button {
+      padding: 3px 6px;
+      margin: -4px 5px 0 0;
+
+      svg {
+        padding: 0;
+        margin: 0;
+      }
+    }
+  }
+
+  h3 {
+    display: inline;
+  }
+}
+
+
+
+/* Set dropdown font-families */
+ #toolbar-container .ql-font span[data-label="Sans Serif"]::before {
+   font-family: "Sans Serif", sans-serif;
+ }
+
+#toolbar-container .ql-font span[data-label="Arial"]::before {
+  font-family: "Arial", sans-serif;
+}
+#toolbar-container .ql-font span[data-label="Comic Sans MS"]::before {
+  font-family: "Comic Sans MS", sans-serif;
+}
+#toolbar-container .ql-font span[data-label="Courier New"]::before {
+  font-family: "Courier New", serif;
+}
+#toolbar-container .ql-font span[data-label="Georgia"]::before {
+  font-family: "Georgia", serif;
+}
+#toolbar-container .ql-font span[data-label="Helvetica"]::before {
+  font-family: "Helvetica", sans-serif;
+}
+#toolbar-container .ql-font span[data-label="Impact"]::before {
+  font-family: "Impact", sans-serif;
+}
+#toolbar-container .ql-font span[data-label="Lucida"]::before {
+  font-family: "Lucida", sans-serif;
+}
+#toolbar-container .ql-font span[data-label="Roboto"]::before {
+  font-family: "Roboto", sans-serif;
+}
+#toolbar-container .ql-font span[data-label="Times New Roman"]::before {
+  font-family: "Times New Roman", serif;
+}
+#toolbar-container .ql-font span[data-label="Trebuchet MS"]::before {
+  font-family: "Trebuchet MS", serif;
+}
+#toolbar-container .ql-font span[data-label="Verdana"]::before {
+  font-family: "Verdana", sans-serif;
+}
+
+
+/* Set content font-families */
+.ql-font-arial {
+  font-family: "Arial", sans-serif;
+}
+.ql-font-comic-sans {
+  font-family: "Comic Sans MS", sans-serif;
+}
+.ql-font-courier-new {
+  font-family: "Courier New", serif;
+}
+.ql-font-georgia {
+  font-family: "Georgia", serif;
+}
+.ql-font-helvetica {
+  font-family: "Helvetica", sans-serif;
+}
+.ql-font-impact {
+  font-family: "Impact", sans-serif;
+}
+.ql-font-lucida {
+  font-family: "Lucida Console", sans-serif;
+}
+.ql-font-roboto {
+  font-family: "Roboto", sans-serif;
+}
+.ql-font-times-new-roman {
+  font-family: "Times New Roman", serif;
+}
+.ql-font-trebuchet-ms {
+  font-family: "Trebuchet MS", serif;
+}
+.ql-font-verdana {
+  font-family: "Verdana", serif;
+}

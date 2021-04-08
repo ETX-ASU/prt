@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from 'react';
+import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
 import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
@@ -10,11 +10,19 @@ import HeaderBar from "../../app/components/HeaderBar";
 import {reportError} from "../../developer/DevUtils";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faCheck, faTimes} from '@fortawesome/free-solid-svg-icons'
+import {faCheck, faChevronLeft, faTimes} from '@fortawesome/free-solid-svg-icons'
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import QuizViewerAndEngager from "../../tool/QuizViewerAndEngager";
 import {sendAutoGradeToLMS} from "../../lmsConnection/RingLeader";
 import {calcAutoScore, calcMaxScoreForAssignment} from "../../tool/ToolUtils";
+import DraftWriter from "../../tool/DraftWriter";
+import ResizePanel from "react-resize-panel";
+
+import IconBackArrow from "../../assets/icon-back-arrow.svg";
+import RubricPanel from "../../instructor/assignments/RubricPanel";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import ReactQuill from "react-quill";
+import RubricViewer from "../../instructor/assignments/RubricViewer";
 
 library.add(faCheck, faTimes);
 
@@ -29,7 +37,14 @@ function HomeworkEngager(props) {
 	const activeUser = useSelector(state => state.app.activeUser);
 	const [toolHomeworkData, setToolHomeworkData] = useState(Object.assign({}, homework.toolHomeworkData));
   const [activeModal, setActiveModal] = useState(null);
+  const handle = useRef(null);
+  const topZone = useRef(null);
+  const [dragState, setDragState] = useState({isDragging:false, originY:-1, h:200});
+  const [topZoneHeight, setTopZoneHeight] = useState(200);
 
+  // useEffect(() => {
+  //   handle.onMouseDown
+  // })
 
 	async function submitHomeworkForReview() {
     setActiveModal(null);
@@ -86,8 +101,9 @@ function HomeworkEngager(props) {
     await props.refreshHandler();
   }
 
-  function handleHomeworkDataChange(data) {
-	  setToolHomeworkData(data);
+  const handleHomeworkDataChange = (value) => {
+	  console.log("-------- updateToolHomeworkData");
+	  setToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
   }
 
   function autoSave() {
@@ -116,36 +132,58 @@ function HomeworkEngager(props) {
     }
   }
 
+  function handleCancelButton() {
+    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
+  }
+
+
+  function handleResizing(e) {
+    if (!dragState.isDragging) {
+      if (dragState.originY === -1 && e.buttons === 1) {
+        setDragState({isDragging:true, originY:e.pageY, h:topZone.current.clientHeight});
+      }
+      return;
+    }
+
+    // Stop the drag if no button is down
+	  if (dragState.isDragging && e.buttons !== 1) {
+	    setDragState({isDragging: false, originY:-1, h:dragState.h});
+	    return;
+    }
+
+    const yDelta = e.pageY - dragState.originY;
+    console.log(yDelta)
+    const h = dragState.h+yDelta;
+    setTopZoneHeight(h);
+  }
+
+
 	return (
 		<Fragment>
       {activeModal && renderModal()}
-      <HeaderBar title={assignment.title}>
-        <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
-      </HeaderBar>
-
-			<form>
-        <Container className='mt-2 ml-1 mr-2'>
-          <Row className={'mt-4'}>
-            <Col><p>{assignment.summary}</p></Col>
-          </Row>
-        </Container>
-
-        <Container className='pb-5'>
-          <QuizViewerAndEngager
-            isReadOnly={false}
-            isShowCorrect={false}
-            toolAssignmentData={assignment.toolAssignmentData}
-            toolHomeworkData={toolHomeworkData}
-            updateToolHomeworkData={handleHomeworkDataChange}
-            triggerAutoSave={autoSave} />
-        </Container>
-
-			</form>
-
-      <Row>
-        <Col className='text-right mr-4'>
+      <Row className={'m-0 p-0 pb-2'}>
+        <Col className='col-9 p-0'>
+          <FontAwesomeIcon className='btn-icon mr-2' icon={faChevronLeft} onClick={handleCancelButton}/>
+          <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
+        </Col>
+        <Col className={'col-3 text-right'}>
           <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
         </Col>
+      </Row>
+
+      {/* This row is what gets resized to different height %*/}
+      <Row className={'m-0 p-0 h-75'}>
+        <DraftWriter
+          isReadOnly={false}
+          isShowCorrect={false}
+          toolAssignmentData={assignment.toolAssignmentData}
+          toolHomeworkData={toolHomeworkData}
+          handleContentUpdated={handleHomeworkDataChange}
+          triggerAutoSave={autoSave} />
+        <RubricViewer
+          rubricRanks={assignment.toolAssignmentData.rubricRanks}
+          rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
+        />
       </Row>
 		</Fragment>
 	)
