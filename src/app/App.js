@@ -117,8 +117,10 @@ function App() {
       if (!assignment?.id) reportError('', `We're sorry. There was an error fetching the assignment. Provided assignmentId from URL strand does not match any existing DB assignment.`);
 
 			// TODO: If this is NOT the origin assignment, we must copy in the origin assignment's Rubric Data
-			if (assignment.toolAssignmentData.originId) {
-				const originResults = await API.graphql(graphqlOperation(getAssignment, {id:assignment.toolAssignmentData.originId}));
+			const roundNum = assignment.toolAssignmentData.sequenceIds.length;
+			if (roundNum) {
+				const originId = assignment.toolAssignmentData.sequenceIds[0];
+				const originResults = await API.graphql(graphqlOperation(getAssignment, {id:originId}));
 				const originToolData = originResults.data.getAssignment.toolAssignmentData;
 				assignment.toolAssignmentData.rubricCriteria = originToolData.rubricCriteria;
 				assignment.toolAssignmentData.rubricRanks = originToolData.rubricRanks;
@@ -143,7 +145,7 @@ function App() {
 	}
 
 	return (
-		<Container className="app mt-4 mb-5 p-0">
+		<Container className="app mt-4 mb-0 p-0 h-100">
 			<Row className='main-content-row'>
 				{!activeUser?.id && <LoadingIndicator msgClasses='xtext-white' loadingMsg='LOADING'/>}
 				{activeUser.activeRole === ROLE_TYPES.dev && <DevUtilityDashboard />}

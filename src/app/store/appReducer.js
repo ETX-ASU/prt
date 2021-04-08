@@ -2,6 +2,7 @@ import {APP_NAMESPACE, SORT_BY, UI_SCREEN_MODES} from "../constants";
 
 export const SET_SESSION_DATA = APP_NAMESPACE+'.SET_SESSION_DATA';
 export const SET_ASSIGNMENT_DATA = APP_NAMESPACE+'.SET_ASSIGNMENT_DATA';
+export const SET_DRAFTS_TO_BE_REVIEWED_BY_USER = APP_NAMESPACE+'.SET_DRAFTS_TO_BE_REVIEWED_BY_USER';
 export const SET_DISPLAY_ORDER = APP_NAMESPACE+'.SET_DISPLAY_ORDER';
 export const SET_CURRENTLY_REVIEWED_STUDENT_ID = APP_NAMESPACE+'.SET_CURRENTLY_REVIEWED_STUDENT_ID';
 export const SET_GRADES_DATA = APP_NAMESPACE+'.SET_GRADES_DATA';
@@ -43,6 +44,14 @@ export function editAssignmentPhase(assignment) {
     assignment
   }
 }
+
+export function setDraftsToBeReviewedByUser(draftsToBeReviewedByUser) {
+  return {
+    type: SET_DRAFTS_TO_BE_REVIEWED_BY_USER,
+    draftsToBeReviewedByUser
+  }
+}
+
 
 export function setActiveUiScreenMode(activeUiScreenMode) {
   return {
@@ -101,6 +110,7 @@ const defaultState = {
   assignment: {},
   members: [],
   homeworks: [],
+  draftsToBeReviewedByUser: [],
   grades: [],
   currentlyReviewedStudentId: '',
   activeUiScreenMode: '',
@@ -119,6 +129,9 @@ function appReducer(currentState = defaultState, action) {
 
     case ADD_HOMEWORKS_DATA:
       return Object.assign({}, currentState, {homeworks:[...currentState.homeworks, ...action.homeworks]});
+
+    case SET_DRAFTS_TO_BE_REVIEWED_BY_USER:
+      return Object.assign({}, currentState, {draftsToBeReviewedByUser: action.draftsToBeReviewedByUser});
 
     case SET_SESSION_DATA:
       return Object.assign({}, currentState, {

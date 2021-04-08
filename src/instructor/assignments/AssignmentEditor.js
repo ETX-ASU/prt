@@ -34,7 +34,7 @@ function AssignmentEditor() {
     if (!urlAssignmentId) {
       setActiveModal({type: MODAL_TYPES.cancelDupedAssignmentEditsWarning});
     } else {
-      if (!formData.toolAssignmentData.originId) {
+      if (!formData.toolAssignmentData.sequenceIds?.length) {
         setActiveModal({
           type: MODAL_TYPES.cancelNewAssignmentEditsWarning,
           data: [formData.title]
@@ -54,7 +54,7 @@ function AssignmentEditor() {
     delete inputData.updatedAt;
 
     // Don't copy any rubric data to non-origin assignments
-    if (inputData.toolAssignmentData.originId) {
+    if (inputData.toolAssignmentData.sequenceIds?.length) {
       inputData.toolAssignmentData.rubricCriteria = null;
       inputData.toolAssignmentData.rubricRanks = null;
     }
@@ -65,11 +65,12 @@ function AssignmentEditor() {
       reportError(error, `We're sorry. An error occurred while trying to update the edits to your assignment. Please wait a moment and try again.`);
     }
 
-    if (formData.toolAssignmentData.originId) setActiveModal({
+    const isOrigin = (!formData.toolAssignmentData.sequenceIds.length);
+    if (isOrigin) setActiveModal({
       type: MODAL_TYPES.cancelPhaseEditsWarning,
       data: [formData.title]
     });
-    if (!formData.toolAssignmentData.originId) setActiveModal({
+    if (!isOrigin) setActiveModal({
       type: MODAL_TYPES.cancelNewAssignmentEditsWarning,
       data: [formData.title]
     });
@@ -150,17 +151,17 @@ function AssignmentEditor() {
           isLimitedEditing={isLimitedEditing}
         />
 
-        {(formData.toolAssignmentData.roundNum === 0) && <RootPhaseSettings
+        {(formData.toolAssignmentData.sequenceIds.length === 0) && <RootPhaseSettings
           formData={formData}
           setFormData={setFormData}
           isLimitedEditing={isLimitedEditing} />}
 
-        {(formData.toolAssignmentData.roundNum%2 === 0) && <DraftPhaseSettings
+        {(formData.toolAssignmentData.sequenceIds.length%2 === 0) && <DraftPhaseSettings
           formData={formData}
           setFormData={setFormData}
           isLimitedEditing={isLimitedEditing} />}
 
-        {(formData.toolAssignmentData.roundNum%2 === 1) && <ReviewPhaseSettings
+        {(formData.toolAssignmentData.sequenceIds.length%2 === 1) && <ReviewPhaseSettings
           formData={formData}
           setFormData={setFormData}
           isLimitedEditing={isLimitedEditing} />}

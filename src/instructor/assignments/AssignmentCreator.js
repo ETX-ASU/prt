@@ -44,8 +44,7 @@ const emptyAssignment = {
   toolAssignmentData: {
     rubricRanks: tempRanks,
     rubricCriteria: [],
-    originId: '',
-    roundNum: 0,
+    sequenceIds: [],
     minReviewsRequired: 3,
     minPeersBeforeAllocating: 6,
     allocations: []

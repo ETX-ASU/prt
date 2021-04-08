@@ -218,6 +218,7 @@
 
 
 .rubrics-panel {
+  height: calc(100% - 1.5em);
   background-color: var(--x-lightest-gray);
 
   &.hidden-criterion {
@@ -253,7 +254,7 @@
   }
 
   .ranks-row {
-    height: 150px;
+    height: 100%;
 
     .rank-col {
       font-size: 10px;

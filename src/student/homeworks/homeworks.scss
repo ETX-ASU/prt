@@ -1,3 +1,4 @@
+
 .add-question-btn {
   display: inline-block;
   background-color: var(--x-darkest-gray);
@@ -128,15 +129,6 @@ table.student-assignment-drafts {
   td:nth-child(2) {
     font-weight: bold;
   }
-}
-
-Button.essay-btn {
-  padding: 0 0.5rem;
-  font-size: 0.9rem;
-  width: 135px;
-  border: 1px solid black;
-  font-weight: bold;
-  color: black;
 }
 
 
@@ -276,6 +268,46 @@ input[type="date"]::-webkit-clear-button {
   display: none;
 }
 
+
 .btn-pointer {
   cursor: pointer;
 }
+
+Button.essay-btn {
+  padding: 0 0.5rem;
+  font-size: 0.9rem;
+  width: 135px;
+  border: 1px solid black !important;
+  font-weight: bold;
+  color: black;
+  background-color: var(--x-lightest-gray);
+}
+
+.text-editor {
+  height: auto;
+  width: 65%;
+}
+
+.rubric-viewer-panel, .comments-panel {
+  font-size: 0.8rem;
+  width: 35%;
+  height: 100%;
+  border: 1px solid var(--x-lightest-gray);
+  background-color: var(--x-ultralight-gray);
+
+  .criterion-nav {
+    height: 40px;
+    background-color: var(--x-lightest-gray);
+
+    .nav-btn {
+      height: 30px;
+      width: 30px;
+    }
+  }
+
+  .criterion-content {
+    height: calc(100% - 40px);
+    overflow-y: scroll;
+  }
+}
+

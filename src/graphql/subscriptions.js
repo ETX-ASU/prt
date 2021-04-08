@@ -31,13 +31,14 @@ export const onCreateAssignment = /* GraphQL */ `
           rankSummaries
           weight
         }
-        originId
-        roundNum
+        sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -75,13 +76,14 @@ export const onUpdateAssignment = /* GraphQL */ `
           rankSummaries
           weight
         }
-        originId
-        roundNum
+        sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -119,13 +121,14 @@ export const onDeleteAssignment = /* GraphQL */ `
           rankSummaries
           weight
         }
-        originId
-        roundNum
+        sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -158,7 +161,6 @@ export const onCreateHomework = /* GraphQL */ `
           ratingGiven
           criterionNum
         }
-        allocatedHomeworkIds
       }
       createdAt
       updatedAt
@@ -190,7 +192,6 @@ export const onUpdateHomework = /* GraphQL */ `
           ratingGiven
           criterionNum
         }
-        allocatedHomeworkIds
       }
       createdAt
       updatedAt
@@ -222,7 +223,6 @@ export const onDeleteHomework = /* GraphQL */ `
           ratingGiven
           criterionNum
         }
-        allocatedHomeworkIds
       }
       createdAt
       updatedAt

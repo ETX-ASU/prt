@@ -31,13 +31,14 @@ export const getAssignment = /* GraphQL */ `
           rankSummaries
           weight
         }
-        originId
-        roundNum
+        sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
         allocations {
           assessorId
           homeworkId
+          beganOnDate
+          submittedOnDate
         }
       }
       createdAt
@@ -66,8 +67,7 @@ export const listAssignments = /* GraphQL */ `
         isUseAutoScore
         isUseAutoSubmit
         toolAssignmentData {
-          originId
-          roundNum
+          sequenceIds
           minReviewsRequired
           minPeersBeforeAllocating
         }
@@ -103,7 +103,6 @@ export const getHomework = /* GraphQL */ `
           ratingGiven
           criterionNum
         }
-        allocatedHomeworkIds
       }
       createdAt
       updatedAt
@@ -126,7 +125,74 @@ export const listHomeworks = /* GraphQL */ `
         isLocked
         toolHomeworkData {
           draftContent
-          allocatedHomeworkIds
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const minHomeworkIdsBySubmittedDate = /* GraphQL */ `
+  query MinHomeworkIdsBySubmittedDate(
+    $assignmentId: ID
+    $submittedOnDate: ModelIntKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelHomeworkFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    minHomeworkIdsBySubmittedDate(
+      assignmentId: $assignmentId
+      submittedOnDate: $submittedOnDate
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        assignmentId
+        studentOwnerId
+        beganOnDate
+        submittedOnDate
+        isLocked
+        toolHomeworkData {
+          draftContent
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
+  query FullHomeworkByAsmntAndStudentId(
+    $assignmentId: ID
+    $studentOwnerId: ModelIDKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelHomeworkFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    fullHomeworkByAsmntAndStudentId(
+      assignmentId: $assignmentId
+      studentOwnerId: $studentOwnerId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        assignmentId
+        studentOwnerId
+        beganOnDate
+        submittedOnDate
+        isLocked
+        toolHomeworkData {
+          draftContent
         }
         createdAt
         updatedAt

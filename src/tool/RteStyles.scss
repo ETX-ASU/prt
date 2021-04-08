@@ -1,17 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 .text-editor {
-  width: 75%;
   margin: 0 0;
+  height: 50vh;
 
   &.no-bar {
     #toolbar {
       display: none;
     }
   }
+
+  .quill {
+    height: 100%;
+
+    .ql-container {
+      height: 100%;
+    }
+  }
 }
 .ql-editor {
   min-height: 100px;
+}
+
+.comments-panel {
+  height: auto;
+
+  .comment-buttons {
+    display: inline;
+    width: fit-content;
+
+    button {
+      padding: 3px 6px;
+      margin: -4px 5px 0 0;
+
+      svg {
+        padding: 0;
+        margin: 0;
+      }
+    }
+  }
+
+  h3 {
+    display: inline;
+  }
 }
 
 

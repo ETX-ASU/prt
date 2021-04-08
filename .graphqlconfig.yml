@@ -1,38 +1,4 @@
 projects:
-  boiler:
-    schemaPath: src/graphql/schema.json
-    includes:
-      - src/graphql/**/*.js
-    excludes:
-      - ./amplify/**
-    extensions:
-      amplify:
-        codeGenTarget: javascript
-        generatedFileName: ''
-        docsFilePath: src/graphql
-        maxDepth: 6
-  ringleaderproxy:
-    schemaPath: src/graphql/schema.json
-    includes:
-      - src/graphql/**/*.js
-    excludes:
-      - ./amplify/**
-    extensions:
-      amplify:
-        codeGenTarget: javascript
-        generatedFileName: ''
-        docsFilePath: src/graphql
-  ringleaderproxyapi:
-    schemaPath: src/graphql/schema.json
-    includes:
-      - src/graphql/**/*.js
-    excludes:
-      - ./amplify/**
-    extensions:
-      amplify:
-        codeGenTarget: javascript
-        generatedFileName: ''
-        docsFilePath: src/graphql
   prtDB:
     schemaPath: src/graphql/schema.json
     includes:
@@ -44,6 +10,3 @@ projects:
         codeGenTarget: javascript
         generatedFileName: ''
         docsFilePath: src/graphql
-extensions:
-  amplify:
-    version: 3

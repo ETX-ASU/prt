@@ -77,7 +77,7 @@ function AssignmentNewOrDupe() {
       if (allAssignments.length) {
         const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: allAssignments[0].id}));
         setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
-        const nonStrandeds = allAssignments.filter((a) => (!!a.lineItemId && !a.toolAssignmentData.originId));
+        const nonStrandeds = allAssignments.filter((a) => (!!a.lineItemId && !a.toolAssignmentData.sequenceIds.length));
 
         // TODO: when showing options for a target assignment, filter out any previous rounds. That is, only show root assignments
 
@@ -91,16 +91,12 @@ function AssignmentNewOrDupe() {
     }
   }
 
-  function getOriginPhaseCounts(all) {
-    return all.reduce((acc, a) => {
-      let originId = a.toolAssignmentData.originId || a.id;
-      if (acc[originId] === -1 || !a.lineItemId) {
-        acc[originId] = -1;
-      } else {
-        acc[originId] = (!acc[originId] || (a.toolAssignmentData.roundNum > acc[originId])) ? a.toolAssignmentData.roundNum : acc[originId];
-      }
-      return acc;
-    }, {})
+
+  function getPhaseSequenceIds(all, originId) {
+    const siblingAssignments = all.filter(a => a.toolAssignmentData.sequenceIds.length && a.toolAssignmentData.sequenceIds[0] === originId);
+    siblingAssignments.sort((a,b) => b.toolAssignmentData.sequenceIds.length - a.toolAssignmentData.sequenceIds.length);
+    if (!siblingAssignments.length) return [originId];
+    return [...siblingAssignments[0].toolAssignmentData.sequenceIds, siblingAssignments[0].id];
   }
 
   function closeModalAndEditDuped(dupedAssignmentData) {
@@ -138,8 +134,7 @@ function AssignmentNewOrDupe() {
         courseId,
         lockOnDate: 0,
         toolAssignmentData: {
-          originId: selectedRootAssignment.id,
-          roundNum: rootDetails.roundNum + 1,
+          sequenceIds: rootDetails.previousSequenceIds,
           minReviewsRequired: 3,
           minPeersBeforeAllocating: 6,
           allocations: []
@@ -232,14 +227,14 @@ function AssignmentNewOrDupe() {
   }
 
   function getRootAssignmentDetails() {
-    const originPhaseCounts = getOriginPhaseCounts(allAssignments);
+    const previousSequenceIds = getPhaseSequenceIds(allAssignments, selectedRootAssignment.id);
     let roundNamePrefix = ['1st', '2nd', '3rd', '4th', '5th'];
-    let roundNum = originPhaseCounts[selectedRootAssignment.id] || 0;
+    let roundNum = previousSequenceIds.length - 1;
     let isNextRoundAReviewSession = (!(roundNum%2));
     let totalDraftRounds = Math.floor(roundNum/2) + 1;
     let totalReviewRounds = totalDraftRounds - 1 + (roundNum%2);
     let roundName = (isNextRoundAReviewSession) ? `${roundNamePrefix[totalDraftRounds - 1]} Draft Review` : `${roundNamePrefix[totalDraftRounds]} Draft`;
-    return ({roundNum, roundName, isNextRoundAReviewSession, totalDraftRounds, totalReviewRounds})
+    return ({roundNum, roundName, previousSequenceIds, isNextRoundAReviewSession, totalDraftRounds, totalReviewRounds})
   }
 
   function getNewRoundSummary() {
@@ -307,7 +302,7 @@ function AssignmentNewOrDupe() {
                   <Col className={'xbg-light text-center p-2'}>
                     <Button className='align-middle' onClick={handleAddAssignmentPhase} disabled={!allAssignments.length}>
                       <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                      {(selectedRootAssignment.toolAssignmentData.roundNum%2 === 0) ? 'Create New Draft' : 'Create Peer Review Session'}
+                      {(selectedRootAssignment.toolAssignmentData.sequenceIds.length%2) ? 'Create New Draft' : 'Create Peer Review Session'}
                     </Button>
                   </Col>
                 </Row>

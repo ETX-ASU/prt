@@ -21,12 +21,10 @@ function RubricPanel(props) {
 
   function onToggleVisibility() {
     const curCrit = shownCriteria.find(c => c.id === curTabId);
-    console.log(`criterion ${curCrit.name}`)
     props.onCriterionPropChanged(curCrit, 'isVisible', !curCrit.isVisible);
   }
 
   function onCopy() {
-    console.log("copy");
     const alteredCriteria = deepCopy(shownCriteria);
     const index = alteredCriteria.findIndex(c => c.id === curTabId);
     const dupedCriterion = deepCopy(alteredCriteria[index]);
@@ -63,7 +61,6 @@ function RubricPanel(props) {
 
   function isVisibilityToggleDisabled(crit) {
     const totalVisible = shownCriteria.filter(c => c.isVisible).length;
-    console.log(`totalVisible`, totalVisible);
     return (crit.isVisible && totalVisible <= MIN_NUM_ACTIVE_CRITERIA);
   }
 
@@ -75,7 +72,7 @@ function RubricPanel(props) {
 
   return (
     <Fragment>
-      <Row>
+      <Row className='h-100 w-100 m-0'>
         <Tab.Container activeKey={curTabId} onSelect={(k) => setCurTabId(k)} id="criterion-tab" transition={false}>
           <Nav>
             {shownCriteria.map(crit =>
@@ -85,40 +82,45 @@ function RubricPanel(props) {
               </NavItem>)
             }
           </Nav>
-          <Tab.Content>
+          <Tab.Content className='h-100'>
             {shownCriteria.map(criterion =>
-            <Tab.Pane key={criterion.id} eventKey={criterion.id} title={criterion.name} className={`${!criterion.isVisible ? 'hidden-criterion' : ''}`}>
+            <Tab.Pane key={criterion.id} eventKey={criterion.id} title={criterion.name}
+              className={`${!criterion.isVisible ? 'h-100 hidden-criterion' : 'h-100'}`}>
               <Container className={`p-2 rubrics-panel ${!criterion.isVisible ? 'hidden-criterion' : ''}`} >
+
+                {props.isEditMode &&
                 <Row className={'p-0 m-0'}>
                   <div className='criterion-name-label'>Name</div>
                   <div className='criterion-name m-1'>
                     <input type='text' value={criterion.name} size={12}
-                        onChange={(e) => props.onCriterionPropChanged(criterion, 'name', e.target.value)} />
+                      onChange={(e) => props.onCriterionPropChanged(criterion, 'name', e.target.value)}/>
                   </div>
                   <div className='grade-weight-label'>Grade Weight</div>
                   <div className='grade-weight m-1'>
-                    <input type='number' min={0} max={100} value={criterion.weight} onChange={(e) => props.onCriterionPropChanged(criterion, 'weight', parseInt(e.target.value))} />
+                    <input type='number' min={0} max={100} value={criterion.weight}
+                      onChange={(e) => props.onCriterionPropChanged(criterion, 'weight', parseInt(e.target.value))}/>
                   </div>
-                  <span className='vl' />
+                  <span className='vl'/>
                   <Button
-                      disabled={isVisibilityToggleDisabled(criterion)}
-                      className='text-center xbg-dark p-0 criterion-settings-btn'
-                      onClick={onToggleVisibility} >
-                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(criterion.isVisible) ? faEye : faEyeSlash} />
+                    disabled={isVisibilityToggleDisabled(criterion)}
+                    className='text-center xbg-dark p-0 criterion-settings-btn'
+                    onClick={onToggleVisibility}>
+                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(criterion.isVisible) ? faEye : faEyeSlash}/>
                   </Button>
                   <Button
-                      disabled={shownCriteria.length >= MAX_NUM_CRITERIA}
-                      className='text-center xbg-dark p-0 criterion-settings-btn'
-                      onClick={onCopy} >
-                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faCopy} />
+                    disabled={shownCriteria.length >= MAX_NUM_CRITERIA}
+                    className='text-center xbg-dark p-0 criterion-settings-btn'
+                    onClick={onCopy}>
+                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faCopy}/>
                   </Button>
                   <Button
-                      disabled={shownCriteria.length <= 1}
-                      className='text-center xbg-dark p-0 criterion-settings-btn'
-                      onClick={onDelete} >
-                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faTrash} />
+                    disabled={shownCriteria.length <= 1}
+                    className='text-center xbg-dark p-0 criterion-settings-btn'
+                    onClick={onDelete}>
+                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faTrash}/>
                   </Button>
-                </Row>
+                </Row>}
+
                 <Row className='w-100 pt-1 m-0 ranks-row' >
                   {shownRanks.map((rank, rNum) =>
                       (rank.isVisible || props.isEditMode) &&
@@ -129,10 +131,18 @@ function RubricPanel(props) {
                             <FontAwesomeIcon className='hidden-indicator' icon={faEyeSlash} />
                           </div>
                           <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}</div>
-                          <textarea
+                          {props.isEditMode &&
+                            <textarea
                               className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block'
                               value={criterion.rankSummaries[rNum]}
                               onChange={e => onSummaryChange(e, criterion, rNum)} />
+                          }
+                          {!props.isEditMode &&
+                            <textarea
+                              readOnly={true}
+                              value={criterion.rankSummaries[rNum]}
+                              className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block' />
+                          }
                         </div>
                       </Col>
                   )}
@@ -142,12 +152,16 @@ function RubricPanel(props) {
             }
           </Tab.Content>
         </Tab.Container>
+
+        {props.isEditMode &&
         <Button disabled={props.isLimitedEditing || shownCriteria.length >= MAX_NUM_CRITERIA}
             className='add-criterion-btn rounded-circle xbg-dark p-0 m-0'
             style={{width:'24px', height:'24px'}}
             onClick={onAddCriterionBtn}>
           <FontAwesomeIcon className='btn-icon mr-0' icon={faPlus} />
         </Button>
+        }
+
       </Row>
     </Fragment>
   )

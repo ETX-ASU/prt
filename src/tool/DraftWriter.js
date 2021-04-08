@@ -1,42 +1,38 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import ReactQuill from "react-quill";
 import {EMPTY_HOMEWORK} from "../app/constants";
 import EditorToolbar, { modules, formats } from "./RteToolbar";
 import "react-quill/dist/quill.snow.css";
 import "./RteStyles.scss";
+import RubricViewer from "../instructor/assignments/RubricViewer";
 
 
 
 // TOOL-DEV: You will provide your own component to act as a UI allowing a student to engage with and view their homework
 function DraftWriter(props) {
-  const {isReadOnly, isShowCorrect, toolAssignmentData, toolHomeworkData, handleContentUpdated} = props;
+  const {isReadOnly, isShowCorrect, toolAssignmentData, toolHomeworkData} = props;
+  const handleContentUpdated = (isReadOnly) ? () => {} : props.handleContentUpdated;
   const {draftContent} = toolHomeworkData || EMPTY_HOMEWORK;
-  // function styleForAnswer(qNum, selectedAnswerIndex) {
-  //   const isSelected = (quizAnswers[qNum] === selectedAnswerIndex);
-  //   if (!isSelected) return '';
-  //   const isCorrect = quizQuestions[qNum].correctAnswerIndex === selectedAnswerIndex;
-  //   return (!isShowCorrect) ? 'selected' : (isCorrect) ? 'selected correct-selection' : 'selected incorrect-selection';
-  // }
-  //
-  // function isCorrectChoice(qNum, selectedAnswerIndex) {
-  //   return (quizQuestions[qNum].correctAnswerIndex === selectedAnswerIndex);
-  // }
-  //
-  // function handleOptSelected(qNum, optNum) {
-  //   const updatedQuizAnswers = quizAnswers.slice();
-  //   updatedQuizAnswers[qNum] = optNum;
-  //   updateToolHomeworkData(Object.assign({}, {quizAnswers:updatedQuizAnswers}))
-  // }
+  const [barHeight, setBarHeight] = useState(66);
 
-  // const handleChange = value => {
-  //   console.log(`Change to: ${value}`, props)
-  //   props.updateToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
-  // };
+  useEffect(() => {
+    const elem = document.getElementById('toolbar');
+    console.log('toolbar height', elem.clientHeight);
+    window.addEventListener('resize', handleResize);
+    setBarHeight(elem.clientHeight+2);
+  }, [])
+
+  function handleResize(e) {
+    const elem = document.getElementById('toolbar');
+    console.log('height', elem.clientHeight);
+    setBarHeight(elem.clientHeight+2);
+  }
 
   return (
-    <div className={`text-editor mt-4 ${(isReadOnly) ? 'no-bar' : ''}`}>
+    <div className={`d-flex flex-column text-editor ${(isReadOnly) ? 'no-bar' : ''}`}>
       <EditorToolbar />
       <ReactQuill
+        className='h-100'
         theme="snow"
         readOnly={isReadOnly}
         value={draftContent}
@@ -44,6 +40,7 @@ function DraftWriter(props) {
         placeholder={"Write something awesome..."}
         modules={modules}
         formats={formats}
+        // style={{height: `calc(100% - ${barHeight}px`}}
       />
     </div>
   );

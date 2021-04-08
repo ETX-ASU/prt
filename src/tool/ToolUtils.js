@@ -7,7 +7,7 @@ export function getHomeworkStatus(gradeData, homework) {
   const {gradingProgress} = gradeData;
   return (gradingProgress === HOMEWORK_PROGRESS.fullyGraded) ? HOMEWORK_PROGRESS.fullyGraded :
     (homework.submittedOnDate) ? HOMEWORK_PROGRESS.submitted :
-      (homework.beganOnDate) ? HOMEWORK_PROGRESS.inProgress :
+      (homework.createdAt !== homework.updatedAt) ? HOMEWORK_PROGRESS.inProgress :
         HOMEWORK_PROGRESS.notBegun;
 }
 
@@ -31,7 +31,8 @@ export function calcPercentCompleted(assignment, homework) {
   if (!homework?.id || !homework?.beganOnDate) return 0;
 
   // TODO: If this is a draft/writing round then return 0 if it hasn't been submitted yet, and 100 if it has. Eventually, this might be based on word count.
-  if (assignment.roundNum % 2) return (homework.submittedOnDate) ? 100 : 0;
+  const roundNum = assignment.toolAssignmentData.sequenceIds.length - 1;
+  if (roundNum % 2) return (homework.submittedOnDate) ? 100 : 0;
 
   // This is an even round, which means it is a review/assessment round. These are based on how many peers this student has reviewed vs how many they must review.
   // TODO: We need to write calculation to determine completion of this. For now, it's 50%.
@@ -53,7 +54,6 @@ export function calcAutoScore(assignment, homework) {
 
 
 export function generateDefaultRubric() {
-  console.log("generateDefaultRubric");
   let defaultRubric = Object.assign({}, EMPTY_RUBRIC);
   defaultRubric.criteria[0] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:0, name:'Tasty'});
   defaultRubric.criteria[0].rankSummaries = ['I ate my own fingers just to get more of the flavor', 'Induces compulsive eating.', "I would eat this.", "I wouldn't eat this if I had a choice.", "I'd drink dumpster juice before eating that again. \n" +

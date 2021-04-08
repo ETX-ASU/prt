@@ -21,8 +21,8 @@ import ResizePanel from "react-resize-panel";
 import IconBackArrow from "../../assets/icon-back-arrow.svg";
 import RubricPanel from "../../instructor/assignments/RubricPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import ReactQuill from "react-quill";
 import RubricViewer from "../../instructor/assignments/RubricViewer";
+import CommentsPanel from "./CommentsPanel";
 
 library.add(faCheck, faTimes);
 
@@ -31,7 +31,7 @@ library.add(faCheck, faTimes);
 /** This screen is shown to the student so they can "engage" with the homework assignment.
  * Any work they do or changes or interactions they make would be recorded and the updates
  * saved to the database as necessary. */
-function HomeworkEngager(props) {
+function PeerHomeworkAssessor(props) {
 	const dispatch = useDispatch();
 	const {homework, assignment} = props;
 	const activeUser = useSelector(state => state.app.activeUser);
@@ -41,6 +41,7 @@ function HomeworkEngager(props) {
   const topZone = useRef(null);
   const [dragState, setDragState] = useState({isDragging:false, originY:-1, h:200});
   const [topZoneHeight, setTopZoneHeight] = useState(200);
+  const [topZonePercent, setTopZonePercent] = useState(45);
 
   // useEffect(() => {
   //   handle.onMouseDown
@@ -133,9 +134,17 @@ function HomeworkEngager(props) {
   }
 
   function handleCancelButton() {
-    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
+    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
   }
 
+
+  // function startDrag(e) {
+	//   setDragState({isDragging:true, originY:e.pageY})
+  // }
+  //
+  // function stopDrag(e) {
+	//   setDragState({isDragging:false, originY:-1})
+  // }
 
   function handleResizing(e) {
     if (!dragState.isDragging) {
@@ -152,8 +161,7 @@ function HomeworkEngager(props) {
     }
 
     const yDelta = e.pageY - dragState.originY;
-    console.log(yDelta)
-    const h = dragState.h+yDelta;
+    const h = dragState.h+yDelta; //Math.max(Math.min(topZoneHeight+yDelta, 600), 200);
     setTopZoneHeight(h);
   }
 
@@ -171,22 +179,80 @@ function HomeworkEngager(props) {
         </Col>
       </Row>
 
-      {/* This row is what gets resized to different height %*/}
-      <Row className={'m-0 p-0 h-75'}>
-        <DraftWriter
-          isReadOnly={false}
-          isShowCorrect={false}
-          toolAssignmentData={assignment.toolAssignmentData}
-          toolHomeworkData={toolHomeworkData}
-          handleContentUpdated={handleHomeworkDataChange}
-          triggerAutoSave={autoSave} />
-        <RubricViewer
-          rubricRanks={assignment.toolAssignmentData.rubricRanks}
-          rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
-        />
+			<form className='d-flex flex-column h-100'>
+        <div ref={topZone}
+          className='top-zone w-100 mt-3 mb-3'
+          style={{'flexBasis':topZonePercent+'%'}}
+        >
+          <RubricPanel
+            rubricRanks={assignment.toolAssignmentData.rubricRanks}
+            rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
+            isEditMode={false}
+            isLimitedEditing={false}
+          />
+        </div>
+        <div ref={handle} className='handle text-center p-2'
+          onMouseMove={handleResizing}
+        >
+          ===
+        </div>
+        <div className='bottom-zone d-flex flex-row'>
+          <DraftWriter
+            style={{'height': 100 - topZonePercent+'vh'}}
+            isReadOnly={true}
+            isShowCorrect={false}
+            toolAssignmentData={assignment.toolAssignmentData}
+            toolHomeworkData={toolHomeworkData}
+            handleContentUpdated={handleHomeworkDataChange}
+            triggerAutoSave={autoSave} />
+
+          <CommentsPanel
+            style={{'height': 100 - topZonePercent+'vh'}}
+            className='h-auto'
+            assessorId={activeUser.id}
+            toolAssignmentData={assignment.toolAssignmentData}
+            toolHomeworkData={toolHomeworkData}
+          />
+        </div>
+
+        {/*<Container className='mt-2 ml-1 mr-2'>*/}
+        {/*  <ResizePanel direction="s">*/}
+        {/*    <RubricPanel*/}
+        {/*      rubricRanks={assignment.toolAssignmentData.rubricRanks}*/}
+        {/*      rubricCriteria={assignment.toolAssignmentData.rubricCriteria}*/}
+        {/*      isEditMode={false}*/}
+        {/*      isLimitedEditing={false}*/}
+        {/*    />*/}
+        {/*  </ResizePanel>*/}
+        {/*  <DraftWriter*/}
+        {/*    isReadOnly={false}*/}
+        {/*    isShowCorrect={false}*/}
+        {/*    toolAssignmentData={assignment.toolAssignmentData}*/}
+        {/*    toolHomeworkData={toolHomeworkData}*/}
+        {/*    handleContentUpdated={handleHomeworkDataChange}*/}
+        {/*    triggerAutoSave={autoSave} />*/}
+        {/*</Container>*/}
+
+        {/*<Container className='pb-5'>*/}
+        {/*  <DraftWriter*/}
+        {/*    isReadOnly={false}*/}
+        {/*    isShowCorrect={false}*/}
+        {/*    toolAssignmentData={assignment.toolAssignmentData}*/}
+        {/*    toolHomeworkData={toolHomeworkData}*/}
+        {/*    handleContentUpdated={handleHomeworkDataChange}*/}
+        {/*    triggerAutoSave={autoSave} />*/}
+        {/*</Container>*/}
+			</form>
+
+
+
+      <Row>
+        <Col className='text-right mr-4'>
+          <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
+        </Col>
       </Row>
 		</Fragment>
 	)
 }
 
-export default HomeworkEngager;
+export default PeerHomeworkAssessor;

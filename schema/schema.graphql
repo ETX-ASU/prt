@@ -15,7 +15,9 @@ type Assignment @model {
   toolAssignmentData: ToolAssignmentData
 }
 
-type Homework @model {
+type Homework @model
+@key(name:"minHomeworkIdsBySubmittedDate", fields:["assignmentId", "submittedOnDate"], queryField:"minHomeworkIdsBySubmittedDate")
+@key(name:"fullHomeworkByAsmntAndStudentId", fields:["assignmentId", "studentOwnerId"], queryField:"fullHomeworkByAsmntAndStudentId") {
   id: ID!
   assignmentId: ID!
   studentOwnerId: ID!
@@ -27,14 +29,6 @@ type Homework @model {
 
 
 # ===================================================== RUBRIC
-# Comparing PRT assignments to each other, the main difference is the rubric used. Thus, we treat the rubric as, in a way,
-# the assignment itself. To clone a rubric for use in another assignment... just clone the original assignment.
-
-type Rubric {
-  ranks: [Rank]
-  criteria: [Criterion]
-}
-
 type Rank {
   name: String
   points: Int
@@ -51,12 +45,12 @@ type Criterion {
   weight: Int # number indicating what percentage of grade should come from this criterion
 }
 
-
 # ===================================================== ASSIGNMENT
+
 type ToolAssignmentData {
-  rubric: Rubric
-  originId: ID # null for original assignment
-  roundNum: Int # 0 for original assignment
+  rubricRanks: [Rank]
+  rubricCriteria: [Criterion]
+  sequenceIds: [ID] # list of ids for previous rounds. Empty array means this is origin assignment. If this = [A, B] then A is origin, B is 1st draft review, and THIS is 2nd draft
   minReviewsRequired: Int # number of reviews each student should give
   minPeersBeforeAllocating: Int # number of peers that must have turned in work before allocation can begin
   allocations: [Allocation]
@@ -65,6 +59,8 @@ type ToolAssignmentData {
 type Allocation {
   assessorId: ID! # id of student who must provide a review/assessment for
   homeworkId: ID! # id of homework this student must assess
+  beganOnDate: AWSTimestamp
+  submittedOnDate: AWSTimestamp
 }
 
 
@@ -75,7 +71,6 @@ type ToolHomeworkData {
   draftContent: String # this is the actual essay content. (Might eventually be a url). It is NULL "" if it is a REVIEW round.
   commentsOnDraft: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
   criterionRatingsOnDraft: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
-  allocatedHomeworkIds: [ID] # homework IDs of peer drafts this student must review/assess. It is [] EMPTY for a DRAFT round.
 }
 
 type CriterionQualityScore {
@@ -104,4 +99,3 @@ type DocLocation {
   x: Int
   y: Int # value of 0 means it is a document-wide comment
 }
-

@@ -1,4 +1,30 @@
-## BUG FIXING
+## ALLOCATING PEER ASSESSMENTS
+
+1. Student logs in. Student homework is pulled from DB for this student.
+2. If it is a peer review session, we look at assignment.toolAssignmentData.allocations as follows:
+   1. Look at assignment.toolAssignmentData.allocations 
+   1. Does this student need a new allocation?
+      * No? - great. Fetch the homeworks for the allocations they already DO have. Done.
+      * Yes? - Get all of the homeworks for this assignment id that are submitted.
+         - Map out how many times each of these HAVE been allocated
+         - Filter out the disqualified
+         - Randomly select the one of the remaining and assign it to this user.
+         - Save this allocation change to the DB
+   
+FILTER OUT DISQUALIFIED
+
+1. look at all homeworks and tier them by number of reviews they each got
+2. look at the tier with the least reviews received (allocated to them)
+   1. so if there are 4 essays, 3 of them have 1 review and 1 of them has 2, look at the 3 with just 1 review
+3. if this user owns the essay OR was already allocated to one of these 3, filter them out
+   3a. if no essays in this tier, look at the next tier up and repeat step 3
+   3b. if there's still no essays left, the user must WAIT for more peers to finish
+   
+Otherwise, randomly select from the remaining (filtered) essays in the tier
+   
+   
+
+
 
 # Next steps.
 
