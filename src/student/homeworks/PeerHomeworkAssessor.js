@@ -23,6 +23,10 @@ import RubricPanel from "../../instructor/assignments/RubricPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import RubricViewer from "../../instructor/assignments/RubricViewer";
 import CommentsPanel from "./CommentsPanel";
+import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
+import ReactQuill, {Quill} from "react-quill";
+import EmphBlot from "../../tool/ComTag";
+import { v4 as uuid } from "uuid";
 
 library.add(faCheck, faTimes);
 
@@ -39,13 +43,69 @@ function PeerHomeworkAssessor(props) {
   const [activeModal, setActiveModal] = useState(null);
   const handle = useRef(null);
   const topZone = useRef(null);
+  const reactQuillRef = useRef(null);
   const [dragState, setDragState] = useState({isDragging:false, originY:-1, h:200});
   const [topZoneHeight, setTopZoneHeight] = useState(200);
   const [topZonePercent, setTopZonePercent] = useState(45);
+  const [comments, setComments] = useState([]);
+  const [activeCommentIndex, setActiveCommentIndex] = useState(-1);
+  const [combinedDraftAndCommentsContent, setCombinedDraftAndCommentsContent] = useState(toolHomeworkData.draftContent);
+  // const [quillRef, setQuillRef] = useState(null);
+
+
+
+  useEffect(() => {
+    // Loop through all comments
+    const editor = reactQuillRef.current.editor;
+    const origSelection = editor.getSelection();
+    let wasUpdated = false;
+    comments.forEach(c => {
+      const cFormat = editor.getFormat(c.location.index, c.location.length);
+      if (cFormat.color === 'inherit') return;
+      editor.setSelection(c.location.index, c.location.length);
+      editor.format('span', {id:c.id, tagNum:c.tagNum});
+      wasUpdated = true;
+      // editor.format('link', () => console.log("Howdy, Bob"));
+      // document.getElementById(c.id).onClick = () => console.log(`You clicked ${c.id}`);
+    })
+
+    // if (wasUpdated) {
+    //   editor.off("selection-change", onSelectionChanged);
+    //   editor.on("selection-change", onSelectionChanged);
+    // }
+      // If comment has NOT been tagged, select it's region in the essay and tag it now.
+
+      // If comment has been set as active, mark it as active and unmark the previous tag
+
+
+
+  }, [comments]);
 
   // useEffect(() => {
-  //   handle.onMouseDown
-  // })
+  //   const editor = reactQuillRef.current.editor;
+  //   editor.on('selection-change', onSelectionChanged)
+  // }, [])
+
+
+  const onSelectionChanged = (range, source, olEditor) => {
+    const editor = reactQuillRef?.current?.editor;
+    if (!editor) return;
+    if (source !== 'user' || !range || range.length > 0) return;
+    const leaf = editor.getLeaf(range.index);
+    if (leaf[0].parent.domNode.className !== 'comtag') return;
+    // console.log("leaf", leaf[0]);
+    const commentId = (leaf[0].parent.domNode.id);
+    console.log(`Clicked on leaf id #${commentId}`, comments.length);
+  }
+
+  // function handleClickFormat() {
+  //   console.log('adding comment');
+  //   let range = reactQuillRef.current.editor.getSelection();
+  //   if (range) {
+  //     reactQuillRef.current.editor.format('span', true);
+  //   }
+  // }
+
 
 	async function submitHomeworkForReview() {
     setActiveModal(null);
@@ -102,11 +162,6 @@ function PeerHomeworkAssessor(props) {
     await props.refreshHandler();
   }
 
-  const handleHomeworkDataChange = (value) => {
-	  console.log("-------- updateToolHomeworkData");
-	  setToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
-  }
-
   function autoSave() {
 	  // TODO: Bonus. Add in method to handle automatically saving student work
   }
@@ -137,15 +192,6 @@ function PeerHomeworkAssessor(props) {
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
   }
 
-
-  // function startDrag(e) {
-	//   setDragState({isDragging:true, originY:e.pageY})
-  // }
-  //
-  // function stopDrag(e) {
-	//   setDragState({isDragging:false, originY:-1})
-  // }
-
   function handleResizing(e) {
     if (!dragState.isDragging) {
       if (dragState.originY === -1 && e.buttons === 1) {
@@ -166,6 +212,67 @@ function PeerHomeworkAssessor(props) {
   }
 
 
+  function onAddComment() {
+	  const editor = reactQuillRef.current.editor;
+
+	  // Look through all current comments.
+    let sel = editor.getSelection();
+    const isWholeDocument = !sel;
+    const selStart = isWholeDocument ? 0 : sel.index;
+    const selEnd = isWholeDocument ? 1 : selStart + sel.length;
+
+    const isAvailable = comments.every(c => ((selStart > c.location.index + c.location.length) || (selEnd < c.location.index)));
+
+    const comCount = comments.length;
+    if (!isWholeDocument && !isAvailable) {
+      console.log("Comment NOT added because selection overlaps and existing comment area.");
+    } else {
+      // Otherwise, we can add this comment to the pile.
+      setComments([...comments, {
+        id: uuid(),
+        reviewerId: activeUser.id,
+        tagNum: comCount,
+        content: 'Add your notes here',
+        location: {
+          isWholeDocument: isWholeDocument,
+          index: sel.index,
+          length: sel.length,
+          x: 0,
+          y: 0
+        },
+        commentRating: -1,
+        criterionNum: -1,
+        isDrawn: false,
+        isActive: false
+      }]);
+
+      setActiveCommentIndex(comCount)
+    }
+
+    // let format = editor.getFormat();
+    // if(format.custom) {
+    //   editor.format('custom', '');
+    // } else {
+    //   editor.format('custom', 'comment-dot');
+    // }
+  }
+
+/*  useEffect(() => {
+    const elem = document.getElementById('toolbar');
+    console.log('toolbar height', elem.clientHeight);
+    window.addEventListener('resize', handleResize);
+    setBarHeight(elem.clientHeight+2);
+  }, [])
+
+  function handleResize(e) {
+    const elem = document.getElementById('toolbar');
+    console.log('height', elem.clientHeight);
+    setBarHeight(elem.clientHeight+2);
+  }*/
+
+
+
+
 	return (
 		<Fragment>
       {activeModal && renderModal()}
@@ -180,10 +287,7 @@ function PeerHomeworkAssessor(props) {
       </Row>
 
 			<form className='d-flex flex-column h-100'>
-        <div ref={topZone}
-          className='top-zone w-100 mt-3 mb-3'
-          style={{'flexBasis':topZonePercent+'%'}}
-        >
+        <div ref={topZone} className='top-zone w-100 mt-3 mb-3' style={{'flexBasis':topZonePercent+'%'}} >
           <RubricPanel
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
@@ -191,57 +295,35 @@ function PeerHomeworkAssessor(props) {
             isLimitedEditing={false}
           />
         </div>
-        <div ref={handle} className='handle text-center p-2'
-          onMouseMove={handleResizing}
-        >
+        <div ref={handle} className='handle text-center p-2' onMouseMove={handleResizing} >
           ===
         </div>
         <div className='bottom-zone d-flex flex-row'>
-          <DraftWriter
-            style={{'height': 100 - topZonePercent+'vh'}}
-            isReadOnly={true}
-            isShowCorrect={false}
-            toolAssignmentData={assignment.toolAssignmentData}
-            toolHomeworkData={toolHomeworkData}
-            handleContentUpdated={handleHomeworkDataChange}
-            triggerAutoSave={autoSave} />
-
+          <div className={`d-flex flex-column text-editor no-bar`}>
+            <EditorToolbar />
+            <ReactQuill
+              ref={reactQuillRef}
+              className='h-100'
+              theme="snow"
+              readOnly={false}
+              defaultValue={combinedDraftAndCommentsContent}
+              onChange={() => {}}
+              onChangeSelection={onSelectionChanged}
+              placeholder={"Write something awesome..."}
+              modules={modules}
+              formats={formats}
+              // style={{height: `calc(100% - ${barHeight}px`}}
+            />
+          </div>
           <CommentsPanel
             style={{'height': 100 - topZonePercent+'vh'}}
             className='h-auto'
             assessorId={activeUser.id}
             toolAssignmentData={assignment.toolAssignmentData}
             toolHomeworkData={toolHomeworkData}
+            onAddComment={onAddComment}
           />
         </div>
-
-        {/*<Container className='mt-2 ml-1 mr-2'>*/}
-        {/*  <ResizePanel direction="s">*/}
-        {/*    <RubricPanel*/}
-        {/*      rubricRanks={assignment.toolAssignmentData.rubricRanks}*/}
-        {/*      rubricCriteria={assignment.toolAssignmentData.rubricCriteria}*/}
-        {/*      isEditMode={false}*/}
-        {/*      isLimitedEditing={false}*/}
-        {/*    />*/}
-        {/*  </ResizePanel>*/}
-        {/*  <DraftWriter*/}
-        {/*    isReadOnly={false}*/}
-        {/*    isShowCorrect={false}*/}
-        {/*    toolAssignmentData={assignment.toolAssignmentData}*/}
-        {/*    toolHomeworkData={toolHomeworkData}*/}
-        {/*    handleContentUpdated={handleHomeworkDataChange}*/}
-        {/*    triggerAutoSave={autoSave} />*/}
-        {/*</Container>*/}
-
-        {/*<Container className='pb-5'>*/}
-        {/*  <DraftWriter*/}
-        {/*    isReadOnly={false}*/}
-        {/*    isShowCorrect={false}*/}
-        {/*    toolAssignmentData={assignment.toolAssignmentData}*/}
-        {/*    toolHomeworkData={toolHomeworkData}*/}
-        {/*    handleContentUpdated={handleHomeworkDataChange}*/}
-        {/*    triggerAutoSave={autoSave} />*/}
-        {/*</Container>*/}
 			</form>
 
 

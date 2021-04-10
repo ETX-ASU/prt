@@ -10,7 +10,8 @@ library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
 
 
 function CommentsPanel(props) {
-  const {assessorId, toolAssignmentData, toolHomeworkData} = props;
+  const {assessorId, toolHomeworkData, onAddComment} = props;
+  // const editor = (quillRef?.current?.editor) ? quillRef.current.editor : null;
   const [assessorComments, setAssessorComments] = useState([]);
   const [commentIndex, setCommentIndex] = useState(0);
 
@@ -26,9 +27,6 @@ function CommentsPanel(props) {
     (commentIndex === 0) ? setCommentIndex(assessorComments.length-1) : setCommentIndex(commentIndex-1);
   }
 
-  function onAddComment() {
-    console.log('add comment');
-  }
 
   function onDeleteComment() {
     console.log('delete comment');

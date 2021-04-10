@@ -42,7 +42,7 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
 						location {
 							isWholeDocument
 							startCharNum
-							endCharNum
+							selectionLength
 							x
 							y
 						}
@@ -117,7 +117,7 @@ export const listFullHomeworks = /* GraphQL */ `
 						location {
 							isWholeDocument
 							startCharNum
-							endCharNum
+							selectionLength
 							x
 							y
 						}

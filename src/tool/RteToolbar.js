@@ -1,6 +1,10 @@
 import React from "react";
 import "./RteStyles.scss";
-import { Quill } from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
+import ComTag from "./ComTag";
+
+
+Quill.register('formats/span', ComTag);
 
 // Custom Undo button icon component for Quill editor. You can import it directly
 // from 'quill/assets/icons/undo.svg' but I found that a number of loaders do not
@@ -56,13 +60,22 @@ Font.whitelist = [
 ];
 Quill.register(Font, true);
 
+
 // Modules object for setting up the Quill editor
 export const modules = {
   toolbar: {
     container: "#toolbar",
     handlers: {
       undo: undoChange,
-      redo: redoChange
+      redo: redoChange,
+      link: (value) => {
+        if (value) {
+          let href = prompt('Enter the URL');
+          this.quill.format('link', href);
+        } else {
+          this.quill.format('link', false);
+        }
+      }
     }
   },
   history: {
@@ -91,7 +104,8 @@ export const formats = [
   "link",
   "image",
   "color",
-  "code-block"
+  "code-block",
+  "span"
 ];
 
 // Quill Toolbar component

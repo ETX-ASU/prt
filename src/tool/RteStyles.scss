@@ -121,3 +121,24 @@
 .ql-font-verdana {
   font-family: "Verdana", serif;
 }
+
+
+span.comtag {
+  background-color: rgba(255, 255, 0, 0.5);
+  margin-right: -5px;
+
+  &:after {
+    content: attr(data-content);
+    border: 1px solid black;
+    background-color: yellow;
+    color: midnightblue;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    position: relative;
+    top: -5px;
+    left: 0;
+    padding: 5px;
+    margin-left: 5px;
+  }
+}

@@ -95,7 +95,7 @@ type Comment {
 type DocLocation {
   isWholeDocument: Boolean # TRUE if the comment isn't about a specific point in the document
   startCharNum: Int
-  endCharNum: Int
+  selectionLength: Int
   x: Int
   y: Int # value of 0 means it is a document-wide comment
 }
