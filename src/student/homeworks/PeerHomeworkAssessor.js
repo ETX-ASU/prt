@@ -49,8 +49,13 @@ function PeerHomeworkAssessor(props) {
   const [topZoneHeight, setTopZoneHeight] = useState(200);
   const [topZonePercent, setTopZonePercent] = useState(45);
   const [comments, setComments] = useState([]);
-  const [activeCommentId, setActiveCommentId] = useState('');
+  const [activeCommentId, _setActiveCommentId] = useState('');
+  const [prevCommentId, setPrevCommentId] = useState('');
 
+  const setActiveCommentId = (id) => {
+    setPrevCommentId(activeCommentId);
+    _setActiveCommentId(id);
+  }
 
   useEffect(() => {
     const tagsElem = document.getElementById('comments-layer-wrapper');
@@ -66,15 +71,20 @@ function PeerHomeworkAssessor(props) {
 
   useEffect(() => {
     const editor = reactQuillRef.current.editor;
-
+    let activeComment = null;
     comments.forEach(c => {
       const startPt = c.location.index;
       editor.setSelection(startPt, c.location.length);
       editor.format('comment-tag', {id: c.id, isActiveBtn: (c.id === activeCommentId)});
+      if (c.id === activeCommentId) activeComment = c;
     })
 
-    editor.blur();
-  }, [comments, activeCommentId]);
+    if (prevCommentId !== activeCommentId && activeComment) {
+      editor.setSelection(activeComment.location.index + activeComment.location.length - 1, 0, 'user');
+    } else {
+      editor.setSelection(null);
+    }
+  }, [comments.length, activeCommentId]);
 
 
 
@@ -231,7 +241,7 @@ function PeerHomeworkAssessor(props) {
         reviewerId: activeUser.id,
         tagNum: comCount,
         tagName: (comCount < 10) ? "0" + comCount : "" + comCount,
-        content: 'Add your notes here',
+        content: '',
         location: {
           isWholeDocument: isWholeDocument,
           index: sel.index,
@@ -326,8 +336,9 @@ function PeerHomeworkAssessor(props) {
             assessorId={activeUser.id}
             toolAssignmentData={assignment.toolAssignmentData}
             toolHomeworkData={toolHomeworkData}
-            comments={comments}
             activeCommentId={activeCommentId}
+            comments={comments}
+            setActiveCommentId={setActiveCommentId}
             updateComment={onUpdateComment}
             onAddComment={onAddComment}
           />

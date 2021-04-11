@@ -25,6 +25,11 @@
 .comments-panel {
   height: auto;
 
+  textarea {
+    font-size: 12px;
+    height: 65%;
+  }
+
   .comment-buttons {
     display: inline;
     width: fit-content;
@@ -40,7 +45,7 @@
     }
   }
 
-  h3 {
+  h4 {
     display: inline;
   }
 }
