@@ -44,68 +44,56 @@ function PeerHomeworkAssessor(props) {
   const handle = useRef(null);
   const topZone = useRef(null);
   const reactQuillRef = useRef(null);
+  const [tagsLayer, setTagsLayer] = useState(null);
   const [dragState, setDragState] = useState({isDragging:false, originY:-1, h:200});
   const [topZoneHeight, setTopZoneHeight] = useState(200);
   const [topZonePercent, setTopZonePercent] = useState(45);
   const [comments, setComments] = useState([]);
-  const [activeCommentIndex, setActiveCommentIndex] = useState(-1);
-  const [combinedDraftAndCommentsContent, setCombinedDraftAndCommentsContent] = useState(toolHomeworkData.draftContent);
-  // const [quillRef, setQuillRef] = useState(null);
-
+  const [activeCommentId, setActiveCommentId] = useState('');
 
 
   useEffect(() => {
-    // Loop through all comments
+    const tagsElem = document.getElementById('comments-layer-wrapper');
+    setTagsLayer(tagsElem);
+    reactQuillRef.current.editor.addContainer(tagsElem);
+
+    const toolbarElem = document.querySelector('.ql-tooltip.ql-hidden');
+    const buttonsLayer = tagsElem.querySelector('.comment-buttons-layer');
+    const editorElem = document.querySelector('.ql-editor');
+    editorElem.addEventListener('scroll', () => buttonsLayer.style.top = toolbarElem.style['margin-top']);
+  }, [])
+
+
+  useEffect(() => {
     const editor = reactQuillRef.current.editor;
-    const origSelection = editor.getSelection();
-    let wasUpdated = false;
+
     comments.forEach(c => {
-      const cFormat = editor.getFormat(c.location.index, c.location.length);
-      if (cFormat.color === 'inherit') return;
-      editor.setSelection(c.location.index, c.location.length);
-      editor.format('span', {id:c.id, tagNum:c.tagNum});
-      wasUpdated = true;
-      // editor.format('link', () => console.log("Howdy, Bob"));
-      // document.getElementById(c.id).onClick = () => console.log(`You clicked ${c.id}`);
+      const startPt = c.location.index;
+      editor.setSelection(startPt, c.location.length);
+      editor.format('comment-tag', {id: c.id, isActiveBtn: (c.id === activeCommentId)});
     })
 
-    // if (wasUpdated) {
-    //   editor.off("selection-change", onSelectionChanged);
-    //   editor.on("selection-change", onSelectionChanged);
-    // }
-      // If comment has NOT been tagged, select it's region in the essay and tag it now.
-
-      // If comment has been set as active, mark it as active and unmark the previous tag
+    editor.blur();
+  }, [comments, activeCommentId]);
 
 
 
-  }, [comments]);
+  function getIdOfLeaf(editor, index) {
+    const leaf = editor.getLeaf(index);
+    const className = leaf[0].parent.domNode.className;
+    if (className !== 'comment-btn' && className !== 'comment-tag') return;
 
-  // useEffect(() => {
-  //   const editor = reactQuillRef.current.editor;
-  //   editor.on('selection-change', onSelectionChanged)
-  // }, [])
-
-
-  const onSelectionChanged = (range, source, olEditor) => {
-    const editor = reactQuillRef?.current?.editor;
-    if (!editor) return;
-    if (source !== 'user' || !range || range.length > 0) return;
-    const leaf = editor.getLeaf(range.index);
-    if (leaf[0].parent.domNode.className !== 'comtag') return;
-    // console.log("leaf", leaf[0]);
-    const commentId = (leaf[0].parent.domNode.id);
-    console.log(`Clicked on leaf id #${commentId}`, comments.length);
+    return leaf[0].parent.domNode.id || '';
   }
 
-  // function handleClickFormat() {
-  //   console.log('adding comment');
-  //   let range = reactQuillRef.current.editor.getSelection();
-  //   if (range) {
-  //     reactQuillRef.current.editor.format('span', true);
-  //   }
-  // }
+  // changes selection if actual highlighted content is clicked
+  const onSelectionChanged = (range, source) => {
+    const editor = reactQuillRef?.current?.editor;
+    if (!editor || source !== 'user' || !range || range.length > 0) return;
 
+    const commentId = getIdOfLeaf(editor, range.index);
+    setActiveCommentId(commentId);
+  }
 
 	async function submitHomeworkForReview() {
     setActiveModal(null);
@@ -212,49 +200,54 @@ function PeerHomeworkAssessor(props) {
   }
 
 
+  function onUpdateComment(comment) {
+    let altComments = [...comments];
+    let index = altComments.findIndex(c => c.id === comment.id)
+    altComments[index] = comment;
+    setComments(altComments);
+  }
+
+
   function onAddComment() {
 	  const editor = reactQuillRef.current.editor;
 
 	  // Look through all current comments.
     let sel = editor.getSelection();
+    let bounds = editor.getBounds(sel.index, sel.length);
+
     const isWholeDocument = !sel;
     const selStart = isWholeDocument ? 0 : sel.index;
     const selEnd = isWholeDocument ? 1 : selStart + sel.length;
 
     const isAvailable = comments.every(c => ((selStart > c.location.index + c.location.length) || (selEnd < c.location.index)));
 
-    const comCount = comments.length;
+    const comCount = comments.length + 1;
     if (!isWholeDocument && !isAvailable) {
       console.log("Comment NOT added because selection overlaps and existing comment area.");
     } else {
-      // Otherwise, we can add this comment to the pile.
-      setComments([...comments, {
-        id: uuid(),
+      const id = uuid();
+      const newComment = {
+        id: id,
         reviewerId: activeUser.id,
         tagNum: comCount,
+        tagName: (comCount < 10) ? "0" + comCount : "" + comCount,
         content: 'Add your notes here',
         location: {
           isWholeDocument: isWholeDocument,
           index: sel.index,
           length: sel.length,
-          x: 0,
-          y: 0
+          x: bounds.left + bounds.width,
+          y: bounds.top
         },
         commentRating: -1,
         criterionNum: -1,
         isDrawn: false,
         isActive: false
-      }]);
+      };
 
-      setActiveCommentIndex(comCount)
+      setActiveCommentId(id);
+      setComments([...comments, newComment]);
     }
-
-    // let format = editor.getFormat();
-    // if(format.custom) {
-    //   editor.format('custom', '');
-    // } else {
-    //   editor.format('custom', 'comment-dot');
-    // }
   }
 
 /*  useEffect(() => {
@@ -301,12 +294,24 @@ function PeerHomeworkAssessor(props) {
         <div className='bottom-zone d-flex flex-row'>
           <div className={`d-flex flex-column text-editor no-bar`}>
             <EditorToolbar />
+            <div id='comments-layer-wrapper'>
+              <div className='comment-buttons-layer'>
+                {comments.map(c =>
+                  <div key={c.id}
+                    onClick={() => setActiveCommentId(c.id)}
+                    className={`comment-btn${(c.id === activeCommentId) ? ' selected' : ''}`}
+                    style={{top: (c.location.y - 14)+'px', left: (c.location.x - 8)+'px'}}>
+                    {c.tagName}
+                  </div>
+                )}
+              </div>
+            </div>
             <ReactQuill
               ref={reactQuillRef}
               className='h-100'
               theme="snow"
               readOnly={false}
-              defaultValue={combinedDraftAndCommentsContent}
+              defaultValue={toolHomeworkData.draftContent}
               onChange={() => {}}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
@@ -321,8 +326,14 @@ function PeerHomeworkAssessor(props) {
             assessorId={activeUser.id}
             toolAssignmentData={assignment.toolAssignmentData}
             toolHomeworkData={toolHomeworkData}
+            comments={comments}
+            activeCommentId={activeCommentId}
+            updateComment={onUpdateComment}
             onAddComment={onAddComment}
           />
+          {/*<div ref={tagsLayerRef} >*/}
+          {/*  <div className='badge-danger'>HOWDY!</div>*/}
+          {/*</div>*/}
         </div>
 			</form>
 

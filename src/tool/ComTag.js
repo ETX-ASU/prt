@@ -4,16 +4,13 @@ import ReactQuill from "react-quill";
 let Inline = ReactQuill.Quill.import('blots/inline');
 
 class ComTag extends Inline {
-	static create(value) {
-		let node = super.create();
+	static create({id, isActiveBtn}) {
+		let node = super.create({id, isActiveBtn});
 		// Oddly, we must set an attribute to trigger the style update and use of the added class name
-		node.setAttribute('style', 'color: inherit; data-id:"blah"');
-		node.setAttribute('data-content', `TAG-${value.tagNum}`);
-		node.setAttribute('src', `TAG-${value.tagNum}`);
-		node.id = value.id;
-		// node.setAttribute('src', `javascript: () => console.log("Hell yeah")`);
-		// node.onClick = () => console.log("Hell yeah");
-		// if (value?.url) node.setAttribute('src', `javascript: () => console.log("Hell yeah")`);
+		node.setAttribute('style', `color: inherit; background-color: ${(isActiveBtn) ? '#FFD23D' : '#FFFAD1'}`);
+		// node.setAttribute('style', `color: inherit`);
+		// node.setAttribute('src', 'nothing')
+		node.id = id;
 		return node;
 	}
 
@@ -25,9 +22,10 @@ class ComTag extends Inline {
 	}
 }
 
-ComTag.blotName = 'span';
+ComTag.blotName = 'comment-tag';
 ComTag.tagName = 'span';
-ComTag.className = 'comtag';
+ComTag.className = 'comment-tag';
 
 export default ComTag;
+
 
