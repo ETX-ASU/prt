@@ -12,7 +12,7 @@ const MAX_NUM_CRITERIA = 10;
 const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricPanel(props) {
-  const {rubricCriteria, rubricRanks} = props;
+  const {rubricCriteria, rubricRanks, isReviewerMode} = props;
   // Note: In instructor/edit mode, ALL criteria and ranks are shown even when they are marked to be hidden from students
   const shownCriteria = (props.isEditMode) ? deepCopy(rubricCriteria) : rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);;
   const shownRanks = (props.isEditMode) ? deepCopy(rubricRanks) : rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
@@ -125,7 +125,6 @@ function RubricPanel(props) {
                   {shownRanks.map((rank, rNum) =>
                       (rank.isVisible || props.isEditMode) &&
                       <Col key={rNum} className={`rank-col p-0 ${rNum === props.activeDraggedRankIndex ? 'dragged-rank-match' : ''}`}>
-                      {/*<Col key={rNum} className={`rank-col p-0`}>*/}
                         <div className={`rank-summary w-100 bg-white ${!rank.isVisible ? 'mark-as-hidden' : ''}`}>
                           <div className='hidden-marker'>
                             <FontAwesomeIcon className='hidden-indicator' icon={faEyeSlash} />

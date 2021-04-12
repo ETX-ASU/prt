@@ -1,4 +1,4 @@
-.add-question-btn {
+/*.add-question-btn {
   display: inline-block;
   background-color: var(--x-darkest-gray);
   width: 24px;
@@ -32,7 +32,7 @@
       margin: 0 6px 0 10px;
     }
   }
-}
+}*/
 
 .add-remove-opts-bar {
   display: inline-block;
@@ -271,6 +271,10 @@
           text-transform: uppercase;
           background-color: aliceblue;
           border-bottom: 1px solid var(--x-lightest-gray);
+
+          &.rank-btn {
+            cursor: pointer;
+          }
         }
 
         textarea.rank-text {
@@ -305,7 +309,7 @@
           }
         }
 
-        .hidden-marker {
+        .hidden-marker, .selected-marker {
           display: none;
           position: absolute;
           padding-top: 2.25rem;
@@ -317,7 +321,7 @@
           text-align: center;
           vertical-align: middle;
 
-          .hidden-indicator {
+          .hidden-indicator, .selected-indicator {
             display: inline-block;
             width: 100px;
             height: 100px;
@@ -325,8 +329,14 @@
           }
         }
 
-        &.mark-as-hidden .hidden-marker {
+        .selected-marker {
+          //display: block;
+          //opacity: 0.01;
+          background-color: limegreen;
+        }
+        &.mark-as-hidden .hidden-marker, &.mark-as-selected .selected-marker {
           display: block;
+          //opacity: 0.25;
         }
       }
 
@@ -353,3 +363,44 @@
 }
 
 
+div.drag-bar {
+  position: absolute;
+  width: 100%;
+  line-height: 2px;
+  height: 2px;
+  margin-top: 8px;
+  cursor: pointer;
+
+  .drag-bar-line {
+    position: relative;
+    background-color: var(--x-lightest-gray);
+    cursor: pointer;
+    line-height: 2px;
+    height: 2px;
+  }
+
+  .drag-bar-knob {
+    display: block;
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 18px;
+    height: 7px;
+    background-color: var(--x-ultralight-gray);
+    border-radius: 5px;
+    border: 2px solid var(--x-lightest-gray);
+    //color: white;
+  }
+
+  //.drag-bar-handle {
+  //  width: 100px;
+  //  height: 6px;
+  //  border-radius: 3px;
+  //  background-color: var(--x-gray);
+  //  color: white;
+  //}
+}
+
+//.assessor-wrapper {
+//  height: calc(100% - 20px);
+//}

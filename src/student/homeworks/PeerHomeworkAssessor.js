@@ -19,7 +19,7 @@ import DraftWriter from "../../tool/DraftWriter";
 import ResizePanel from "react-resize-panel";
 
 import IconBackArrow from "../../assets/icon-back-arrow.svg";
-import RubricPanel from "../../instructor/assignments/RubricPanel";
+import RubricAssessorPanel from "../../instructor/assignments/RubricAssessorPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import RubricViewer from "../../instructor/assignments/RubricViewer";
 import CommentsPanel from "./CommentsPanel";
@@ -31,6 +31,9 @@ import { v4 as uuid } from "uuid";
 library.add(faCheck, faTimes);
 
 
+const MIN_TOP_ZONE_PERCENT = 15;
+const MAX_TOP_ZONE_PERCENT = 50;
+const VERT_MARGIN_PX = 128;
 
 /** This screen is shown to the student so they can "engage" with the homework assignment.
  * Any work they do or changes or interactions they make would be recorded and the updates
@@ -41,13 +44,17 @@ function PeerHomeworkAssessor(props) {
 	const activeUser = useSelector(state => state.app.activeUser);
 	const [toolHomeworkData, setToolHomeworkData] = useState(Object.assign({}, homework.toolHomeworkData));
   const [activeModal, setActiveModal] = useState(null);
-  const handle = useRef(null);
+
+  const headerZoneRef = useRef(null);
+  const footerZoneRef = useRef(null);
+  const wrapperRef = useRef(null);
   const topZone = useRef(null);
   const reactQuillRef = useRef(null);
-  const [tagsLayer, setTagsLayer] = useState(null);
-  const [dragState, setDragState] = useState({isDragging:false, originY:-1, h:200});
-  const [topZoneHeight, setTopZoneHeight] = useState(200);
-  const [topZonePercent, setTopZonePercent] = useState(45);
+
+  const [availHeightPx, setAvailHeightPx] = useState(1000);
+  const [topZonePercent, setTopZonePercent] = useState(20);
+  const [bottomZonePercent, setBottomZonePercent] = useState(80);
+
   const [comments, setComments] = useState([]);
   const [activeCommentId, _setActiveCommentId] = useState('');
   const [prevCommentId, setPrevCommentId] = useState('');
@@ -57,14 +64,23 @@ function PeerHomeworkAssessor(props) {
     _setActiveCommentId(id);
   }
 
+
   useEffect(() => {
     const tagsElem = document.getElementById('comments-layer-wrapper');
-    setTagsLayer(tagsElem);
     reactQuillRef.current.editor.addContainer(tagsElem);
 
     const toolbarElem = document.querySelector('.ql-tooltip.ql-hidden');
     const buttonsLayer = tagsElem.querySelector('.comment-buttons-layer');
     const editorElem = document.querySelector('.ql-editor');
+
+    let remainingHeight = document.documentElement.clientHeight
+      - headerZoneRef.current.offsetHeight
+      - footerZoneRef.current.offsetHeight
+      - VERT_MARGIN_PX;
+
+    setAvailHeightPx(remainingHeight);
+
+    window.addEventListener('resize', onWindowResized);
     editorElem.addEventListener('scroll', () => buttonsLayer.style.top = toolbarElem.style['margin-top']);
   }, [])
 
@@ -86,6 +102,40 @@ function PeerHomeworkAssessor(props) {
     }
   }, [comments.length, activeCommentId]);
 
+
+  function onWindowResized(e) {
+    let remainingHeight = document.documentElement.clientHeight
+      - headerZoneRef.current.offsetHeight
+      - footerZoneRef.current.offsetHeight
+      - VERT_MARGIN_PX;
+    setAvailHeightPx(remainingHeight);
+  }
+
+  function downSizeRubric(e) {
+    const SHIFT = 5;
+
+    if (topZonePercent-SHIFT < MIN_TOP_ZONE_PERCENT) {
+      setTopZonePercent(MIN_TOP_ZONE_PERCENT);
+      setBottomZonePercent(100 - MIN_TOP_ZONE_PERCENT);
+    } else {
+      setTopZonePercent(topZonePercent - SHIFT);
+      setBottomZonePercent(bottomZonePercent + SHIFT);
+    }
+
+  }
+
+  function upSizeRubric(e) {
+    const SHIFT = 5;
+
+    if (topZonePercent+SHIFT > MAX_TOP_ZONE_PERCENT) {
+      setTopZonePercent(MAX_TOP_ZONE_PERCENT);
+      setBottomZonePercent(100 - MAX_TOP_ZONE_PERCENT);
+    } else {
+      setTopZonePercent(topZonePercent + SHIFT);
+      setBottomZonePercent(bottomZonePercent - SHIFT);
+    }
+
+  }
 
 
   function getIdOfLeaf(editor, index) {
@@ -190,24 +240,6 @@ function PeerHomeworkAssessor(props) {
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
   }
 
-  function handleResizing(e) {
-    if (!dragState.isDragging) {
-      if (dragState.originY === -1 && e.buttons === 1) {
-        setDragState({isDragging:true, originY:e.pageY, h:topZone.current.clientHeight});
-      }
-      return;
-    }
-
-    // Stop the drag if no button is down
-	  if (dragState.isDragging && e.buttons !== 1) {
-	    setDragState({isDragging: false, originY:-1, h:dragState.h});
-	    return;
-    }
-
-    const yDelta = e.pageY - dragState.originY;
-    const h = dragState.h+yDelta; //Math.max(Math.min(topZoneHeight+yDelta, 600), 200);
-    setTopZoneHeight(h);
-  }
 
 
   function onUpdateComment(comment) {
@@ -233,7 +265,7 @@ function PeerHomeworkAssessor(props) {
 
     const comCount = comments.length + 1;
     if (!isWholeDocument && !isAvailable) {
-      console.log("Comment NOT added because selection overlaps and existing comment area.");
+      console.log("Comment NOT added because selection overlaps an existing comment area.");
     } else {
       const id = uuid();
       const newComment = {
@@ -247,7 +279,7 @@ function PeerHomeworkAssessor(props) {
           index: sel.index,
           length: sel.length,
           x: bounds.left + bounds.width,
-          y: bounds.top
+          y: bounds.top + editor.scrollingContainer.scrollTop
         },
         commentRating: -1,
         criterionNum: -1,
@@ -260,48 +292,61 @@ function PeerHomeworkAssessor(props) {
     }
   }
 
-/*  useEffect(() => {
-    const elem = document.getElementById('toolbar');
-    console.log('toolbar height', elem.clientHeight);
-    window.addEventListener('resize', handleResize);
-    setBarHeight(elem.clientHeight+2);
-  }, [])
 
-  function handleResize(e) {
-    const elem = document.getElementById('toolbar');
-    console.log('height', elem.clientHeight);
-    setBarHeight(elem.clientHeight+2);
-  }*/
-
-
+  function onRankSelected(crit, rNum) {
+    const ratings = [...toolHomeworkData.criterionRatingsOnDraft];
+    let ratingIndex = ratings.findIndex(r => r.criterionId === crit.id);
+    if (ratingIndex >= 0) {
+      const oldRating = ratings[ratingIndex];
+      oldRating.ratingGiven = rNum;
+      ratings.splice(ratingIndex, 1, oldRating)
+    } else {
+      const rating = {
+        reviewerId: activeUser.id,
+        ratingGiven: rNum,
+        criterionId: crit.id
+      }
+      ratings.push(rating);
+    }
+    setToolHomeworkData({...toolHomeworkData, criterionRatingsOnDraft:ratings})
+  }
 
 
 	return (
 		<Fragment>
       {activeModal && renderModal()}
-      <Row className={'m-0 p-0 pb-2'}>
+      <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
         <Col className='col-9 p-0'>
           <FontAwesomeIcon className='btn-icon mr-2' icon={faChevronLeft} onClick={handleCancelButton}/>
           <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
         </Col>
         <Col className={'col-3 text-right'}>
+          <span onClick={downSizeRubric}>[-]</span>
+          <span onClick={upSizeRubric}>[+]</span>
           <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
         </Col>
       </Row>
 
-			<form className='d-flex flex-column h-100'>
-        <div ref={topZone} className='top-zone w-100 mt-3 mb-3' style={{'flexBasis':topZonePercent+'%'}} >
-          <RubricPanel
+			<div ref={wrapperRef}
+        className='assessor-wrapper d-flex flex-column' style={{height: availHeightPx+'px'}}>
+        {/*onMouseUp={onDragEnd}*/}
+        {/*onMouseMove={onDrag}>*/}
+        <div ref={topZone} className='top-zone w-100 mt-3 mb-3' style={{height: topZonePercent+'%'}}>
+          <RubricAssessorPanel
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
-            isEditMode={false}
-            isLimitedEditing={false}
+            ratings={toolHomeworkData.criterionRatingsOnDraft}
+            onRankSelected={onRankSelected}
           />
         </div>
-        <div ref={handle} className='handle text-center p-2' onMouseMove={handleResizing} >
-          ===
-        </div>
-        <div className='bottom-zone d-flex flex-row'>
+        {/*<div ref={dragBarRef}*/}
+        {/*  style={{top: (topZonePercent + 53)+'px'}}*/}
+        {/*  className='drag-bar text-center p-2'*/}
+        {/*  onMouseDown={onDragStart} >*/}
+        {/*  <div className='drag-bar-line' />*/}
+        {/*  <div className='drag-bar-knob' />*/}
+        {/*</div>*/}
+        <div className='bottom-zone d-flex flex-row mt-3' style={{height: bottomZonePercent+'%'}} >
           <div className={`d-flex flex-column text-editor no-bar`}>
             <EditorToolbar />
             <div id='comments-layer-wrapper'>
@@ -318,7 +363,7 @@ function PeerHomeworkAssessor(props) {
             </div>
             <ReactQuill
               ref={reactQuillRef}
-              className='h-100'
+              // className='h-100'
               theme="snow"
               readOnly={false}
               defaultValue={toolHomeworkData.draftContent}
@@ -331,7 +376,6 @@ function PeerHomeworkAssessor(props) {
             />
           </div>
           <CommentsPanel
-            style={{'height': 100 - topZonePercent+'vh'}}
             className='h-auto'
             assessorId={activeUser.id}
             toolAssignmentData={assignment.toolAssignmentData}
@@ -345,12 +389,13 @@ function PeerHomeworkAssessor(props) {
           {/*<div ref={tagsLayerRef} >*/}
           {/*  <div className='badge-danger'>HOWDY!</div>*/}
           {/*</div>*/}
+
         </div>
-			</form>
+			</div>
 
 
 
-      <Row>
+      <Row ref={footerZoneRef} className='mt-2' >
         <Col className='text-right mr-4'>
           <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
         </Col>
