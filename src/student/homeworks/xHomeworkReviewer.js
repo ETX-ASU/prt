@@ -10,11 +10,11 @@ import HeaderBar from "../../app/components/HeaderBar";
 import {reportError} from "../../developer/DevUtils";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faCheck, faChevronLeft, faTimes} from '@fortawesome/free-solid-svg-icons'
+import {faCheck, faChevronLeft, faTimes, faGripLines} from '@fortawesome/free-solid-svg-icons'
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import QuizViewerAndEngager from "../../tool/QuizViewerAndEngager";
 import {sendAutoGradeToLMS} from "../../lmsConnection/RingLeader";
-import {calcAutoScore, calcMaxScoreForAssignment} from "../../tool/ToolUtils";
+import {calcAutoScore, calcMaxScoreForAssignment, sizerFunc} from "../../tool/ToolUtils";
 import DraftWriter from "../../tool/DraftWriter";
 import ResizePanel from "react-resize-panel";
 
@@ -22,27 +22,36 @@ import IconBackArrow from "../../assets/icon-back-arrow.svg";
 import RubricPanel from "../../instructor/assignments/RubricPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
-library.add(faCheck, faTimes);
+library.add(faCheck, faTimes, faGripLines);
 
 
 
 /** This screen is shown to the student so they can "engage" with the homework assignment.
  * Any work they do or changes or interactions they make would be recorded and the updates
  * saved to the database as necessary. */
-function HomeworkReviewer(props) {
+function xHomeworkReviewer(props) {
 	const dispatch = useDispatch();
 	const {homework, assignment} = props;
 	const activeUser = useSelector(state => state.app.activeUser);
 	const [toolHomeworkData, setToolHomeworkData] = useState(Object.assign({}, homework.toolHomeworkData));
   const [activeModal, setActiveModal] = useState(null);
-  const handle = useRef(null);
-  const topZone = useRef(null);
-  const [dragState, setDragState] = useState({isDragging:false, originY:-1, h:200});
-  const [topZoneHeight, setTopZoneHeight] = useState(200);
 
-  // useEffect(() => {
-  //   handle.onMouseDown
-  // })
+  // const handle = useRef(null);
+  // const topZone = useRef(null);
+  // const [dragState, setDragState] = useState({isDragging:false, originY:-1, h:200});
+
+
+  // const [topZoneHeight, setTopZoneHeight] = useState(200);
+
+  const headerZoneRef = useRef(null);
+  const footerZoneRef = useRef(null);
+
+  const [availableHeight, setAvailableHeight] = useState(300);
+  const [availableWidth, setAvailableWidth] = useState(500);
+  const [topPerc, setTopPerc] = useState(0.25);
+
+
+  useEffect(sizerFunc({headerZoneRef, extraHeight: 106}, setAvailableWidth, setAvailableHeight), [])
 
 	async function submitHomeworkForReview() {
     setActiveModal(null);
@@ -143,45 +152,22 @@ function HomeworkReviewer(props) {
 	//   setDragState({isDragging:false, originY:-1})
   // }
 
-  function handleResizing(e) {
-    if (!dragState.isDragging) {
-      if (dragState.originY === -1 && e.buttons === 1) {
-        setDragState({isDragging:true, originY:e.pageY, h:topZone.current.clientHeight});
-      }
-      return;
-    }
-
-    // Stop the drag if no button is down
-	  if (dragState.isDragging && e.buttons !== 1) {
-	    setDragState({isDragging: false, originY:-1, h:dragState.h});
-	    return;
-    }
-
-    const yDelta = e.pageY - dragState.originY;
-    console.log(yDelta)
-    const h = dragState.h+yDelta; //Math.max(Math.min(topZoneHeight+yDelta, 600), 200);
-    setTopZoneHeight(h);
-  }
-
-
 	return (
 		<Fragment>
       {activeModal && renderModal()}
-      <Row className={'m-0 p-0 pb-2'}>
+      <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
         <Col className='col-9 p-0'>
           <FontAwesomeIcon className='btn-icon mr-2' icon={faChevronLeft} onClick={handleCancelButton}/>
           <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
         </Col>
-        <Col className={'col-3 text-right'}>
-          <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
+        <Col className={'col-3 text-right pr-0'}>
+          {/*<Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>*/}
         </Col>
       </Row>
 
 			<form>
-        <div ref={topZone}
-          className='top-zone position-relative w-100 mt-3 mb-3'
-          style={{height:topZoneHeight+'px'}}
-        >
+        <div className='top-zone position-relative w-100 mt-0 mb-3'
+          style={{height: Math.round(availableHeight * topPerc)+'px'}} >
           <RubricPanel
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
@@ -189,12 +175,11 @@ function HomeworkReviewer(props) {
             isLimitedEditing={false}
           />
         </div>
-        <div ref={handle} className='handle position-relative text-center p-2'
-          onMouseMove={handleResizing}
-        >
-          ===
+        <div className='handle position-relative text-center p-1'>
+          <FontAwesomeIcon className='btn-icon mr-2' icon={faGripLines} />
         </div>
-        <div className='bottom-zone position-relative d-flex flex-row'>
+        <div className='bottom-zone position-relative d-flex flex-row'
+          style={{height: Math.round(availableHeight * (1-topPerc))+'px'}} >
           <DraftWriter
             isReadOnly={false}
             isShowCorrect={false}
@@ -232,16 +217,8 @@ function HomeworkReviewer(props) {
         {/*    triggerAutoSave={autoSave} />*/}
         {/*</Container>*/}
 			</form>
-
-
-
-      <Row>
-        <Col className='text-right mr-4'>
-          <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
-        </Col>
-      </Row>
 		</Fragment>
 	)
 }
 
-export default HomeworkReviewer;
+export default xHomeworkReviewer;

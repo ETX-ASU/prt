@@ -31,7 +31,7 @@ function RubricPanel(props) {
     dupedCriterion.id = uuid();
     dupedCriterion.name += ' Copy';
     alteredCriteria.splice(index+1, 0, dupedCriterion);
-    props.onRubricCriteriaChanged(alteredCriteria);
+    props.onRubricCriteriaChanged('rubricCriteria', alteredCriteria);
     setCurTabId(dupedCriterion.id);
   }
 
@@ -44,7 +44,7 @@ function RubricPanel(props) {
     alteredCriteria.splice(index, 1);
 
     if (replaceVisibility) alteredCriteria.find(c => !c.isVisible).isVisible = true;
-    props.onRubricCriteriaChanged(alteredCriteria);
+    props.onRubricCriteriaChanged('rubricCriteria', alteredCriteria);
     setCurTabId(nextId);
   }
 
@@ -121,7 +121,7 @@ function RubricPanel(props) {
                   </Button>
                 </Row>}
 
-                <Row className='w-100 pt-1 m-0 ranks-row' >
+                <Row className={`w-100 pt-1 m-0 ranks-row ${props.isEditMode ? 'with-input-bar' : ''}`} >
                   {shownRanks.map((rank, rNum) =>
                       (rank.isVisible || props.isEditMode) &&
                       <Col key={rNum} className={`rank-col p-0 ${rNum === props.activeDraggedRankIndex ? 'dragged-rank-match' : ''}`}>
@@ -154,7 +154,7 @@ function RubricPanel(props) {
 
         {props.isEditMode &&
         <Button disabled={props.isLimitedEditing || shownCriteria.length >= MAX_NUM_CRITERIA}
-            className='add-criterion-btn rounded-circle xbg-dark p-0 m-0'
+            className='add-criterion-btn rounded-circle xbg-dark p-0 mr-3'
             style={{width:'24px', height:'24px'}}
             onClick={onAddCriterionBtn}>
           <FontAwesomeIcon className='btn-icon mr-0' icon={faPlus} />

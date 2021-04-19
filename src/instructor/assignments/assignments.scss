@@ -254,7 +254,12 @@
   }
 
   .ranks-row {
+    //height: 250px;
     height: 100%;
+
+    &.with-input-bar {
+      height: calc(100% - 3em);
+    }
 
     .rank-col {
       font-size: 10px;
@@ -404,3 +409,9 @@ div.drag-bar {
 //.assessor-wrapper {
 //  height: calc(100% - 20px);
 //}
+
+.sizer-btn {
+  cursor: pointer;
+  margin: 5px;
+  font-weight: bold;
+}

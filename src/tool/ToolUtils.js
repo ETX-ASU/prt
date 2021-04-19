@@ -1,7 +1,44 @@
-import {EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
+import {APP_TOP_PADDING, EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
 import {EMPTY_CRITERION, EMPTY_RUBRIC} from "./constants";
 import {v4 as uuid} from "uuid";
+import {useEffect} from "react";
 
+
+
+// export function sizerFunc(zoneRefs, widthSetter, heightSetter, toolBarHeightSetter) {
+//   return () => {
+//
+//     function onWindowResized() {
+//       const {width, height} = getAvailableContentDims(zoneRefs.headerZoneRef, zoneRefs.footerZoneRef, zoneRefs.rteToolbar)
+//       if (heightSetter) heightSetter(height - (zoneRefs.extraHeight || 0));
+//       if (widthSetter) widthSetter(width - (zoneRefs.extraWidth || 0));
+//     }
+//     window.addEventListener('resize', onWindowResized);
+//     onWindowResized();
+//
+//     return () => {
+//       window.removeEventListener('resize', onWindowResized);
+//     }
+//   }
+// }
+
+
+export function getAvailableContentDims(headerElem, footerElem) {
+    let excluded = 0;
+    if (headerElem) excluded += headerElem.current.getBoundingClientRect().bottom;
+    if (headerElem && headerElem.current.style.marginBottom) excluded += parseInt(headerElem.current.style.marginBottom);
+    if (footerElem) excluded += footerElem.current.getBoundingClientRect().height;
+    if (footerElem && footerElem.current.style.marginBottom) excluded += parseInt(footerElem.current.style.marginTop);
+
+    const appElem = document.querySelector('#app-container');
+    const appBounds = appElem.getBoundingClientRect();
+    excluded += appBounds.top;
+    excluded += (APP_TOP_PADDING * 2);
+    return ({
+      height: appBounds.height - excluded,
+      width: appBounds.width
+    });
+}
 
 export function getHomeworkStatus(gradeData, homework) {
   const {gradingProgress} = gradeData;
@@ -10,7 +47,6 @@ export function getHomeworkStatus(gradeData, homework) {
       (homework.createdAt !== homework.updatedAt) ? HOMEWORK_PROGRESS.inProgress :
         HOMEWORK_PROGRESS.notBegun;
 }
-
 
 export function calcMaxScoreForAssignment(assignment) {
   // TOOL-DEV: Use your own code here to receive toolAssignmentData and use it to return the maximum possible score for this assignment
@@ -55,15 +91,75 @@ export function calcAutoScore(assignment, homework) {
 
 export function generateDefaultRubric() {
   let defaultRubric = Object.assign({}, EMPTY_RUBRIC);
-  defaultRubric.criteria[0] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:0, name:'Tasty'});
-  defaultRubric.criteria[0].rankSummaries = ['I ate my own fingers just to get more of the flavor', 'Induces compulsive eating.', "I would eat this.", "I wouldn't eat this if I had a choice.", "I'd drink dumpster juice before eating that again. \n" +
-  "\n" +
-  "And now I'm going to throw a lot of text into this description in order to see how it handles the scrolling. In fact. I'm going to copy an paste this thing to kingdom come now that I think about it.\n" +
-  "\n" +
-  "I mean, heck. Why not? Just git er done, right?"]
-  defaultRubric.criteria[1] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:1, name:'Sticky'});
-  defaultRubric.criteria[1].rankSummaries =  ["It's like eating a rodent glue trap", "Good substitute for Elmer's", "Makes a nice mess", "More oily than sticky", "Petrolium Jelly is sticks better than this."]
-  defaultRubric.criteria[2] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:2, name:'Filling'});
-  defaultRubric.criteria[2].rankSummaries =  ["Filling like a neutron star", "I can't walk after eating it", "Filling like a bag of rocks", "Barely noticed I ate it", "Filling only if you're a cockroach and you had a snack just a few minutes ago."]
+
+  defaultRubric.criteria[0] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:0, name:'Idea / Content'});
+  defaultRubric.criteria[0].rankSummaries = [
+    "Focus on the topic is clear and well defined.\n\n" +
+    "Rich sense of detail creates a vivid, authentic picture of both environment and action, showing knowledge and insight.\n\n" +
+    "Fresh approach holds reader’s attention.",
+
+    "Focus on topic is clear.\n\n" +
+    "Sufficient detail creates a picture showing some knowledge and insight.\n\n" +
+    "Fresh approach adds something to reader’s understanding.",
+
+    "Focus on topic is somewhat defined.\n\n" +
+    "Underdeveloped details show little knowledge and are too general to create a picture.\n\n" +
+    "Fresh approach attempted, but lacks supporting details.\n",
+
+    "Focus on topic is not clearly defined.\n\n" +
+    "Limited, or disconnected details show virtually no understanding of the subject.\n\n" +
+    "Approach is common.",
+
+    "No focus\n\n" +
+    "Not able to identify any idea coherent or topic."
+  ]
+
+  defaultRubric.criteria[1] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:1, name:'Organization'});
+  defaultRubric.criteria[1].rankSummaries =  [
+    "Memorable introduction and conclusion are clearly linked (may be explicit or implicit connection) and establish focus.\n\n" +
+    "Sequencing of details is effective and logical.\n\n" +
+    "Transitions effectively tie the ideas of the paper together",
+
+    "Effective introduction and conclusion are clearly linked (may be explicit or implicit connection) and establish focus.\n\n" +
+    "Sequencing of details is logical.\n\n" +
+    "Transitions attempt to tie the ideas of the paper together",
+
+    "Introduction and conclusion attempt to establish focus.\n\n" +
+    "Sequencing of details is limited.\n\n" +
+    "Transitions are limited.",
+
+    "Introduction /conclusion may be absent or lack focus.\n\n" +
+    "Sequencing of details is not clear.\n\n" +
+    "Transitions are not evident.",
+
+    "Lacks any sequence-- sudden changes in past, present, future reference to events in such a way the reader is left confused."
+  ]
+
+  defaultRubric.criteria[2] = Object.assign({}, EMPTY_CRITERION, {id:uuid(), orderNum:2, name:'Voice'});
+  defaultRubric.criteria[2].rankSummaries =  [
+    "The writer’s personality is expressed; confidence and feeling are apparent.\n\n" +
+    "Individual, powerful commitment to the topic is obvious.\n\n" +
+    "Connection to audience and purpose is excellent.\n\n" +
+    "Writing evokes strong emotion",
+
+    "Writer’s personality is undefined; writing is cautious.\n\n" +
+    "Commitment to topic is limited.\n\n" +
+    "Connection to audience and purpose is limited.\n\n" +
+    "Writing evokes limited emotion in the reader.",
+
+    "Writer’s personality pokes through; confidence and feeling fade in and out.\n\n" +
+    "A commitment to the topic is apparent.\n\n" +
+    "Connection to audience and purpose is appropriate.\n\n" +
+    "The writing evokes some emotion in the reader.",
+
+    "Writer’s personality is not evident.\n\n" +
+    "Commitment to topic is lacking.\n\n" +
+    "Connection to audience and purpose is lacking.\n\n" +
+    "Writing evokes minimal emotion in the reader.",
+
+    "Plagiarism.\n\n" +
+    "Leaves the reader utterly unengaged and wondering regretfully about the minutes or hours lost reading it."
+  ]
+
   return defaultRubric;
 }

@@ -26,7 +26,6 @@ import moment from "moment";
 import {reportError} from "../developer/DevUtils";
 
 import './homeworks/homeworks.scss';
-import HomeworkReviewer from "./homeworks/HomeworkReviewer";
 import PeerReviewsSummaryTable from "./homeworks/PeerReviewsSummaryTable";
 import PeerHomeworkAssessor from "./homeworks/PeerHomeworkAssessor";
 

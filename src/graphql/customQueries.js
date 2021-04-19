@@ -27,10 +27,9 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
         toolHomeworkData {
 					draftContent
 					criterionRatingsOnDraft {
-						id
+						criterionId
 						reviewerId
 						ratingGiven
-						criterionNum
 					}
 					commentsOnDraft {
 						id
@@ -39,13 +38,8 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
 						content
 						commentRating
 						criterionNum
-						location {
-							isWholeDocument
-							startCharNum
-							selectionLength
-							x
-							y
-						}
+						index
+						length
 					}
 				}
         createdAt
@@ -102,10 +96,9 @@ export const listFullHomeworks = /* GraphQL */ `
         toolHomeworkData {
 					draftContent
 					criterionRatingsOnDraft {
-						id
+						criterionId
 						reviewerId
 						ratingGiven
-						criterionNum
 					}
 					commentsOnDraft {
 						id
@@ -114,13 +107,8 @@ export const listFullHomeworks = /* GraphQL */ `
 						content
 						commentRating
 						criterionNum
-						location {
-							isWholeDocument
-							startCharNum
-							selectionLength
-							x
-							y
-						}
+						index
+						length
 					}
 				}
         createdAt

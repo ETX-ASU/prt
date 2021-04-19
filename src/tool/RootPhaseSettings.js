@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useRef, useState} from 'react';
 import {Container, Row, Col, Button, Card} from 'react-bootstrap';
 import { v4 as uuid } from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -20,6 +20,8 @@ function RootPhaseSettings(props) {
   const [activeDropZoneIndex, setActiveDropZoneIndex] = useState(-1);
   const [activeDraggedRankIndex, setActiveDraggedRankIndex] = useState(-1);
   const [orderedRanks, setOrderedRanks] = useState(rubricRanks.sort((a,b) => a.orderNum - b.orderNum));
+
+
 
   // Save a copy of the rubric upon initialization, otherwise drag-n-drop triggers re-render and data goes out of sync
   useEffect(() => {
@@ -149,9 +151,14 @@ function RootPhaseSettings(props) {
       </Row>
 
       <h3 className='mt-2 mb-2'>Rubric Criteria</h3>
-      <Row className='m-0'>
-        <Col>
-          {!!rubricCriteria.length &&
+      <Row className='d-flex flex-column' style={{height: '400px'}}>
+        {/*onMouseUp={onDragEnd}*/}
+        {/*onMouseMove={onDrag}>*/}
+        <Col className='top-zone w-100 mt-3 mb-3' >
+
+      {/*<Row className='m-0 p-0'>*/}
+      {/*  <Col className='m-0 p-0'>*/}
+          {!!rubricCriteria?.length &&
             <RubricPanel
               onRubricCriteriaChanged={onRubricCriteriaChanged}
               activeDraggedRankIndex={activeDraggedRankIndex}
@@ -165,6 +172,8 @@ function RootPhaseSettings(props) {
           }
         </Col>
       </Row>
+      {/*  </Col>*/}
+      {/*</Row>*/}
     </Container>
   )
 

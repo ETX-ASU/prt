@@ -288,6 +288,10 @@ Button.essay-btn {
   width: 65%;
 }
 
+#criterion-selector {
+  z-index: 150;
+}
+
 .rubric-viewer-panel, .comments-panel {
   font-size: 0.8rem;
   width: 35%;
