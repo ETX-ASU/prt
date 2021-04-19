@@ -45,7 +45,7 @@ function RubricAssessorPanel(props) {
 
   return (
     <Fragment>
-      <Row className='h-100 w-100 m-0'>
+      <Row className='h-100 w-100 m-0 pb-3'>
         <Tab.Container activeKey={curTabId} onSelect={(k) => setCurTabId(k)} id="criterion-tab" transition={false}>
           <Nav>
             {shownCriteria.map(crit =>

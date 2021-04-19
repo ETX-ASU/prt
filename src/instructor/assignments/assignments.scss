@@ -371,30 +371,28 @@
 div.drag-bar {
   position: absolute;
   width: 100%;
-  line-height: 2px;
-  height: 2px;
-  margin-top: 8px;
+  line-height: 12px;
+  height: 12px;
   cursor: pointer;
+  color: var(--x-light-gray);
+  align-content: center;
+  text-align: center;
+  z-index: 2000;
 
-  .drag-bar-line {
-    position: relative;
-    background-color: var(--x-lightest-gray);
-    cursor: pointer;
-    line-height: 2px;
-    height: 2px;
-  }
-
-  .drag-bar-knob {
-    display: block;
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    width: 18px;
-    height: 7px;
-    background-color: var(--x-ultralight-gray);
-    border-radius: 5px;
-    border: 2px solid var(--x-lightest-gray);
-    //color: white;
+  //.drag-bar-line {
+  //  position: relative;
+  //  background-color: var(--x-lightest-gray);
+  //  cursor: pointer;
+  //  line-height: 2px;
+  //  height: 2px;
+  //}
+  //
+  .drag-knob {
+    display: inline-block;
+    padding: 0px 8px;
+    background-color: white;
+    border: 1px solid var(--x-gray);
+    border-radius: 3px;
   }
 
   //.drag-bar-handle {
@@ -406,9 +404,9 @@ div.drag-bar {
   //}
 }
 
-//.assessor-wrapper {
-//  height: calc(100% - 20px);
-//}
+.assessor-wrapper {
+  position: relative;
+}
 
 .sizer-btn {
   cursor: pointer;

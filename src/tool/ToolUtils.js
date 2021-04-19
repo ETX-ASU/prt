@@ -23,7 +23,7 @@ import {useEffect} from "react";
 // }
 
 
-export function getAvailableContentDims(headerElem, footerElem) {
+export function getAvailableContentDims(headerElem, footerElem, extra) {
     let excluded = 0;
     if (headerElem) excluded += headerElem.current.getBoundingClientRect().bottom;
     if (headerElem && headerElem.current.style.marginBottom) excluded += parseInt(headerElem.current.style.marginBottom);
@@ -33,7 +33,7 @@ export function getAvailableContentDims(headerElem, footerElem) {
     const appElem = document.querySelector('#app-container');
     const appBounds = appElem.getBoundingClientRect();
     excluded += appBounds.top;
-    excluded += (APP_TOP_PADDING * 2);
+    if (extra) excluded += extra;
     return ({
       height: appBounds.height - excluded,
       width: appBounds.width

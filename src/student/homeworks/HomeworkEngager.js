@@ -60,8 +60,8 @@ function HomeworkEngager(props) {
 
 
   function onWindowResized() {
-    console.log("Running resize handler")
-    const {width, height} = getAvailableContentDims()
+    // console.log("Running resize handler")
+    const {width, height} = getAvailableContentDims(headerZoneRef)
     const barHeight = document.querySelector('#toolbar').getBoundingClientRect().height;
 
     setToolbarHeight(barHeight);
@@ -178,7 +178,7 @@ function HomeworkEngager(props) {
       {/* This row is what gets resized to different height %*/}
       {/*<Row className={'m-0 p-0'} style={{height: availableHeight+'px'}}>*/}
 
-      <div className='bottom-zone d-flex flex-row m-0 p-0'  style={{height: `calc(100% - 40px - 3em)`}}>
+      <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(100% - 3em)`}}>
         <DraftWriter
           assignment={assignment}
           availableHeight={availableHeight}

@@ -1,6 +1,7 @@
 # TOUCH UPS LIST:
 
-3. Make the rubric 'sizeable'
+2. When reviewing your recent submission - get rid of submit button!!
+
 4. need to be able to delete a comment
 4. Actually SAVE the review data and allow for submitting it
 3. Location dots should be set dynamically because resizing the screen width
