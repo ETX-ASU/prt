@@ -2,7 +2,6 @@
 
 .text-editor {
   margin: 0 0;
-  height: 50vh;
 
   &.no-bar {
     #toolbar {
@@ -27,7 +26,6 @@
 
   textarea {
     font-size: 12px;
-    height: 65%;
   }
 
   .comment-buttons {

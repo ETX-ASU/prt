@@ -141,7 +141,9 @@ export const formats = [
 // );
 
 // Quill Toolbar component
-export const QuillToolbar = () => (
+export const QuillToolbar = (props) => {
+  if (props.isReadOnly) return (<div id="toolbar" style={{visibility: 'hidden', padding:0, marginTop:'-2px'}} />);
+  return (
   <div id="toolbar">
     <span className="ql-formats">
       <select className="ql-font" defaultValue="arial">
@@ -211,6 +213,6 @@ export const QuillToolbar = () => (
       </button>
     </span>
   </div>
-);
+)};
 
 export default QuillToolbar;

@@ -19,6 +19,8 @@ import {reportError} from "../../developer/DevUtils";
 import {createAssignmentInLms, handleConnectToLMS} from "../../lmsConnection/RingLeader";
 import {calcMaxScoreForAssignment, generateDefaultRubric} from "../../tool/ToolUtils";
 import BasicAssignmentSettings from "./BasicAssignmentSettings";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faChevronLeft} from "@fortawesome/free-solid-svg-icons";
 
 
 const tempRanks = [
@@ -38,7 +40,7 @@ const emptyAssignment = {
   lineItemId: '',
   isLockedOnSubmission: true,
   lockOnDate: 0,
-  isUseAutoScore: true,
+  isUseAutoScore: false,
   isUseAutoSubmit: false,
 
   toolAssignmentData: {
@@ -130,9 +132,18 @@ function AssignmentCreator() {
       </HeaderBar>
 
       <form>
-        <BasicAssignmentSettings formData={formData} setFormData={setFormData} />
-        <RootPhaseSettings formData={formData} setFormData={setFormData} />
+        <Container className='m-0'>
+          <BasicAssignmentSettings formData={formData} setFormData={setFormData} />
+          <RootPhaseSettings formData={formData} setFormData={setFormData} />
+          <Row className={'m-0 p-0 pt-2 position-relative'}>
+            <div className={'right-side-buttons'}>
+              <Button onClick={() => setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning})} className='mr-2'>Cancel</Button>
+              <Button onClick={handleSubmitBtn}>Create</Button>
+            </div>
+          </Row>
+        </Container>
       </form>
+
     </Fragment>
   )
 }

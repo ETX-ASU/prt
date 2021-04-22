@@ -10,7 +10,7 @@ library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
 
 
 function CommentsPanel(props) {
-  const {assessorId, setActiveCommentId, onAddComment, activeCommentId, updateComment, comments} = props;
+  const {criteria, setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments} = props;
   // const editor = (quillRef?.current?.editor) ? quillRef.current.editor : null;
   const [activeComment, setActiveComment] = useState(comments.find(c => c.id === activeCommentId));
 
@@ -34,9 +34,9 @@ function CommentsPanel(props) {
   function onNavBtn(isFwd) {
     if (comments.length <= 1) return;
     const tempComments = [...comments];
-    tempComments.sort((a,b) => (a.location.index === b.location.index)
+    tempComments.sort((a,b) => (a.index === b.index)
       ? a.tagNum - b.tagNum
-      : a.location.index - b.location.index);
+      : a.index - b.index);
     const index = tempComments.findIndex(c => c.id === activeCommentId);
     if (isFwd) {
       (index === tempComments.length - 1)
@@ -48,12 +48,6 @@ function CommentsPanel(props) {
         : setActiveCommentId(tempComments[index-1].id);
     }
   }
-
-
-  function onDeleteComment() {
-    console.log('delete comment');
-  }
-
 
   function onChange(e) {
     setCommentText(e.target.value);
@@ -72,7 +66,7 @@ function CommentsPanel(props) {
             <Button className='align-middle' onClick={onAddComment}>
               <FontAwesomeIcon className='btn-icon' icon={faPlus}/>
             </Button>
-            <Button className='align-middle' onClick={onDeleteComment}>
+            <Button className='align-middle' onClick={() => onDeleteComment(activeCommentId)}>
               <FontAwesomeIcon className='btn-icon' icon={faTrash}/>
             </Button>
           </div>
@@ -86,9 +80,18 @@ function CommentsPanel(props) {
       </Row>
       <Row className='criterion-content m-0 p-2'>
         <Col className='p-0 m-0'>
+          <select
+            defaultValue={criteria[0].id}
+            onChange={() => console.log('changed association')}
+            className="form-control"
+            id="criterion-selector">
+            {criteria.map(c =>
+              <option key={c.id} value={c.id}>{c.name}</option>
+            )}
+          </select>
           {activeCommentId && activeComment &&
             <textarea
-              className='mt-2 form-control'
+              className='mt-2 form-control h-50'
               placeholder={`Add note #${activeComment.tagName} here`}
               onBlur={onBlur}
               onChange={onChange}
@@ -96,7 +99,7 @@ function CommentsPanel(props) {
           }
           {!activeCommentId &&
             <textarea
-              className='mt-2 form-control'
+              className='mt-2 form-control h-50'
               placeholder={`Select a region in the document and click the [+] button to add a note. 
               \nUse the navigation arrows [<][>] to navigate through your comments, or just click on the comment directly in the document to view and make edits to them. 
               \nTo delete a comment, select it and click the trash icon.`}

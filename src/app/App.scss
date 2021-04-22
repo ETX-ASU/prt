@@ -307,3 +307,13 @@ label {
   margin: 0 40px 0 10px;
 }
 
+#version-number {
+  position: absolute;
+  z-index: 200;
+  text-align: center;
+  width: 30px;
+  left: 50%;
+  color: var(--x-light-gray);
+  font-size: 12px;
+  top: 50px;
+}

@@ -139,32 +139,34 @@ function AssignmentEditor() {
           <FontAwesomeIcon icon={faExclamationTriangle} size='2x' inverse/>
         </Col>
         <Col className='col-10'>
-          <p className='m-3'>Students have begun their assignment, therefore some options can no longer be changed and are disabled.</p>
+          <p className='m-3'>Students have begun their assignment, therefore only some assignment options can be edited.</p>
         </Col>
       </Row>
       }
 
       <form>
-        <BasicAssignmentSettings
-          formData={formData}
-          setFormData={setFormData}
-          isLimitedEditing={isLimitedEditing}
-        />
+        <Container className='m-0'>
+          <BasicAssignmentSettings
+            formData={formData}
+            setFormData={setFormData}
+            isLimitedEditing={isLimitedEditing}
+          />
 
-        {(formData.toolAssignmentData.sequenceIds.length === 0) && <RootPhaseSettings
-          formData={formData}
-          setFormData={setFormData}
-          isLimitedEditing={isLimitedEditing} />}
+          {/*{(formData.toolAssignmentData.sequenceIds.length === 0) && <RootPhaseSettings*/}
+          {/*  formData={formData}*/}
+          {/*  setFormData={setFormData}*/}
+          {/*  isLimitedEditing={isLimitedEditing} />}*/}
 
-        {(formData.toolAssignmentData.sequenceIds.length%2 === 0) && <DraftPhaseSettings
-          formData={formData}
-          setFormData={setFormData}
-          isLimitedEditing={isLimitedEditing} />}
+          {/*{(formData.toolAssignmentData.sequenceIds.length%2 === 0) && <DraftPhaseSettings*/}
+          {/*  formData={formData}*/}
+          {/*  setFormData={setFormData}*/}
+          {/*  isLimitedEditing={isLimitedEditing} />}*/}
 
-        {(formData.toolAssignmentData.sequenceIds.length%2 === 1) && <ReviewPhaseSettings
-          formData={formData}
-          setFormData={setFormData}
-          isLimitedEditing={isLimitedEditing} />}
+          {/*{(formData.toolAssignmentData.sequenceIds.length%2 === 1) && <ReviewPhaseSettings*/}
+          {/*  formData={formData}*/}
+          {/*  setFormData={setFormData}*/}
+          {/*  isLimitedEditing={isLimitedEditing} />}*/}
+        </Container>
       </form>
     </Fragment>
   )
