@@ -1,6 +1,7 @@
 import {EMPTY_TOOL_HOMEWORK_DATA} from '../tool/constants'
 
 export const APP_NAMESPACE = 'QUIZ_APP'; // Change this to name of tool
+export const APP_TOP_PADDING = 24; // Temporary. We need padding of the app container, and other means are more convoluted than should be.
 
 
 export const MODAL_TYPES = {

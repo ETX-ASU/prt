@@ -163,15 +163,16 @@ export const createHomework = /* GraphQL */ `
           id
           reviewerId
           tagNum
+          index
+          length
           content
           commentRating
           criterionNum
         }
         criterionRatingsOnDraft {
-          id
           reviewerId
+          criterionId
           ratingGiven
-          criterionNum
         }
       }
       createdAt
@@ -197,15 +198,16 @@ export const updateHomework = /* GraphQL */ `
           id
           reviewerId
           tagNum
+          index
+          length
           content
           commentRating
           criterionNum
         }
         criterionRatingsOnDraft {
-          id
           reviewerId
+          criterionId
           ratingGiven
-          criterionNum
         }
       }
       createdAt
@@ -231,15 +233,16 @@ export const deleteHomework = /* GraphQL */ `
           id
           reviewerId
           tagNum
+          index
+          length
           content
           commentRating
           criterionNum
         }
         criterionRatingsOnDraft {
-          id
           reviewerId
+          criterionId
           ratingGiven
-          criterionNum
         }
       }
       createdAt

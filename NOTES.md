@@ -1,3 +1,72 @@
+# TOUCH UPS LIST:
+
+
+3. Make right-side panels toggle on/off display
+7. Rubric tabs... what happens when too long
+
+
+
+2. When reviewing your recent submission - get rid of submit button!!
+
+4. need to be able to delete a comment
+4. Actually SAVE the review data and allow for submitting it
+3. Location dots should be set dynamically because resizing the screen width
+   can change text wrapping and thus effect where the dot x value is. Instead,
+   dot x/y values should be determined by the bounds of the highlighted text at the
+   moment the dot is to be rendered onto the tags layer.
+5. clicking the "add comment" button when nothing is selected should 
+   not be possible by disabling the [+] add button when there is no range selected
+
+
+=====
+
+1. Create a 'getAvailableContentHeight' util function in tool/ToolUtils.js
+   1. It looks for header and footer divs. Gets the doc height. And subtracts the header and footer heights.
+   2. It also has the header/footer padding used throughout the app for the calc
+   3. It returns this as availContentHeight
+   
+2. On pages that use the RTE and need to fill vh of the page:
+   1. Add 'onMounted' useEffect(()=>{}, []) to add resize event listener for BOTH
+      changes in page size (height) and dragSizerKnob location
+   2. When page is resized
+      1. clear any previous "handleResize" timer
+      2. set NEW 500ms "handleResize" timer
+
+3. After the handleResize timer goes off
+   1. run the calculations to get the new availableContentHeight
+   2. setAvailableContentHeight
+   3. if this screen has 'dragSizer' control on it
+      1. calculate current 
+   
+=====
+
+For screens with adjustable height
+   
+
+
+
+
+
+
+
+
+
+1. place the drag bar row in normal flow, after the rubric row
+2. And mouse down listener to the knob
+   1. When down, start listening to mouse movement
+      * Each time mouse moves, look at mouse deltaY in pixels.
+      * if it is up and Rubric is at min allowed height, just set it for min. If down and max, same.
+      * calculate new height of Rubric and set that height.
+      * calculate remaining height minus the header and footer and use that for the Essay Area
+   
+      
+
+
+
+
+
+
+
 ## ALLOCATING PEER ASSESSMENTS
 
 1. Student logs in. Student homework is pulled from DB for this student.

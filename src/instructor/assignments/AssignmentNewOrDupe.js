@@ -302,7 +302,7 @@ function AssignmentNewOrDupe() {
                   <Col className={'xbg-light text-center p-2'}>
                     <Button className='align-middle' onClick={handleAddAssignmentPhase} disabled={!allAssignments.length}>
                       <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                      {(selectedRootAssignment.toolAssignmentData.sequenceIds.length%2) ? 'Create New Draft' : 'Create Peer Review Session'}
+                      {(getRootAssignmentDetails().isNextRoundAReviewSession) ? 'Create Peer Review Session' : 'Create New Draft'}
                     </Button>
                   </Col>
                 </Row>

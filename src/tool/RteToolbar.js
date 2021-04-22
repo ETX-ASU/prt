@@ -1,6 +1,12 @@
 import React from "react";
 import "./RteStyles.scss";
-import { Quill } from "react-quill";
+import ReactQuill, { Quill } from "react-quill";
+import ComTag from "./ComTag";
+import ComBtn from "./ComBtn";
+
+
+Quill.register('formats/comment-tag', ComTag);
+Quill.register('formats/comment-btn', ComBtn);
 
 // Custom Undo button icon component for Quill editor. You can import it directly
 // from 'quill/assets/icons/undo.svg' but I found that a number of loaders do not
@@ -56,15 +62,46 @@ Font.whitelist = [
 ];
 Quill.register(Font, true);
 
+
+//
+//
+// function insertStar() {
+//   console.log("INSERT STAR WORKING")
+//
+//   // const cursorPosition = this.quill.getSelection().index;
+//   // this.quill.insertText(cursorPosition, "★");
+//   // this.quill.setSelection(cursorPosition + 1);
+// }
+
+
+
+
 // Modules object for setting up the Quill editor
 export const modules = {
   toolbar: {
     container: "#toolbar",
     handlers: {
       undo: undoChange,
-      redo: redoChange
+      redo: redoChange,
+      link: (value) => {
+        console.log("IsBtn", value)
+        if (value?.isBtn) {
+          this.quill.format('link', '#');
+        } else if (value) {
+          let href = prompt('Enter the URL');
+          this.quill.format('link', href);
+        } else {
+          this.quill.format('link', false);
+        }
+      }
     }
   },
+  // commentsLayer: {
+  //   container: "#commentsLayer",
+  //   handlers: {
+  //     insertStar: insertStar
+  //   }
+  // },
   history: {
     delay: 500,
     maxStack: 100,
@@ -91,11 +128,22 @@ export const formats = [
   "link",
   "image",
   "color",
-  "code-block"
+  "code-block",
+  "span",
+  "comment-tag",
+  "comment-btn"
 ];
 
+// export const CommentsLayer = () => (
+//   <div id="commentsLayer">
+//     <span>CRAY CRAY</span>
+//   </div>
+// );
+
 // Quill Toolbar component
-export const QuillToolbar = () => (
+export const QuillToolbar = (props) => {
+  if (props.isReadOnly) return (<div id="toolbar" style={{visibility: 'hidden', padding:0, marginTop:'-2px'}} />);
+  return (
   <div id="toolbar">
     <span className="ql-formats">
       <select className="ql-font" defaultValue="arial">
@@ -165,6 +213,6 @@ export const QuillToolbar = () => (
       </button>
     </span>
   </div>
-);
+)};
 
 export default QuillToolbar;

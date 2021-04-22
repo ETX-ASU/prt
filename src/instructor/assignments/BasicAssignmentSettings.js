@@ -11,13 +11,13 @@ function BasicAssignmentSettings(props) {
 	}
 
 	return (
-		<Container className='mt-2 ml-2 mr-2 mb-4'>
-			<Row className={'mt-4 mb-4'}>
-				<Col><h2>Basic Assignment Details</h2></Col>
+		<Fragment>
+			<Row className={'mt-4 mb-2'}>
+				<Col><h2>Assignment Details</h2></Col>
 			</Row>
 
-			<Row className={'ml-2'}>
-				<Col className={'col-12'}>
+			<Row className={'m-0'}>
+				<Col className={'col-12 p-0'}>
 					<div className={'form-group'}>
 						<label htmlFor='dataTitle'><h3>Title</h3></label>
 						<input id='dataTitle'
@@ -36,17 +36,17 @@ function BasicAssignmentSettings(props) {
 				</Col>
 			</Row>
 
-			<Row className={'ml-2'}>
-				<Col className='col-12'>
-					<label><h3>Autoscore</h3></label>
-					<div className="custom-control custom-switch d-inline-block" style={{top: `3px`}}>
-						<ToggleSwitch id='dataUseAutoscore'
-							small={true}
-							value={formData.isUseAutoScore}
-							handleToggle={toggleUseAutoScore}/>
-					</div>
-				</Col>
-			</Row>
+			{/*<Row className={'ml-2'}>*/}
+			{/*	<Col className='col-12'>*/}
+			{/*		<label><h3>Autoscore</h3></label>*/}
+			{/*		<div className="custom-control custom-switch d-inline-block" style={{top: `3px`}}>*/}
+			{/*			<ToggleSwitch id='dataUseAutoscore'*/}
+			{/*				small={true}*/}
+			{/*				value={formData.isUseAutoScore}*/}
+			{/*				handleToggle={toggleUseAutoScore}/>*/}
+			{/*		</div>*/}
+			{/*	</Col>*/}
+			{/*</Row>*/}
 
 			{formData.isUseAutoScore &&
 			<Row className={'ml-2'}>
@@ -64,7 +64,7 @@ function BasicAssignmentSettings(props) {
 			</Row>
 			}
 
-		</Container>
+		</Fragment>
 	)
 }
 

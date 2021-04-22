@@ -26,7 +26,6 @@ import moment from "moment";
 import {reportError} from "../developer/DevUtils";
 
 import './homeworks/homeworks.scss';
-import HomeworkReviewer from "./homeworks/HomeworkReviewer";
 import PeerReviewsSummaryTable from "./homeworks/PeerReviewsSummaryTable";
 import PeerHomeworkAssessor from "./homeworks/PeerHomeworkAssessor";
 
@@ -315,7 +314,7 @@ function ReviewSessionDash() {
 			}
 
 			{(activeUiScreenMode === UI_SCREEN_MODES.assessPeerHomework) &&
-			<Row className={'m-0 p-0 pb-4 h-100'}>
+			<Row className={'m-0 p-0 h-100'}>
 				<Col className='rounded p-0'>
 					<PeerHomeworkAssessor
 						isEditMode={false}

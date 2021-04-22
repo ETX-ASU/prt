@@ -93,15 +93,16 @@ export const getHomework = /* GraphQL */ `
           id
           reviewerId
           tagNum
+          index
+          length
           content
           commentRating
           criterionNum
         }
         criterionRatingsOnDraft {
-          id
           reviewerId
+          criterionId
           ratingGiven
-          criterionNum
         }
       }
       createdAt

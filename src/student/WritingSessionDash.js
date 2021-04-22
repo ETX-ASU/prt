@@ -30,7 +30,6 @@ import {reportError} from "../developer/DevUtils";
 
 import './homeworks/homeworks.scss';
 import IconEssay from "../assets/icon-essay.svg";
-import HomeworkReviewer from "./homeworks/HomeworkReviewer";
 
 // import PeerReviewsSummaryTable from "./homeworks/PeerReviewsSummaryTable";
 
@@ -194,7 +193,7 @@ function StudentDashboard() {
 	}
 
 
-	async function fetchAndSetActiveUserCurrentHomework() {
+	async function fetchAndSetActiveUserCurrentHomework(isSilent = false) {
 		try {
 			const fetchHomeworkResult = await API.graphql({
 				query: fullHomeworkByAsmntAndStudentId,
@@ -230,7 +229,7 @@ function StudentDashboard() {
 				theHomework.homeworkStatus = getHomeworkStatus(scoreData, theHomework);
 				await setHomework(theHomework);
 
-				dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
+				if (!isSilent) dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
 				setIsLoading(false);
 			}
 		} catch (error) {
@@ -310,15 +309,11 @@ function StudentDashboard() {
 			}
 
 			{!isLoading && (activeUiScreenMode === UI_SCREEN_MODES.reviewHomework) &&
-			<Row className={'m-0 m-0 pb-5'}>
-				<Col className='rounded p-0'>
-					<HomeworkReviewer refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment} homework={homework}/>
-				</Col>
-			</Row>
+			<HomeworkEngager isReadOnly={true} refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment} homework={homework}/>
 			}
 
 			{!isLoading && (activeUiScreenMode === UI_SCREEN_MODES.editHomework) &&
-			<HomeworkEngager refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment} homework={homework}/>
+			<HomeworkEngager isReadOnly={false} refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment} homework={homework}/>
 			}
 		</Container>
 	);

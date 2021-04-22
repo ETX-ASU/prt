@@ -2,7 +2,6 @@
 
 .text-editor {
   margin: 0 0;
-  height: 50vh;
 
   &.no-bar {
     #toolbar {
@@ -25,6 +24,10 @@
 .comments-panel {
   height: auto;
 
+  textarea {
+    font-size: 12px;
+  }
+
   .comment-buttons {
     display: inline;
     width: fit-content;
@@ -40,7 +43,7 @@
     }
   }
 
-  h3 {
+  h4 {
     display: inline;
   }
 }
@@ -120,4 +123,72 @@
 }
 .ql-font-verdana {
   font-family: "Verdana", serif;
+}
+
+
+span.comment-tag {
+  //background-color: #FFFAD1;
+  //margin-right: -12px;
+
+}
+
+span.comment-btn {
+  font-family: "Lucida Console", sans-serif;
+  content: attr(data-content);
+  border: 1px solid #404040;
+  //background-color: #FFFAD1;
+  color: #404040;
+  font-size: 12px;
+  border-radius: 50%;
+  position: relative;
+  top: -9px;
+  padding: 2px 1px 2px 2px;
+  display: inline-block;
+  width: 20px;
+  height: 19px;
+  cursor: pointer;
+
+  //&:after {
+  //  color: red;
+  //  content: attr(data-content);
+  //}
+}
+
+#comments-layer-wrapper {
+  position: absolute;
+  //background-color: green;
+  width: calc(100% - 20px);
+  height: 100%;
+  top: 0;
+  left: 0;
+  //opacity: 0.25;
+  pointer-events: none;
+  overflow: hidden;
+
+  .comment-buttons-layer {
+    position: relative;
+    top: 0;
+
+    .comment-btn {
+      font-family: "Lucida Console", sans-serif;
+      background-color: #FFFAD1;
+      content: attr(data-content);
+      border: 1px solid #404040;
+      color: #404040;
+      font-size: 12px;
+      border-radius: 50%;
+      position: absolute;
+      padding: 2px;
+      display: block;
+      width: 21px;
+      height: 21px;
+      cursor: pointer;
+      pointer-events: auto;
+      z-index: 100;
+
+      &.selected {
+        background-color: #FFD23D;
+      }
+    }
+  }
 }
