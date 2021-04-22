@@ -146,6 +146,7 @@ function App() {
 
 	return (
 		<Container id='app-container' className="app pt-4 mb-0 p-0 vh-100">
+			<div id='version-number'>v2.2</div>
 			<Row className='main-content-row'>
 				{!activeUser?.id && <LoadingIndicator msgClasses='xtext-white' loadingMsg='LOADING'/>}
 				{activeUser.activeRole === ROLE_TYPES.dev && <DevUtilityDashboard />}

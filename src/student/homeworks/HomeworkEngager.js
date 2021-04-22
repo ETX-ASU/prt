@@ -17,7 +17,7 @@ import {sendAutoGradeToLMS} from "../../lmsConnection/RingLeader";
 import {
   calcAutoScore,
   calcMaxScoreForAssignment,
-  getAvailableContentDims
+  getAvailableContentDims, useInterval
 } from "../../tool/ToolUtils";
 import DraftWriter from "../../tool/DraftWriter";
 import ResizePanel from "react-resize-panel";
@@ -31,7 +31,7 @@ import userEvent from "@testing-library/user-event";
 
 library.add(faCheck, faTimes);
 
-
+const AUTO_SAVE_INTERVAL = 90000; // Save every 90 seconds
 
 /** This screen is shown to the student so they can "engage" with the homework assignment.
  * Any work they do or changes or interactions they make would be recorded and the updates
@@ -44,13 +44,17 @@ function HomeworkEngager(props) {
   const [activeModal, setActiveModal] = useState(null);
 
   const headerZoneRef = useRef(null);
+  const footerZoneRef = useRef(null);
   const [availableHeight, setAvailableHeight] = useState(300);
   const [toolbarHeight, setToolbarHeight] = useState(64);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChangedSinceLastSave, setHasChangedSinceLastSave] = useState(false);
+  const [time, setTime] = React.useState(0);
 
 
   useEffect(() => {
-    console.log("Created useEffect resize listener")
     window.addEventListener('resize', onWindowResized);
+
     onWindowResized();
 
     return () => {
@@ -59,9 +63,10 @@ function HomeworkEngager(props) {
   }, [])
 
 
+  useInterval(autoSave, AUTO_SAVE_INTERVAL);
+
   function onWindowResized() {
-    // console.log("Running resize handler")
-    const {width, height} = getAvailableContentDims(headerZoneRef)
+    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef)
     const barHeight = document.querySelector('#toolbar').getBoundingClientRect().height;
 
     setToolbarHeight(barHeight);
@@ -69,14 +74,15 @@ function HomeworkEngager(props) {
   }
 
 
-  async function submitHomeworkForReview() {
+  async function saveOrSubmitHomework(isForSubmit = false, isAutoSave = false) {
     setActiveModal(null);
+    setIsSaving(true);
 
     try {
       const inputData = Object.assign({}, homework, {
         toolHomeworkData,
         beganOnDate: (homework.beganOnDate) ? homework.beganOnDate : moment().valueOf(),
-        submittedOnDate: (homework.submittedOnDate) ? homework.submittedOnDate : moment().valueOf()
+        submittedOnDate: (homework.submittedOnDate) ? homework.submittedOnDate : isForSubmit ? moment().valueOf() : 0
       });
       delete inputData.createdAt;
       delete inputData.updatedAt;
@@ -90,12 +96,19 @@ function HomeworkEngager(props) {
       const result = await API.graphql({query: updateHomeworkMutation, variables: {input: inputData}});
       if (result) {
         if (assignment.isUseAutoSubmit) await calcAndSendScore(inputData);
-        await setActiveModal({type: MODAL_TYPES.confirmHomeworkSubmitted})
+        setHasChangedSinceLastSave(false);
+        if (isForSubmit) {
+          await setActiveModal({type: MODAL_TYPES.confirmHomeworkSubmitted})
+        } else {
+          props.refreshHandler(true);
+        }
       } else {
-        reportError('', `We're sorry. There was a problem submitting your homework for review. Please wait a moment and try again.`);
+        reportError('', `We're sorry. There was a problem ${isForSubmit ? 'submitting your homework for review.' : 'saving your work.'} Please wait a moment and try again.`);
       }
     } catch (error) {
-      reportError(error, `We're sorry. There was a problem submitting your homework for review. Please wait a moment and try again.`);
+      reportError(error, `We're sorry. There was a problem ${isForSubmit ? 'submitting your homework for review.' : 'saving your work.'} Please wait a moment and try again.`);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -125,12 +138,13 @@ function HomeworkEngager(props) {
   }
 
   function handleHomeworkDataChange(value) {
-	  console.log("-------- updateToolHomeworkData");
-	  setToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
+    setHasChangedSinceLastSave(true);
+    setToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
   }
 
   function autoSave() {
-	  // TODO: Bonus. Add in method to handle automatically saving student work
+    console.log("AUTO-SAVING -------------------- ", hasChangedSinceLastSave)
+    if (hasChangedSinceLastSave) saveOrSubmitHomework(false, true);
   }
 
   function renderModal() {
@@ -139,7 +153,7 @@ function HomeworkEngager(props) {
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
             {name:'Cancel', onClick: () => setActiveModal(null)},
-            {name:'Submit', onClick:submitHomeworkForReview},
+            {name:'Submit', onClick:saveOrSubmitHomework},
           ]}>
             <p>Once submitted, you cannot go back to make additional edits to your assignment.</p>
           </ConfirmationModal>
@@ -155,41 +169,47 @@ function HomeworkEngager(props) {
     }
   }
 
-  function handleCancelButton() {
+  function onCancelButton() {
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
   }
 
 
 
-
+  // const savedStateMsg  = (isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date";
 	return (
 		<Fragment>
       {activeModal && renderModal()}
-      <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
-        <Col className='col-9 p-0'>
-          <FontAwesomeIcon className='btn-icon mr-2' icon={faChevronLeft} onClick={handleCancelButton}/>
-          <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
-        </Col>
-        <Col className={'col-3 text-right pr-0'}>
-          <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
-        </Col>
+      <Row ref={headerZoneRef} className={'m-0 p-0 pb-2 position-relative'}>
+        <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon icon={faChevronLeft}/></Button>
+        {!props.isReadOnly && <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>}
+        {props.isReadOnly && <h2 id='assignmentTitle' className="inline-header">{assignment.title} <span className="inline-header-sub">(Submitted)</span></h2>}
+
+        {!props.isReadOnly &&
+        <div className={'right-side-buttons saved-status-ms'}>
+          {(isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date"}
+        </div>
+        }
       </Row>
 
-      {/* This row is what gets resized to different height %*/}
-      {/*<Row className={'m-0 p-0'} style={{height: availableHeight+'px'}}>*/}
-
-      <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(100% - 3em)`}}>
+      <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight}px - 3em)`}}>
         <DraftWriter
           assignment={assignment}
           availableHeight={availableHeight}
           isReadOnly={props.isReadOnly}
-          toolbarHeight={toolbarHeight}
+          toolbarHeight={(props.isReadOnly) ? 0 : toolbarHeight}
           isShowCorrect={false}
           toolHomeworkData={toolHomeworkData}
           handleContentUpdated={handleHomeworkDataChange}
-          triggerAutoSave={autoSave} />
+        />
       </div>
-      {/*</Row>*/}
+
+      {!props.isReadOnly &&
+      <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
+        <Button className='d-inline mr-2 ql-align-right btn-sm' disabled={isSaving} onClick={() => saveOrSubmitHomework(false)}>{isSaving ? 'Saving...' : 'Save'}</Button>
+        <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assignment</Button>
+      </div>
+      }
+
 		</Fragment>
 	)
 }

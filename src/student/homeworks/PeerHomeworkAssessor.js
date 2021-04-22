@@ -6,7 +6,6 @@ import {Button, Container, Row, Col} from 'react-bootstrap';
 import {updateHomework as updateHomeworkMutation} from "../../graphql/mutations";
 import {API} from "aws-amplify";
 import {setActiveUiScreenMode} from "../../app/store/appReducer";
-import HeaderBar from "../../app/components/HeaderBar";
 import {reportError} from "../../developer/DevUtils";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
@@ -24,9 +23,8 @@ import { v4 as uuid } from "uuid";
 
 library.add(faCheck, faTimes, faGripLines);
 
-const MAX_TOP_ZONE_PERCENT = 60;
+const MAX_TOP_ZONE_PERCENT = 80;
 const MIN_TOP_ZONE_PERCENT = 10;
-const VERT_MARGIN_PX = 128;
 
 /** This screen is shown to the student so they can "engage" with the homework assignment.
  * Any work they do or changes or interactions they make would be recorded and the updates
@@ -43,14 +41,12 @@ function PeerHomeworkAssessor(props) {
   const footerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
 
-  const [availableHeight, setAvailableHeight] = useState(1000);
+  const [availableHeight, setAvailableHeight] = useState(2000);
   const [topZonePercent, setTopZonePercent] = useState(20);
-  // const [bottomZonePercent, setBottomZonePercent] = useState(80);
 
   const [comments, setComments] = useState([]);
   const [activeCommentId, _setActiveCommentId] = useState('');
   const [prevCommentId, setPrevCommentId] = useState('');
-  const [wasWinResized, setWasWinResized] = useState(false);
 
   const setActiveCommentId = (id) => {
     setPrevCommentId(activeCommentId);
@@ -59,26 +55,26 @@ function PeerHomeworkAssessor(props) {
 
 
   useEffect(() => {
-    // const tagsElem = document.getElementById('comments-layer-wrapper');
-    // reactQuillRef.current.editor.addContainer(tagsElem);
-    //
-    // const toolbarElem = document.querySelector('.ql-tooltip.ql-hidden');
-    // const buttonsLayer = tagsElem.querySelector('.comment-buttons-layer');
-    // const editorElem = document.querySelector('.ql-editor');
-    //
-    // let remainingHeight = getAvailableContentDims(headerZoneRef, footerZoneRef);
-    //
-    // setAvailableHeight(remainingHeight + 32);
-    // rehydrateComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
+    const tagsElem = document.getElementById('comments-layer-wrapper');
+    reactQuillRef.current.editor.addContainer(tagsElem);
+
+    const toolbarElem = document.querySelector('.ql-tooltip.ql-hidden');
+    const buttonsLayer = tagsElem.querySelector('.comment-buttons-layer');
+    const editorElem = document.querySelector('.ql-editor');
+
+    onWindowResized();
+
+    rehydrateComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
+
 
     window.addEventListener('resize', onWindowResized);
-    // editorElem.addEventListener('scroll', () => buttonsLayer.style.top = toolbarElem.style['margin-top']);
-    onWindowResized();
+
+    // TODO: remove event listener!
+    editorElem.addEventListener('scroll', () => buttonsLayer.style.top = toolbarElem.style['margin-top']);
 
     return () => {
       window.removeEventListener('resize', onWindowResized);
     }
-
   }, [])
 
   useEffect(() => {
@@ -98,33 +94,13 @@ function PeerHomeworkAssessor(props) {
     }
   }, [comments.length, activeCommentId]);
 
-  // useEffect(() => {
-  //   if (!wasWinResized) return;
-  //   rehydrateComments(comments);
-  //   setWasWinResized(false);
-  // }, [wasWinResized])
-
   function onWindowResized() {
     // console.log("Running resize handler")
     const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef)
-
-    // setToolbarHeight(barHeight);
-    setAvailableHeight(height - 40);
+    console.log(`Avail Height: ${height}px`)
+    setAvailableHeight(height - 48);
     rehydrateComments(comments);
   }
-
-
-  // Handle window resizing or changing top/bottom panel sizes
-/*  function onWindowResized(e) {
-    console.log("resize", comments);
-    let remainingHeight = document.documentElement.clientHeight
-      - headerZoneRef.current.offsetHeight
-      - footerZoneRef.current.offsetHeight
-      - VERT_MARGIN_PX;
-    setAvailableHeight(remainingHeight);
-    setWasWinResized(true);
-  }*/
-
 
   // handle changes to selection if actual highlighted content is clicked
   function onSelectionChanged(range, source) {
@@ -367,26 +343,17 @@ function PeerHomeworkAssessor(props) {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     }
-
-
   }
 
 	return (
 		<Fragment>
       {activeModal && renderModal()}
       <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
-        <Col className='col-9 p-0'>
-          <FontAwesomeIcon className='btn-icon mr-2' icon={faChevronLeft} onClick={onCancelButton}/>
-          <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
-        </Col>
-        <Col className={'col-3 text-right pr-0'}>
-          {/*<span className='sizer-btn' onClick={downSizeRubric}>[-]</span>*/}
-          {/*<span className='sizer-btn' onClick={upSizeRubric}>[+]</span>*/}
-          <Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit</Button>
-        </Col>
+        <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon icon={faChevronLeft} /></Button>
+        <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
       </Row>
 
-			<div  className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
+			<div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
         <div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>
           <RubricAssessorPanel
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
@@ -400,7 +367,7 @@ function PeerHomeworkAssessor(props) {
           <div className='drag-knob'><FontAwesomeIcon className={'fa-xs'} icon={faGripLines} /></div>
         </div>
 
-        <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${100 - topZonePercent}%)`}}>
+        <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight - (availableHeight * topZonePercent/100)}px)`}}>
           <div className={`d-flex flex-column text-editor no-bar`}>
             <EditorToolbar />
             <div id='comments-layer-wrapper'>
@@ -419,7 +386,7 @@ function PeerHomeworkAssessor(props) {
               ref={reactQuillRef}
               // className='h-100'
               theme="snow"
-              readOnly={false}
+              readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
               onChange={() => {}}
               onChangeSelection={onSelectionChanged}
@@ -441,19 +408,13 @@ function PeerHomeworkAssessor(props) {
             onAddComment={onAddComment}
             onDeleteComment={onDeleteComment}
           />
-          {/*<div ref={tagsLayerRef} >*/}
-          {/*  <div className='badge-danger'>HOWDY!</div>*/}
-          {/*</div>*/}
-
         </div>
 			</div>
 
-      <Row ref={footerZoneRef} className='pt-2' >
-        <Col className='text-right mr-0'>
-          <Button onClick={saveAssessment}>SAVE</Button>
-          {/*<Button onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>SAVE</Button>*/}
-        </Col>
-      </Row>
+      <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
+        <Button className='d-inline mr-2 ql-align-right btn-sm' onClick={saveAssessment}>Save Changes</Button>
+        <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assessment</Button>
+      </div>
 		</Fragment>
 	)
 }

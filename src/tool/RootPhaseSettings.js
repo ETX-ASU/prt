@@ -132,7 +132,7 @@ function RootPhaseSettings(props) {
   }
 
   return (
-    <Container className='m-0'>
+    <Fragment>
       <h3 className='mb-2'>Rubric Ranks</h3>
       <Row className='m-0 p-0'>
         <Col className='p-0'>
@@ -154,7 +154,7 @@ function RootPhaseSettings(props) {
       <Row className='d-flex flex-column' style={{height: '400px'}}>
         {/*onMouseUp={onDragEnd}*/}
         {/*onMouseMove={onDrag}>*/}
-        <Col className='top-zone w-100 mt-3 mb-3' >
+        <Col className='top-zone w-100 mb-3' >
 
       {/*<Row className='m-0 p-0'>*/}
       {/*  <Col className='m-0 p-0'>*/}
@@ -174,7 +174,7 @@ function RootPhaseSettings(props) {
       </Row>
       {/*  </Col>*/}
       {/*</Row>*/}
-    </Container>
+    </Fragment>
   )
 
 }

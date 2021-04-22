@@ -38,7 +38,7 @@ function WritersRubricViewer(props) {
       <Row className='criterion-content m-0 p-2'>
         <Col className='p-0 m-0'>
           {shownRanks.map((rank, rNum) =>
-            <p key={rNum}><strong>{rank.name}: </strong>{shownCriteria[critIndex].rankSummaries[rNum]}</p>
+            <Fragment key={rNum}><h4 className={'criterion-name'}>{rank.name}: </h4>{shownCriteria[critIndex].rankSummaries[rNum]}</Fragment>
           )}
         </Col>
       </Row>

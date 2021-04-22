@@ -193,7 +193,7 @@ function StudentDashboard() {
 	}
 
 
-	async function fetchAndSetActiveUserCurrentHomework() {
+	async function fetchAndSetActiveUserCurrentHomework(isSilent = false) {
 		try {
 			const fetchHomeworkResult = await API.graphql({
 				query: fullHomeworkByAsmntAndStudentId,
@@ -229,7 +229,7 @@ function StudentDashboard() {
 				theHomework.homeworkStatus = getHomeworkStatus(scoreData, theHomework);
 				await setHomework(theHomework);
 
-				dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
+				if (!isSilent) dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
 				setIsLoading(false);
 			}
 		} catch (error) {

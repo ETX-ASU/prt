@@ -91,7 +91,7 @@ function CommentsPanel(props) {
           </select>
           {activeCommentId && activeComment &&
             <textarea
-              className='mt-2 form-control'
+              className='mt-2 form-control h-50'
               placeholder={`Add note #${activeComment.tagName} here`}
               onBlur={onBlur}
               onChange={onChange}
@@ -99,7 +99,7 @@ function CommentsPanel(props) {
           }
           {!activeCommentId &&
             <textarea
-              className='mt-2 form-control'
+              className='mt-2 form-control h-50'
               placeholder={`Select a region in the document and click the [+] button to add a note. 
               \nUse the navigation arrows [<][>] to navigate through your comments, or just click on the comment directly in the document to view and make edits to them. 
               \nTo delete a comment, select it and click the trash icon.`}

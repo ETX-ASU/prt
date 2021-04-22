@@ -32,9 +32,9 @@ function DraftWriter(props) {
     //   />
     // </div>
 
-    <div className={`d-flex flex-row h-auto`}>
+    <div className={`d-flex flex-row h-auto w-100`}>
       <div className={`d-flex flex-column text-editor`} style={{width: '65%'}}>
-        <EditorToolbar />
+        <EditorToolbar isReadOnly={isReadOnly}/>
 
         <ReactQuill
           id='quill-rte'

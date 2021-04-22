@@ -1,6 +1,7 @@
 import {APP_TOP_PADDING, EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
 import {EMPTY_CRITERION, EMPTY_RUBRIC} from "./constants";
 import {v4 as uuid} from "uuid";
+import React from "react";
 import {useEffect} from "react";
 
 
@@ -25,10 +26,10 @@ import {useEffect} from "react";
 
 export function getAvailableContentDims(headerElem, footerElem, extra) {
     let excluded = 0;
-    if (headerElem) excluded += headerElem.current.getBoundingClientRect().bottom;
-    if (headerElem && headerElem.current.style.marginBottom) excluded += parseInt(headerElem.current.style.marginBottom);
-    if (footerElem) excluded += footerElem.current.getBoundingClientRect().height;
-    if (footerElem && footerElem.current.style.marginBottom) excluded += parseInt(footerElem.current.style.marginTop);
+    if (headerElem?.current) excluded += headerElem.current.getBoundingClientRect().bottom;
+    if (headerElem?.current && headerElem.current.style.marginBottom) excluded += parseInt(headerElem.current.style.marginBottom);
+    if (footerElem?.current) excluded += footerElem.current.getBoundingClientRect().height;
+    if (footerElem?.current && footerElem.current.style.marginBottom) excluded += parseInt(footerElem.current.style.marginTop);
 
     const appElem = document.querySelector('#app-container');
     const appBounds = appElem.getBoundingClientRect();
@@ -162,4 +163,23 @@ export function generateDefaultRubric() {
   ]
 
   return defaultRubric;
+}
+
+export function useInterval(callback, delay) {
+  const intervalRef = React.useRef();
+  const callbackRef = React.useRef(callback);
+
+  React.useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  React.useEffect(() => {
+    if (typeof delay === 'number') {
+      intervalRef.current = window.setInterval(() => callbackRef.current(), delay);
+
+      return () => window.clearInterval(intervalRef.current);
+    }
+  }, [delay]);
+
+  return intervalRef;
 }

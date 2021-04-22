@@ -1,5 +1,11 @@
 # TOUCH UPS LIST:
 
+
+3. Make right-side panels toggle on/off display
+7. Rubric tabs... what happens when too long
+
+
+
 2. When reviewing your recent submission - get rid of submit button!!
 
 4. need to be able to delete a comment

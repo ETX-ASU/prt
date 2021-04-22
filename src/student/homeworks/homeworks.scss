@@ -90,11 +90,11 @@ table.student-assignment-drafts {
     width: auto;
   }
   th:nth-child(5), td:nth-child(5) {
-    width: 130px;
+    width: 140px;
   }
   th:nth-child(6), td:nth-child(6) {
     text-align: right;
-    width: 70px;
+    width: 200px;
   }
 
   td:nth-child(2) {
@@ -120,11 +120,11 @@ table.student-assignment-drafts {
     width: auto;
   }
   th:nth-child(4), td:nth-child(4) {
-    width: 130px;
+    width: 140px;
   }
   th:nth-child(5), td:nth-child(5) {
     text-align: right;
-    width: 70px;
+    width: 200px;
   }
   td:nth-child(2) {
     font-weight: bold;
@@ -230,6 +230,10 @@ table.student-assignment-drafts {
   display: inline-block !important;
 }
 
+.inline-header-sub {
+  color: var(--x-lightest-gray);
+}
+
 .small-text {
   font-size: 12px;
 }
@@ -276,7 +280,7 @@ input[type="date"]::-webkit-clear-button {
 Button.essay-btn {
   padding: 0 0.5rem;
   font-size: 0.9rem;
-  width: 135px;
+  width: auto;
   border: 1px solid black !important;
   font-weight: bold;
   color: black;
@@ -311,7 +315,22 @@ Button.essay-btn {
 
   .criterion-content {
     height: calc(100% - 40px);
-    overflow-y: scroll;
+    overflow-y: hidden;
+    padding-top: 2em;
+
+    .criterion-name {
+      color: var(--x-gray);
+      text-transform: uppercase;
+      margin: 1em 0 4px 0;
+      border-top: 2px solid var(--x-lightest-gray);
+      border-bottom: 2px solid var(--x-lightest-gray);
+    }
   }
 }
 
+
+.saved-status-ms {
+  bottom: 1em;
+  font-size: 12px;
+  color: var(--x-light-gray);
+}
