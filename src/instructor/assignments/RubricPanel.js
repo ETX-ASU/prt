@@ -12,7 +12,7 @@ const MAX_NUM_CRITERIA = 10;
 const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricPanel(props) {
-  const {rubricCriteria, rubricRanks, isReviewerMode} = props;
+  const {rubricCriteria, rubricRanks, isReviewerMode, isLimitedEditing} = props;
   // Note: In instructor/edit mode, ALL criteria and ranks are shown even when they are marked to be hidden from students
   const shownCriteria = (props.isEditMode) ? deepCopy(rubricCriteria) : rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);;
   const shownRanks = (props.isEditMode) ? deepCopy(rubricRanks) : rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
@@ -88,7 +88,30 @@ function RubricPanel(props) {
               className={`${!criterion.isVisible ? 'h-100 hidden-criterion' : 'h-100'}`}>
               <Container className={`p-2 rubrics-panel ${!criterion.isVisible ? 'hidden-criterion' : ''}`} >
 
-                {props.isEditMode &&
+                {props.isEditMode && isLimitedEditing &&
+                <Row className={'p-0 m-0'}>
+                  <div className='criterion-name-label'>Name</div>
+                  <div className='criterion-name m-1'>
+                    <input type='text' disabled={true} defaultValue={criterion.name} size={12} />
+                  </div>
+                  <div className='grade-weight-label'>Grade Weight</div>
+                  <div className='grade-weight m-1'>
+                    <input type='number' disabled={true} min={0} max={100} defaultValue={criterion.weight} />
+                  </div>
+                  <span className='vl'/>
+                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn' >
+                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(criterion.isVisible) ? faEye : faEyeSlash}/>
+                  </Button>
+                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn' >
+                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faCopy}/>
+                  </Button>
+                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn'>
+                    <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faTrash}/>
+                  </Button>
+                </Row>
+                }
+
+                {props.isEditMode && !isLimitedEditing &&
                 <Row className={'p-0 m-0'}>
                   <div className='criterion-name-label'>Name</div>
                   <div className='criterion-name m-1'>
@@ -119,7 +142,8 @@ function RubricPanel(props) {
                     onClick={onDelete}>
                     <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faTrash}/>
                   </Button>
-                </Row>}
+                </Row>
+                }
 
                 <Row className={`w-100 pt-1 m-0 ranks-row ${props.isEditMode ? 'with-input-bar' : ''}`} >
                   {shownRanks.map((rank, rNum) =>
@@ -130,13 +154,13 @@ function RubricPanel(props) {
                             <FontAwesomeIcon className='hidden-indicator' icon={faEyeSlash} />
                           </div>
                           <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}</div>
-                          {props.isEditMode &&
+                          {(props.isEditMode && !isLimitedEditing) &&
                             <textarea
                               className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block'
                               value={criterion.rankSummaries[rNum]}
                               onChange={e => onSummaryChange(e, criterion, rNum)} />
                           }
-                          {!props.isEditMode &&
+                          {(!props.isEditMode || isLimitedEditing)&&
                             <textarea
                               readOnly={true}
                               value={criterion.rankSummaries[rNum]}
@@ -153,7 +177,7 @@ function RubricPanel(props) {
         </Tab.Container>
 
         {props.isEditMode &&
-        <Button disabled={props.isLimitedEditing || shownCriteria.length >= MAX_NUM_CRITERIA}
+        <Button disabled={isLimitedEditing || shownCriteria.length >= MAX_NUM_CRITERIA}
             className='add-criterion-btn rounded-circle xbg-dark p-0 mr-3'
             style={{width:'24px', height:'24px'}}
             onClick={onAddCriterionBtn}>

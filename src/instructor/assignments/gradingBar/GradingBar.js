@@ -68,15 +68,14 @@ function GradingBar(props) {
   }
 
   return (
-    <Container className='p-0 m-0 mt-4 mb-4 login-bar bg-white rounded xt-med xtext-med align-middle'>
-      <Row>
-        <Col className='align-middle' style={{'maxWidth':'40px'}}>
+    <Container id={'instructor-grading-bar'} className='p-0 m-0 mt-2 mb-2 login-bar bg-white rounded xt-med xtext-med'>
+      <Row className='p-0 m-0'>
+        <div className='d-inline-block p-0 m-0 my-auto' style={{'maxWidth':'40px'}}>
           <FontAwesomeIcon size='2x' icon={faArrowCircleLeft} onClick={navToPrev} className='grade-bar-nav-btn' />
-        </Col>
+        </div>
 
-        <Col className=''>
-          <Container>
-            <Row>
+        <Col className='p-0 m-0'>
+            <Row className='p-0 m-0'>
               <Col className='col-4' style={{'width':'calc(100% - 100px)'}}>
                 <h2>{(isHideStudentIdentity) ? `Student #${reviewedStudent.randomOrderNum}` : reviewedStudent.name}</h2>
                 <span className='aside'><h3 className='subtext d-inline-block'>{reviewedStudent.percentCompleted}% Complete | </h3>
@@ -112,19 +111,18 @@ function GradingBar(props) {
               </Col>
 
             </Row>
-          </Container>
         </Col>
 
-        <Col className='align-middle text-right' style={{'maxWidth':'40px'}}>
+        <div className='d-inline-block p-0 m-0 text-right my-auto' style={{'maxWidth':'40px'}}>
           <FontAwesomeIcon size='2x' icon={faArrowCircleRight} onClick={navToNext} className='grade-bar-nav-btn' />
-        </Col>
+        </div>
       </Row>
 
-      <Row>
-        <Col className='col-12'>
-          <textarea className='mt-2 form-control' placeholder='Leave feedback' onChange={handleCommentUpdated} value={comment}/>
-        </Col>
-      </Row>
+      {/*<Row>*/}
+      {/*  <Col className='col-12'>*/}
+      {/*    <textarea className='mt-2 form-control' placeholder='Leave feedback' onChange={handleCommentUpdated} value={comment}/>*/}
+      {/*  </Col>*/}
+      {/*</Row>*/}
 
     </Container>
   )

@@ -7,17 +7,18 @@ import DraftWriter from "../../tool/DraftWriter";
 
 
 function HomeworkViewer(props) {
-	const {homework, assignment} = props;
+	const {homework, assignment, availableHeight} = props;
 
 	return (
-    <Container className='pb-5'>
+		<div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight}px - 6em)`}}>
       <DraftWriter
         isReadOnly={true}
         isShowCorrect={false}
+				toolbarHeight={0}
         someFunc={() => console.log("i'm yo daddy")}
-        toolAssignmentData={assignment.toolAssignmentData}
+        assignment={assignment}
         toolHomeworkData={homework.toolHomeworkData} />
-    </Container>
+		</div>
 	)
 }
 

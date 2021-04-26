@@ -1,15 +1,22 @@
-# TOUCH UPS LIST:
+# OVERVIEW OF NEXT STEPS
 
+1. Instructor should be able to edit the Rubric of Root Assignment before it has begun (this is critical for cloned assignments)
+2. Grading of student essays... instructor should have basic grading capability
+3. Assessing Students should be able to submit assessments (This is working I think)
+   1. When reviewing your recent submission - get rid of submit button!!
+   2. need to be able to delete a comment
+   3. Actually SAVE the review data vs SUBMITTING it
+4. Reviewed students should be able to VIEW the reviews they received from peers
+5. Reviewed students should be able to provide feedback on peer assessment comments
+6. Assessing students should be able to VIEW the feedback received on their assessment comments
+7. In review session assignments, instructors should be able to see student assessments
+8. In draft writing assignments, instructors should be able to see student draft and assess it like a peer
 
+   
 3. Make right-side panels toggle on/off display
 7. Rubric tabs... what happens when too long
 
 
-
-2. When reviewing your recent submission - get rid of submit button!!
-
-4. need to be able to delete a comment
-4. Actually SAVE the review data and allow for submitting it
 3. Location dots should be set dynamically because resizing the screen width
    can change text wrapping and thus effect where the dot x value is. Instead,
    dot x/y values should be determined by the bounds of the highlighted text at the

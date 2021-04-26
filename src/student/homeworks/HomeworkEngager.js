@@ -31,7 +31,7 @@ import userEvent from "@testing-library/user-event";
 
 library.add(faCheck, faTimes);
 
-const AUTO_SAVE_INTERVAL = 90000; // Save every 90 seconds
+const AUTO_SAVE_INTERVAL = 10000; // Save every 90 seconds
 
 /** This screen is shown to the student so they can "engage" with the homework assignment.
  * Any work they do or changes or interactions they make would be recorded and the updates
@@ -49,19 +49,16 @@ function HomeworkEngager(props) {
   const [toolbarHeight, setToolbarHeight] = useState(64);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChangedSinceLastSave, setHasChangedSinceLastSave] = useState(false);
-  const [time, setTime] = React.useState(0);
 
 
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
-
     onWindowResized();
 
     return () => {
       window.removeEventListener('resize', onWindowResized);
     }
   }, [])
-
 
   useInterval(autoSave, AUTO_SAVE_INTERVAL);
 
@@ -100,7 +97,7 @@ function HomeworkEngager(props) {
         if (isForSubmit) {
           await setActiveModal({type: MODAL_TYPES.confirmHomeworkSubmitted})
         } else {
-          props.refreshHandler(true);
+          if (!isAutoSave) props.refreshHandler(true);
         }
       } else {
         reportError('', `We're sorry. There was a problem ${isForSubmit ? 'submitting your homework for review.' : 'saving your work.'} Please wait a moment and try again.`);
@@ -137,13 +134,14 @@ function HomeworkEngager(props) {
     await props.refreshHandler();
   }
 
-  function handleHomeworkDataChange(value) {
-    setHasChangedSinceLastSave(true);
-    setToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
+  function handleHomeworkDataChange(value, delta, source) {
+    if (source === 'user') {
+      setToolHomeworkData(Object.assign({}, toolHomeworkData, {draftContent:value}));
+      setHasChangedSinceLastSave(true);
+    }
   }
 
   function autoSave() {
-    console.log("AUTO-SAVING -------------------- ", hasChangedSinceLastSave)
     if (hasChangedSinceLastSave) saveOrSubmitHomework(false, true);
   }
 
@@ -170,12 +168,12 @@ function HomeworkEngager(props) {
   }
 
   function onCancelButton() {
+    props.refreshHandler(true);
+    // TODO: Warn user if there are unsaved changes.
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
   }
 
 
-
-  // const savedStateMsg  = (isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date";
 	return (
 		<Fragment>
       {activeModal && renderModal()}

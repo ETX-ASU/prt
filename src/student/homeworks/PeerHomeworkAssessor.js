@@ -26,12 +26,10 @@ library.add(faCheck, faTimes, faGripLines);
 const MAX_TOP_ZONE_PERCENT = 80;
 const MIN_TOP_ZONE_PERCENT = 10;
 
-/** This screen is shown to the student so they can "engage" with the homework assignment.
- * Any work they do or changes or interactions they make would be recorded and the updates
- * saved to the database as necessary. */
+
 function PeerHomeworkAssessor(props) {
 	const dispatch = useDispatch();
-	const {homework, assignment} = props;
+	const {homework, assignment, isInstructorAssessment} = props;
 	const activeUser = useSelector(state => state.app.activeUser);
 	const [toolHomeworkData, setToolHomeworkData] = useState(Object.assign({}, homework.toolHomeworkData));
   const [activeModal, setActiveModal] = useState(null);
@@ -96,10 +94,13 @@ function PeerHomeworkAssessor(props) {
 
   function onWindowResized() {
     // console.log("Running resize handler")
-    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef)
-    console.log(`Avail Height: ${height}px`)
-    setAvailableHeight(height - 48);
-    rehydrateComments(comments);
+    if (isInstructorAssessment) {
+      if (isInstructorAssessment) setAvailableHeight(props.availableHeight);
+    } else {
+      const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.extraHeight);
+      setAvailableHeight(height - 48);
+      rehydrateComments(comments);
+    }
   }
 
   // handle changes to selection if actual highlighted content is clicked
@@ -235,7 +236,6 @@ function PeerHomeworkAssessor(props) {
       criterionNum: c.criterionNum
     }));
 
-
     try {
       const inputData = Object.assign({}, homework, {
         toolHomeworkData: {...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...userComments]},
@@ -348,10 +348,13 @@ function PeerHomeworkAssessor(props) {
 	return (
 		<Fragment>
       {activeModal && renderModal()}
+      {!isInstructorAssessment &&
       <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
-        <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon icon={faChevronLeft} /></Button>
+        <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon
+          icon={faChevronLeft}/></Button>
         <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
       </Row>
+      }
 
 			<div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
         <div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>
@@ -411,10 +414,12 @@ function PeerHomeworkAssessor(props) {
         </div>
 			</div>
 
+      {!isInstructorAssessment &&
       <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
         <Button className='d-inline mr-2 ql-align-right btn-sm' onClick={saveAssessment}>Save Changes</Button>
         <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assessment</Button>
       </div>
+      }
 		</Fragment>
 	)
 }

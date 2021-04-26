@@ -131,6 +131,32 @@ function RootPhaseSettings(props) {
     )
   }
 
+  function renderLimitedRanksPanel(rank, index) {
+    return(
+      <Fragment key={index}>
+        <Card className='rank-card' draggable={false} defaultValue={index}>
+          <div className='card-handle'>
+            <FontAwesomeIcon icon={faEllipsisV} />
+            <FontAwesomeIcon icon={faEllipsisV} />
+          </div>
+          <div className='card-content'>
+            <div className='rank-name m-1'>
+              <input type='text' disabled={true} defaultValue={rank.name} />
+            </div>
+            <div className='rank-points m-1'>
+              <input disabled={true} type='number' min={0} max={100} defaultValue={rank.points} />
+            </div>
+            <Button disabled={true} className='d-inline-block text-center xbg-dark p-0 rank-visibility-btn' >
+              <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(rank.isVisible) ? faEye : faEyeSlash} />
+            </Button>
+          </div>
+        </Card>
+        <div className='drop-sliver' />
+      </Fragment>
+    )
+  }
+
+
   return (
     <Fragment>
       <h3 className='mb-2'>Rubric Ranks</h3>
@@ -138,13 +164,18 @@ function RootPhaseSettings(props) {
         <Col className='p-0'>
           <Container className={`ranks-panel${activeDraggedRankIndex >= 0 ? ' dragging-active' : ''}`}>
             <Row className={'p-0 m-0'}>
+              {!isLimitedEditing &&
               <div key={`dropzone-0`}
                 onDragOver={(e) => e.preventDefault()}
                 className={`drop-sliver${activeDropZoneIndex === 0 ? ' active-drop-zone' : ''}`}
                 onDragEnter={() => setActiveDropZoneIndex(0)}
                 onDragLeave={() => setActiveDropZoneIndex(-1)}
                 onDrop={onDropped} />
-              {orderedRanks.map((r, rankNum) => renderRanksPanel(r, rankNum))}
+              }
+              {isLimitedEditing &&
+              <div className={`drop-sliver`} />
+              }
+              {orderedRanks.map((r, rankNum) => (isLimitedEditing) ? renderLimitedRanksPanel(r, rankNum) : renderRanksPanel(r, rankNum))}
             </Row>
           </Container>
         </Col>
