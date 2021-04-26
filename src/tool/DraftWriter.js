@@ -40,7 +40,7 @@ function DraftWriter(props) {
           id='quill-rte'
           theme="snow"
           readOnly={isReadOnly}
-          value={draftContent}
+          defaultValue={draftContent}
           onChange={handleContentUpdated}
           placeholder={"Write something awesome..."}
           modules={modules}

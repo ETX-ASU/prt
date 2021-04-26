@@ -143,7 +143,7 @@ function HomeworkListing(props) {
 
   return (
     <Fragment>
-      <Row className='pt-2 pb-4'>
+      <Row className='pt-0 pb-2'>
         <Col className='col-9'>
           {pageCount > 5 &&
           <Button className='page-nav-btn mr-1 xbg-dark text-white' onClick={() => setCurPageNum(Math.max(curPageNum-5, 0))}>
@@ -163,7 +163,7 @@ function HomeworkListing(props) {
             <FontAwesomeIcon icon={faForward}/>
           </Button>}
         </Col>
-        <Col className='text-right mr-2'>
+        <Col className='text-right'>
           <span>Per page
             <DropdownButton className='d-inline-block ml-2' title={studentsPerPage} onSelect={handleStudentsPerPageSelected}>
               <Dropdown.Item eventKey={10}>10</Dropdown.Item>

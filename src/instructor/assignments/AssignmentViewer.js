@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useRef, useState} from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, ROLE_TYPES, UI_SCREEN_MODES} from "../../app/constants";
 import LoadingIndicator from "../../app/components/LoadingIndicator";
@@ -11,8 +11,9 @@ import {
 } from "../../app/store/appReducer";
 import {Button, Container, Row, Col} from 'react-bootstrap';
 import {API, graphqlOperation} from "aws-amplify";
-import {listHomeworks} from "../../graphql/queries";
-import HomeworkReview from "./HomeworkReview";
+// import {listHomeworks} from "../../graphql/queries";
+import {listFullHomeworks} from "../../graphql/customQueries";
+import InstructorDraftAssessor from "./InstructorDraftAssessor";
 import HomeworkListing from "./HomeworkListing";
 import {fetchAllGrades, sendInstructorGradeToLMS} from "../../lmsConnection/RingLeader";
 import HeaderBar from "../../app/components/HeaderBar";
@@ -24,7 +25,7 @@ import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {shuffle} from "../../app/utils/shuffle";
 import {
   calcAutoScore, calcMaxScoreForAssignment,
-  calcPercentCompleted,
+  calcPercentCompleted, getAvailableContentDims,
   getHomeworkStatus,
   getNewToolHomeworkDataForAssignment
 } from "../../tool/ToolUtils";
@@ -38,7 +39,7 @@ const SUBMISSION_MODAL_OPTS = {
 }
 
 function AssignmentViewer(props) {
-	const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
   const reviewedStudentId = useSelector(state => state.app.currentlyReviewedStudentId);
   const assignment = useSelector(state => state.app.assignment);
@@ -50,6 +51,19 @@ function AssignmentViewer(props) {
   const [nextTokenVal, setNextTokenVal] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
   const [students, setStudents] = useState([]);
+
+  const headerZoneRef = useRef(null);
+  const footerZoneRef = useRef(null);
+  const [availableHeight, setAvailableHeight] = useState(300);
+
+  useEffect(() => {
+    window.addEventListener('resize', onWindowResized);
+    onWindowResized();
+
+    return () => {
+      window.removeEventListener('resize', onWindowResized);
+    }
+  }, [])
 
 
   useEffect(() => {
@@ -64,15 +78,19 @@ function AssignmentViewer(props) {
     if (nextTokenVal) fetchBatchOfHomeworks(nextTokenVal);
   }, [nextTokenVal]);
 
-
   useEffect(() => {
     if (!assignment?.id || !members.length) return;
     let studentsOnly = members.filter(m => m.roles.indexOf(ROLE_TYPES.learner) > -1);
-    let positions = shuffle(studentsOnly.map((h, i) => i+1));
+    let positions = shuffle(studentsOnly.map((h, i) => i + 1));
 
     const enhancedDataStudents = studentsOnly.map(s => {
       let gradeDataForStudent = (grades) ? Object.assign({}, grades.find(g => g.studentId === s.id)) : null;
-      if (!gradeDataForStudent) gradeDataForStudent = {scoreGiven:0, scoreMaximum:100, gradingProgress:HOMEWORK_PROGRESS.notBegun, comment:'' };
+      if (!gradeDataForStudent) gradeDataForStudent = {
+        scoreGiven: 0,
+        scoreMaximum: 100,
+        gradingProgress: HOMEWORK_PROGRESS.notBegun,
+        comment: ''
+      };
 
       let homeworkForStudent = homeworks.find(h => (h.studentOwnerId === s.id && h.assignmentId === assignment.id));
       if (!homeworkForStudent) homeworkForStudent = getNewToolHomeworkDataForAssignment(assignment);
@@ -97,6 +115,12 @@ function AssignmentViewer(props) {
   }, [assignment, members, homeworks, grades, isHideStudentIdentity]);
 
 
+  function onWindowResized() {
+    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef);
+
+    setAvailableHeight(height);
+  }
+
   /**
    * AWS and DynamoDB limits listing query results to 20 results OR 1MB total, whichever comes first. Thus,
    * we query until we have all of the homework fetched for this assignment.
@@ -110,14 +134,14 @@ function AssignmentViewer(props) {
   async function fetchBatchOfHomeworks(token) {
     if (token === "INIT") token = null;
 
-    API.graphql(graphqlOperation(listHomeworks, {
+    API.graphql(graphqlOperation(listFullHomeworks, {
       filter: {assignmentId: {eq: assignment.id}},
       nextToken: token
     }))
-    .then(handleHomeworksResult)
-    .catch((error) =>
-      reportError(error, `We're sorry. There was a problem fetching student work.`)
-    );
+      .then(handleHomeworksResult)
+      .catch((error) =>
+        reportError(error, `We're sorry. There was a problem fetching student work.`)
+      );
   }
 
   function handleHomeworksResult(result) {
@@ -147,12 +171,12 @@ function AssignmentViewer(props) {
     }
   }
 
-	function handleEditBtn() {
-		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.editAssignment));
-	}
+  function handleEditBtn() {
+    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.editAssignment));
+  }
 
-	async function handleBatchSubmit() {
-    setActiveModal({type:MODAL_TYPES.showWaitingForGrades});
+  async function handleBatchSubmit() {
+    setActiveModal({type: MODAL_TYPES.showWaitingForGrades});
 
     try {
       const radioElems = Array.from(document.getElementsByName('modalRadioOpts'));
@@ -163,12 +187,12 @@ function AssignmentViewer(props) {
 
       console.log("done with all");
       await fetchScores();
-    } catch(error) {
+    } catch (error) {
       reportError(error, "Sorry. There appears to have been an error when batch submitting grades. Please refresh and try again.");
     } finally {
       setActiveModal(null);
     }
-	}
+  }
 
   function toggleHideAndRandomize(e) {
     dispatch(toggleHideStudentIdentity(!isHideStudentIdentity));
@@ -198,17 +222,19 @@ function AssignmentViewer(props) {
             {name: 'Submit', onClick: (e) => handleBatchSubmit(e)},
           ]}>
             <p>Submit auto-scores for...</p>
-            <form id={'batchSubmitModalForm'} >
+            <form id={'batchSubmitModalForm'}>
               <div className='ml-4'>
-                <input type="radio" name={`modalRadioOpts`} value={SUBMISSION_MODAL_OPTS.all} />
+                <input type="radio" name={`modalRadioOpts`} value={SUBMISSION_MODAL_OPTS.all}/>
                 <label className='ml-2'>All students, including those who did not submit any work</label>
               </div>
               <div className='ml-4'>
-                <input type="radio" name={`modalRadioOpts`} defaultChecked={true} value={SUBMISSION_MODAL_OPTS.submittedOnly} />
+                <input type="radio" name={`modalRadioOpts`} defaultChecked={true}
+                  value={SUBMISSION_MODAL_OPTS.submittedOnly}/>
                 <label className='ml-2'>Only students who submitted their work</label>
               </div>
             </form>
-            <p className='mt-3'>Note: batch auto submission will <em>not</em> overwrite any scores you previously submitted.</p>
+            <p className='mt-3'>Note: batch auto submission will <em>not</em> overwrite any scores you previously
+              submitted.</p>
           </ConfirmationModal>
         );
 
@@ -216,77 +242,89 @@ function AssignmentViewer(props) {
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Batch Submit... processing'} buttons={[]}>
             <p>Processing Grades Submission.</p>
-              <div className='ml-4'>
-                <LoadingIndicator loadingMsg={'BATCH SUBMITTING GRADES...'} />
-              </div>
+            <div className='ml-4'>
+              <LoadingIndicator loadingMsg={'BATCH SUBMITTING GRADES...'}/>
+            </div>
             <p className='mt-3'>This make take a few moments.</p>
           </ConfirmationModal>
         );
     }
   }
 
-	return (
+  return (
     <Fragment>
       {activeModal && renderModal()}
 
+      {/*className={'m-2 p-0 position-relative'}*/}
       {(!reviewedStudentId) ?
-        <HeaderBar title={`Overview: ${(assignment?.title) ? assignment.title : ''}`}>
-          <Button onClick={handleEditBtn}>
-            <FontAwesomeIcon className='btn-icon' icon={faPen}/>Edit
-          </Button>
-        </HeaderBar> :
-        <HeaderBar onBackClick={() => dispatch(setCurrentlyReviewedStudentId(''))} title={assignment?.title}>
-          <span className='mr-2'>
-            <input type={'checkbox'} onChange={toggleHideAndRandomize} checked={isHideStudentIdentity}/>
-            Hide identity & randomize
-          </span>
-        </HeaderBar>
+        <div ref={headerZoneRef}>
+          <HeaderBar title={`Overview: ${(assignment?.title) ? assignment.title : ''}`}>
+            <Button onClick={handleEditBtn}>
+              <FontAwesomeIcon className='btn-icon' icon={faPen}/>Edit
+            </Button>
+          </HeaderBar>
+        </div> :
+        <div ref={headerZoneRef}>
+          <HeaderBar
+            onBackClick={() => dispatch(setCurrentlyReviewedStudentId(''))} title={assignment?.title}>
+            <span>
+              <input className='mr-2' type={'checkbox'} onChange={toggleHideAndRandomize}
+                checked={isHideStudentIdentity}/>
+              Hide identity & randomize
+            </span>
+          </HeaderBar>
+        </div>
       }
 
-      <Container className="assignment-viewer">
+      <Container className="assignment-viewer p-0 m-0">
         {props.loading &&
-          <div className="nav-pane">
-            <LoadingIndicator loadingMsg={'LOADING ASSIGNMENT DATA'} size={3} />
-          </div>
+        <div className="nav-pane">
+          <LoadingIndicator loadingMsg={'LOADING ASSIGNMENT DATA'} size={3}/>
+        </div>
         }
         {!reviewedStudentId &&
         <Fragment>
-          <Row className='mt-2 mb-2 pt-2 pb-2'>
-            <Col className='col-6'>
-              <Button onClick={() => setActiveModal({type:MODAL_TYPES.showBatchSubmitOptions})}>
-                <FontAwesomeIcon className='btn-icon' icon={faPen} />Batch Submit
-              </Button>
-            </Col>
-            <Col className='text-right'>
-              <span className='mr-2'>
-                <input className='mr-2' type={'checkbox'} onChange={toggleHideAndRandomize} checked={isHideStudentIdentity}/>
+          <Row className='m-0 p-0 position-relative'>
+            {/*<Col className='col-6'>*/}
+            {/*  <Button onClick={() => setActiveModal({type: MODAL_TYPES.showBatchSubmitOptions})}>*/}
+            {/*    <FontAwesomeIcon className='btn-icon' icon={faPen}/>Batch Submit*/}
+            {/*  </Button>*/}
+            {/*</Col>*/}
+            <Col className='col-12 text-right m-0 p-0 mt-1 mb-2'>
+              <span className='m-0'>
+                <input className='mr-2' type={'checkbox'} onChange={toggleHideAndRandomize}
+                  checked={isHideStudentIdentity}/>
                 Hide identity & randomize
               </span>
             </Col>
           </Row>
-          <Row className='mt-2 mb-5'>
-            <Col>
-              <h3>Summary</h3>
-              <p className='summary-data xt-med'>{assignment.summary}</p>
-            </Col>
-            <Col className='col-3 text-right mr-2'>
-              <h3>Autoscore</h3>
-              <p className='summary-data xt-med float-right'>
-                {assignment.isUseAutoScore && <FontAwesomeIcon className='mr-2' icon={faCheck} size='lg'/>}
-                {(assignment.isUseAutoScore) ? 'Enabled' : 'Disabled'}
-              </p>
-            </Col>
-          </Row>
-          <HomeworkListing isUseAutoScore={assignment.isUseAutoScore} isFetchingHomeworks={isLoadingHomeworks} students={students} studentsPerPage={15}/>
+
+          {/*<Row className='mt-2 mb-5'>*/}
+          {/*  <Col>*/}
+          {/*    <h3>Summary</h3>*/}
+          {/*    <p className='summary-data xt-med'>{assignment.summary}</p>*/}
+          {/*  </Col>*/}
+          {/*  <Col className='col-3 text-right mr-2'>*/}
+          {/*    <h3>Autoscore</h3>*/}
+          {/*    <p className='summary-data xt-med float-right'>*/}
+          {/*      {assignment.isUseAutoScore && <FontAwesomeIcon className='mr-2' icon={faCheck} size='lg'/>}*/}
+          {/*      {(assignment.isUseAutoScore) ? 'Enabled' : 'Disabled'}*/}
+          {/*    </p>*/}
+          {/*  </Col>*/}
+          {/*</Row>*/}
+
+          <HomeworkListing isUseAutoScore={assignment.isUseAutoScore} isFetchingHomeworks={isLoadingHomeworks}
+            students={students} studentsPerPage={15}/>
         </Fragment>
         }
 
         {reviewedStudentId && (students?.length > 0) &&
-          <HomeworkReview refreshGrades={fetchScores} assignment={assignment} students={students} reviewedStudentId={reviewedStudentId} />
+        <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
+          students={students} reviewedStudentId={reviewedStudentId} />
         }
       </Container>
     </Fragment>
-	)
+  )
 }
 
 export default AssignmentViewer;
