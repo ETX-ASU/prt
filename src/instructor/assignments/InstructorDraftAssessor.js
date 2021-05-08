@@ -32,7 +32,6 @@ function InstructorDraftAssessor(props) {
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   const activeUser = useSelector(state => state.app.activeUser);
-  const assessorRef = useRef(null);
   const gradingBarRef = useRef(null);
   const submitBtnRef = useRef(null);
   const [gradingBarHeight, setGradingBarHeight] = useState(200);
@@ -50,20 +49,6 @@ function InstructorDraftAssessor(props) {
       window.removeEventListener('resize', onWindowResized);
     }
   }, [gradingBarRef])
-
-
-  useEffect(() => {
-    if (!assessorRef.current) return;
-    assessorRef.current.addEventListener('blur', onBlurred);
-
-    return () => {
-      window.removeEventListener('blur', onBlurred);
-    }
-  }, [assessorRef.current])
-
-  function onBlurred() {
-    console.log("BLURRED!!!!!!!!!!!!!!!!")
-  }
 
   useEffect(() => {
     let targetStudent = students.find(s => s.id === reviewedStudentId);
@@ -148,7 +133,7 @@ function InstructorDraftAssessor(props) {
 
         {hasStudentDoneWork() &&
         <Row className={'m-0 p-0 h-100'}>
-          <Col className='rounded p-0' ref={assessorRef}>
+          <Col className='rounded p-0'>
             <PeerHomeworkAssessor
               // refreshHandler={fetchAndSetActiveUserCurrentHomework}
               key={reviewedStudent.id}

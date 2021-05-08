@@ -18,8 +18,10 @@ import RubricAssessorPanel from "../../instructor/assignments/RubricAssessorPane
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import CommentsPanel from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
-import ReactQuill from "react-quill";
+import ReactQuill, {Quill} from "react-quill";
 import { v4 as uuid } from "uuid";
+
+// import Highlight from '../../tool/Highlight';
 
 library.add(faCheck, faTimes, faGripLines);
 
@@ -36,7 +38,6 @@ function PeerHomeworkAssessor(props) {
   const [nonUserComments, setNonUserComments] = useState(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
   const [userComments, setUserComments] = useState(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
   const [activeModal, setActiveModal] = useState(null);
-  const [lastAlteredComment, setLastAlteredComment] = useState(null);
 
   const dragBarRef = useRef(null);
   const headerZoneRef = useRef(null);
@@ -47,11 +48,13 @@ function PeerHomeworkAssessor(props) {
   const [topZonePercent, setTopZonePercent] = useState(20);
   const [activeCommentId, _setActiveCommentId] = useState(defaultActiveCommentId || '');
   const [prevCommentId, setPrevCommentId] = useState(defaultActiveCommentId || '');
+  const [origComment, setOrigComment] = useState();
 
   const setActiveCommentId = (id) => {
     setPrevCommentId(activeCommentId);
     _setActiveCommentId(id);
   }
+
 
 
   useEffect(() => {
@@ -64,6 +67,8 @@ function PeerHomeworkAssessor(props) {
     const editorElem = document.querySelector('.ql-editor');
 
     onWindowResized();
+    // rehydrateComments(userComments);
+
     window.addEventListener('resize', onWindowResized);
 
     // TODO: remove event listener!
@@ -74,76 +79,67 @@ function PeerHomeworkAssessor(props) {
     }
   }, [])
 
+
+  useEffect(() => {
+    console.log("============================ toolHomeworkData CHANGED!")
+    setNonUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
+    setUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
+    // setActiveCommentId(defaultActiveCommentId);
+
+    const editor = reactQuillRef.current.editor;
+    let origText = editor.getContents(10, 5);
+    setOrigComment(origText);
+    editor.setSelection(10, 5);
+    editor.format('comment-tag', true, 'api');
+
+
+    // reactQuillRef.current.updateContents(new Delta().retain(10).retain(5, {bold: true}));
+
+  }, [toolHomeworkData])
+
   useEffect(() => {
     onWindowResized();
   }, [props.excessHeight])
 
-
   // useEffect(() => {
-  //     console.log("============================ toolHomeworkData CHANGED!")
-  //     setNonUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
-  //     setUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
+  //   const editor = reactQuillRef.current.editor;
+  //   let activeComment = null;
+  //   console.log("+++++++++++++ setting comment-tags");
+  //   userComments.forEach(c => {
+  //     // const startPt = c.index;
+  //     // editor.setSelection(startPt, c.length);
+  //     // editor.format((activeCommentId) ? 'comtag-active' : 'comtag');
+  //     editor.formatText(c.index, c.length, 'comtag');
+  //     if (c.id === activeCommentId) activeComment = c;
+  //   })
   //
-  // }, [toolHomeworkData.commentsOnDraft])
-
-
-  useEffect(() => {
-    setNonUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
-    setUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
-
-    const editor = reactQuillRef.current.editor;
-    let selBefore = editor.getSelection();
-    console.log(`prev | cur: ${prevCommentId} | ${activeCommentId}   ==>`,  {selBefore});
-
-    let selectedComment = highlightCommentsInQuillEditor(userComments, activeCommentId);
-
-    if (selectedComment && (selectedComment.id !== prevCommentId)) {
-      editor.setSelection(selectedComment.index + selectedComment.length - 1, 0, 'user');
-    }
-    //
-    // if (prevCommentId !== activeCommentId && activeCommentId) {
-    //   editor.setSelection(selectedComment.index + selectedComment.length - 1, 0, 'user');
-    // }
-    else {
-      editor.setSelection(null);
-    }
-  }, [activeCommentId, toolHomeworkData.commentsOnDraft]);
-
-
-
-  function highlightCommentsInQuillEditor(comments, targetCommentId) {
-    const editor = reactQuillRef.current.editor;
-    let selectedComment = null;
-
-    console.log("+++++++++++++ setting comment-tags");
-    comments.forEach(c => {
-      const startPt = c.index;
-      editor.setSelection(startPt, c.length);
-      editor.format('comment-tag', {id: c.id, isActiveBtn: (c.id === targetCommentId)});
-      if (c.id === targetCommentId) selectedComment = c;
-    })
-
-    return selectedComment;
-  }
-
-
+  //   if (prevCommentId !== activeCommentId && activeComment) {
+  //     editor.setSelection(activeComment.index + activeComment.length - 1, 0, 'user');
+  //   } else {
+  //     editor.setSelection(null);
+  //   }
+  // }, [userComments, activeCommentId]);
 
 
   function onWindowResized() {
-    // console.log(`props.excessHeight = ${props.excessHeight}`);
-    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
-    setAvailableHeight(height - 48);
+    console.log(`props.excessHeight = ${props.excessHeight}`);
+    // if (isInstructorAssessment) {
+    //   if (isInstructorAssessment) setAvailableHeight(props.availableHeight);
+    // } else {
+      const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
+      // setAvailableHeight((props.excessHeight) ? height - 48 - props.excessHeight : height - 48);
+      setAvailableHeight(height - 48);
+      rehydrateComments(userComments);
+    // }
   }
 
   // handle changes to selection if actual highlighted content is clicked
   function onSelectionChanged(range, source) {
-    // console.log("onSelectionChanged", source, range?.length);
     const editor = reactQuillRef?.current?.editor;
-    if (source !== 'api') console.log("onSelectionChanged", source, range?.index);
+    // console.log("onSelectionChanged", source, range?.length);
     if (!editor || source !== 'user' || !range || range.length > 0) return;
 
     const commentId = getIdOfLeaf(editor, range.index);
-    console.log("  setActiveCommentId to: ", range.index, range.length);
     setActiveCommentId(commentId);
   }
 
@@ -157,28 +153,74 @@ function PeerHomeworkAssessor(props) {
 
 
 
+  function rehydrateComments(comments) {
+    const editor = reactQuillRef.current.editor;
 
+    const updatedComments = comments.map(c => {
+      let bounds = editor.getBounds(c.index, c.length);
+      return ({...c,
+        x: bounds.left + bounds.width,
+        y: bounds.top + editor.scrollingContainer.scrollTop,
+        tagName: (c.tagNum < 10) ? "0" + c.tagNum : "" + c.tagNum
+      })
+    })
 
+    // props.onAssessmentCommentChanges(updatedComments);
+  }
 
   // Handle updates, additions to comments and rank selections
   function onUpdateComment(comment, removeFocus) {
-    // console.log(`onUpdateComment()   ==>`,  reactQuillRef?.current?.editor?.getSelection()?.index, activeCommentId);
-    setLastAlteredComment(comment);
+    let altComments = [...userComments];
+    let index = altComments.findIndex(c => c.id === comment.id)
+    altComments[index] = comment;
 
-    // let altUserComments = [...userComments];
-    // let index = altUserComments.findIndex(c => c.id === comment.id)
-    // altUserComments[index] = comment;
-
-    // const nextCommentId = (removeFocus) ? null : activeCommentId;
-    // onAssessmentUpdated({...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...altUserComments]}, activeCommentId);
+    rehydrateComments(altComments);
+    if (removeFocus) setActiveCommentId(null);
   }
 
 
-  function onDeleteComment(commentId, nextCommentId) {
-    const altUserComments = [...userComments];
-    const cIndex = altUserComments.findIndex(c => c.id === commentId);
-    altUserComments.splice(cIndex, 1);
-    onAssessmentUpdated({...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...altUserComments]}, nextCommentId);
+  function onDeleteComment(commentId) {
+    const editor = reactQuillRef.current.editor;
+    // editor.setSelection(10, 5);
+    // editor.formatText('color', 'red');
+    // editor.removeFormat(10, 5, 'comment-tag');
+    // editor.setSelection(0,0);
+
+    editor.deleteText(10, 5);
+    editor.setContents(origComment);
+
+    // editor.setSelection(10, 5);
+    // editor.format('nontag', true, 'api');
+
+/*
+    // setActiveCommentId('');
+    const updatedComments = [...userComments];
+    const cIndex = updatedComments.findIndex(c => c.id === commentId);
+    const c = updatedComments[cIndex];
+
+    const editor = reactQuillRef.current.editor;
+
+    // reactQuillRef.current.editor.removeFormat(c.index, c.length);
+    const prevFormat = editor.getFormat(c.index, c.length);
+    // editor.setSelection(c.index, c.length);
+    editor.removeFormat(c.index, c.length);
+    // editor.remove();
+
+    // editor.fo(c.index, c.length, 'cleared-tag', true);
+    // editor.format('', {id: '', isActiveBtn: false});
+    // editor.removeFormat(c.index, c.length, 'api');
+
+    const afterFormat = editor.getFormat(c.index, c.length);
+    console.log("prev & after", prevFormat, afterFormat);
+
+    // reactQuillRef.current.editor.format('comment-tag', {id: c.id, isActiveBtn: (c.id === activeCommentId)});
+
+    updatedComments.splice(cIndex, 1);
+    setActiveCommentId(null);
+
+    // After or instead of rehydrate, save changes
+    rehydrateComments(updatedComments);
+*/
   }
 
   function onAddComment(e) {
@@ -242,8 +284,6 @@ function PeerHomeworkAssessor(props) {
     // May need to use this to capture last selection before editor loses focus and a the addComment btn is triggered
     // console.log("Editor Blurred", e)
   }
-
-
 
   async function saveOrSubmitAssessment(isSubmit = false) {
     const userComments = userComments.map(c => ({
@@ -319,7 +359,6 @@ function PeerHomeworkAssessor(props) {
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.reviewHomework));
     await props.refreshHandler();
   }
-
 
 
   function autoSave() {
@@ -422,14 +461,13 @@ function PeerHomeworkAssessor(props) {
               ref={reactQuillRef}
               theme="snow"
               readOnly={true}
-              value={toolHomeworkData.draftContent}
+              defaultValue={toolHomeworkData.draftContent}
               onChange={() => {}}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}
               formats={formats}
               onBlur={onEditorBlur}
-              // style={{height: `calc(100% - ${barHeight}px`}}
             />
           </div>
           <CommentsPanel

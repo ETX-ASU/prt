@@ -131,10 +131,16 @@
 
 
 span.comment-tag {
-  //background-color: #FFFAD1;
-  //margin-right: -12px;
+  color: darkred;
+  background-color: #FFD23D !important;
 
+  //margin-right: -12px;
 }
+
+//div.comtag {
+//  background-color: #f3d11c;
+//  display: inline;
+//}
 
 span.comment-btn {
   font-family: "Lucida Console", sans-serif;

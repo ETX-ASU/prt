@@ -1,6 +1,35 @@
 # OVERVIEW OF NEXT STEPS
 
-
+1. Assessor gets CONTENT from DashAssessor or Redux Store
+   1. It stores this in local state TextContent
+   2. Quill's defaultValue is set to TextContent
+   3. All comments are highlighted using editor function, including Active comment
+      1. ADDing new comment just adds the highlight using editor function
+      2. DESELECTING, SELECTING or DELETING a comment requires that we throw out current TextContent
+         and replace it with original, then scan thru comments to re-highlight them again
+         
+      OPT B)
+   
+      2. Grab the Quill html content. Remove the span. Set Quill with updated value, etc.
+         This is pretty identical to OPT A. It still rebuilds Quill and selections/focus are lost.
+         
+      OPT C)
+   
+      3. Comments are given an 'invisible' style. They get a classname in the process. The
+         class is the real style-enforcer. PROB: Does this work, and what "invisible" style can
+         we use... something that cannot be used by a student to style anything in their paper. Perhaps
+         the border of text?
+         
+      OPT D)
+   
+      4. When setting a comment, get the original content and save it to our comments array. 
+         
+         THEN:
+         1. Add highlight.
+         
+         WHEN REMOVING/CHANGING
+         1. Delete the highlighted span.
+         2. Past in the original span.
 
 
 

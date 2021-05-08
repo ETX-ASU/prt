@@ -38,14 +38,21 @@ function CommentsPanel(props) {
   useEffect(() => {
     setTimeout(() => {
       if (commentTextArea.current) commentTextArea.current.focus();
-    }, 50)
+      console.log("FOCUS SET");
+    }, 100)
+    // commentTextArea.createTextRange();
+    // commentTextArea.setSelectionRange(commentTextArea.selectionEnd, commentTextArea.selectionEnd);
+    // console.log("LENGTH: ", commentTextArea?.current, comments.length, prevCommentsLength);
+    // if (commentTextArea?.current && comments.length > prevCommentsLength) {
+    //   commentTextArea.current.focus();
+    //   console.log("FOCUS SET");
+    //   setPrevCommentsLength(comments.length);
+    // }
   }, [comments.length])
 
 
   function onNavBtn(isFwd) {
-    if (comments.length === 1) setActiveCommentId(comments[0].id);
     if (comments.length <= 1) return;
-
     const tempComments = [...comments];
     tempComments.sort((a,b) => (a.index === b.index)
       ? a.tagNum - b.tagNum
@@ -67,22 +74,9 @@ function CommentsPanel(props) {
   }
 
   function onBlur(e) {
-    console.log("onBlur() triggered for:", commentText);
-    setCommentText(e.target.value);
-    updateComment({...activeComment, content:commentText}, false);
+    console.log("Blur-- updating comment", commentText);
+    updateComment({...activeComment, content:commentText})
     // setActiveComment(null);
-  }
-
-  function onDeleteBtn() {
-    if (comments.length === 1) onDeleteComment(activeCommentId, null);
-    if (comments.length <= 1) return;
-
-    const tempComments = [...comments];
-    tempComments.sort((a,b) => (a.index === b.index) ? a.tagNum - b.tagNum : a.index - b.index);
-
-    const index = tempComments.findIndex(c => c.id === activeCommentId);
-    const nextCommentId = (index === 0) ? tempComments[tempComments.length-1].id : tempComments[index-1].id;
-    onDeleteComment(activeCommentId, nextCommentId);
   }
 
   return (
@@ -90,7 +84,7 @@ function CommentsPanel(props) {
       <Row className='criterion-nav m-0 p-2'>
         <Col className='p-0 m-0'>
           <div className='comment-buttons'>
-            <Button className='align-middle' onClick={onDeleteBtn}>
+            <Button className='align-middle' onClick={() => onDeleteComment(activeCommentId)}>
               <FontAwesomeIcon className='btn-icon' icon={faTrash}/>
             </Button>
           </div>

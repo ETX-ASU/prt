@@ -7,18 +7,15 @@ class ComTag extends Inline {
 	static create({id, isActiveBtn}) {
 		let node = super.create({id, isActiveBtn});
 		// Oddly, we must set an attribute to trigger the style update and use of the added class name
-		node.setAttribute('style', `color: inherit; background-color: ${(isActiveBtn) ? '#FFD23D' : '#FFFAD1'}`);
+		node.setAttribute('style', `background-color: #00000000`);
+		// node.setAttribute('style', `font-weight: bold`);
+		node.setAttribute('alt', `howdy`);
+
+		// node.setAttribute('style', `color: inherit; background-color: ${(isActiveBtn) ? '#FFD23D' : '#FFFAD1'}`);
 		// node.setAttribute('style', `color: inherit`);
 		// node.setAttribute('src', 'nothing')
-		node.id = id;
+		// node.id = id;
 		return node;
-	}
-
-	static value(node) {
-		return {
-			alt: node.getAttribute('alt'),
-			url: node.getAttribute('src')
-		};
 	}
 }
 
