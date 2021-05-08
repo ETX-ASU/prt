@@ -85,14 +85,18 @@ function PeerHomeworkAssessor(props) {
     console.log("============================ toolHomeworkData CHANGED!")
     setNonUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
     setUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
+
+    onAddComment(null, {index:10, length:5});
     // setActiveCommentId(defaultActiveCommentId);
 
-    const editor = reactQuillRef.current.editor;
-    let origText = editor.getContents(10, 5);
-    setOrigComment(origText);
-    editor.setSelection(10, 5);
-    editor.format('comment-tag', true, 'api');
+    // const editor = reactQuillRef.current.editor;
+    // let origText = editor.getContents(10, 5);
 
+    // setOrigComment(origText);
+    // editor.setSelection(10, 5);
+
+    // editor.updateContents(new Delta().retain(10).delete(5));
+    // editor.updateContents(new Delta().retain(10).retain(5, {attribute: {'color': 'yellow'}}));
 
     // reactQuillRef.current.updateContents(new Delta().retain(10).retain(5, {bold: true}));
 
@@ -175,68 +179,41 @@ function PeerHomeworkAssessor(props) {
     let index = altComments.findIndex(c => c.id === comment.id)
     altComments[index] = comment;
 
-    rehydrateComments(altComments);
+    // rehydrateComments(altComments);
+    setUserComments(altComments);
     if (removeFocus) setActiveCommentId(null);
   }
 
 
   function onDeleteComment(commentId) {
+    if (!commentId) return;
     const editor = reactQuillRef.current.editor;
-    // editor.setSelection(10, 5);
-    // editor.formatText('color', 'red');
-    // editor.removeFormat(10, 5, 'comment-tag');
-    // editor.setSelection(0,0);
 
-    // editor.updateContents(new Delta().retain(10).retain(5, {bold: true}));
-    console.log('------------> ', {origComment});
-    let myDelta = {ops: [{retain:10}, {delete:5}, origComment.ops[0]]};
-    // editor.setSelection(10, 5);
-    // editor.updateContents(new Delta().retain(10).delete(5));
+    const altComments = [...userComments];
+    const cIndex = altComments.findIndex(c => c.id === commentId);
+    if (cIndex < 0) {
+      console.error("comment not found!");
+      return;
+    }
+    const targetComment = altComments[cIndex];
+
+    let myDelta = {ops: [{retain: 10}, {delete:5}, ...targetComment.origContent.ops]};
     editor.updateContents(new Delta(myDelta));
 
-    // editor.deleteText(10, 5);
-    // editor.setContents(origComment);
-
-    // editor.setSelection(10, 5);
-    // editor.format('nontag', true, 'api');
-
-/*
-    // setActiveCommentId('');
-    const updatedComments = [...userComments];
-    const cIndex = updatedComments.findIndex(c => c.id === commentId);
-    const c = updatedComments[cIndex];
-
-    const editor = reactQuillRef.current.editor;
-
-    // reactQuillRef.current.editor.removeFormat(c.index, c.length);
-    const prevFormat = editor.getFormat(c.index, c.length);
-    // editor.setSelection(c.index, c.length);
-    editor.removeFormat(c.index, c.length);
-    // editor.remove();
-
-    // editor.fo(c.index, c.length, 'cleared-tag', true);
-    // editor.format('', {id: '', isActiveBtn: false});
-    // editor.removeFormat(c.index, c.length, 'api');
-
-    const afterFormat = editor.getFormat(c.index, c.length);
-    console.log("prev & after", prevFormat, afterFormat);
-
-    // reactQuillRef.current.editor.format('comment-tag', {id: c.id, isActiveBtn: (c.id === activeCommentId)});
-
-    updatedComments.splice(cIndex, 1);
+    altComments.splice(cIndex, 1);
+    setUserComments(altComments);
     setActiveCommentId(null);
 
     // After or instead of rehydrate, save changes
-    rehydrateComments(updatedComments);
-*/
+    // rehydrateComments(updatedComments);
   }
 
-  function onAddComment(e) {
+  function onAddComment(e, selection) {
     let bounds, newComment, isAvailable;
     const comCount = userComments.length + 1;
     const editor = reactQuillRef.current.editor;
 
-    let sel = editor.getSelection();
+    let sel = selection ? selection : editor.getSelection();
     const selEnd = sel?.index + sel?.length;
     if (!sel || !sel.length) {
       // TODO: Notify user of not being a range
@@ -262,11 +239,16 @@ function PeerHomeworkAssessor(props) {
       length: sel.length,
       x: bounds.left + bounds.width,
       y: bounds.top + editor.scrollingContainer.scrollTop,
+      origContent: editor.getContents(sel.index, sel.length),
       commentRating: -1,
       criterionNum: -1
     }
 
-    onAssessmentUpdated({...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...userComments, newComment]}, newComment.id);
+    editor.formatText(sel.index, sel.length, 'comment-tag', {id: newComment.id, isActiveBtn: false}, 'api');
+    setUserComments([...userComments, newComment]);
+    if (!selection) setActiveCommentId(newComment.id);
+
+    // onAssessmentUpdated({...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...userComments, newComment]}, newComment.id);
   }
 
   function onRankSelected(crit, rNum) {
