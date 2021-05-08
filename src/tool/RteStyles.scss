@@ -24,6 +24,10 @@
 .comments-panel {
   height: auto;
 
+  .text-area-overlay-btn {
+    opacity: 0;
+  }
+
   textarea {
     font-size: 12px;
   }

@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState, useRef} from 'react';
 import {Tabs, Tab, Button, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -11,7 +11,9 @@ library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
 
 function CommentsPanel(props) {
   const {criteria, setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments} = props;
+  const visCriteria = criteria.filter(c => c.isVisible);
   // const editor = (quillRef?.current?.editor) ? quillRef.current.editor : null;
+  const commentTextArea = useRef(null);
   const [activeComment, setActiveComment] = useState(comments.find(c => c.id === activeCommentId));
 
 
@@ -22,17 +24,28 @@ function CommentsPanel(props) {
   // const [commentIndex, setCommentIndex] = useState(0);
   // const activeComment = comments.find(c => c.id === activeCommentId);
   const [commentText, setCommentText] = useState('');
+  const [prevCommentsLength, setPrevCommentsLength] = useState(comments.length);
 
   useEffect(() => {
     if (!activeCommentId) return;
     const theComment = comments.find(c => c.id === activeCommentId);
+    if (!theComment) return;
     setActiveComment(theComment);
     setCommentText(theComment.content);
-  }, [activeCommentId])
+  }, [activeCommentId, comments])
+
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (commentTextArea.current) commentTextArea.current.focus();
+    }, 50)
+  }, [comments.length])
 
 
   function onNavBtn(isFwd) {
+    if (comments.length === 1) setActiveCommentId(comments[0].id);
     if (comments.length <= 1) return;
+
     const tempComments = [...comments];
     tempComments.sort((a,b) => (a.index === b.index)
       ? a.tagNum - b.tagNum
@@ -54,8 +67,22 @@ function CommentsPanel(props) {
   }
 
   function onBlur(e) {
-    console.log("Blur-- updating comment", commentText);
-    updateComment({...activeComment, content:commentText})
+    console.log("onBlur() triggered for:", commentText);
+    setCommentText(e.target.value);
+    updateComment({...activeComment, content:commentText}, false);
+    // setActiveComment(null);
+  }
+
+  function onDeleteBtn() {
+    if (comments.length === 1) onDeleteComment(activeCommentId, null);
+    if (comments.length <= 1) return;
+
+    const tempComments = [...comments];
+    tempComments.sort((a,b) => (a.index === b.index) ? a.tagNum - b.tagNum : a.index - b.index);
+
+    const index = tempComments.findIndex(c => c.id === activeCommentId);
+    const nextCommentId = (index === 0) ? tempComments[tempComments.length-1].id : tempComments[index-1].id;
+    onDeleteComment(activeCommentId, nextCommentId);
   }
 
   return (
@@ -63,10 +90,7 @@ function CommentsPanel(props) {
       <Row className='criterion-nav m-0 p-2'>
         <Col className='p-0 m-0'>
           <div className='comment-buttons'>
-            <Button className='align-middle' onClick={onAddComment}>
-              <FontAwesomeIcon className='btn-icon' icon={faPlus}/>
-            </Button>
-            <Button className='align-middle' onClick={() => onDeleteComment(activeCommentId)}>
+            <Button className='align-middle' onClick={onDeleteBtn}>
               <FontAwesomeIcon className='btn-icon' icon={faTrash}/>
             </Button>
           </div>
@@ -80,32 +104,30 @@ function CommentsPanel(props) {
       </Row>
       <Row className='criterion-content m-0 p-2'>
         <Col className='p-0 m-0'>
-          <select
-            defaultValue={criteria[0].id}
-            onChange={() => console.log('changed association')}
-            className="form-control"
-            id="criterion-selector">
-            {criteria.map(c =>
-              <option key={c.id} value={c.id}>{c.name}</option>
-            )}
-          </select>
-          {activeCommentId && activeComment &&
-            <textarea
-              className='mt-2 form-control h-50'
-              placeholder={`Add note #${activeComment.tagName} here`}
-              onBlur={onBlur}
-              onChange={onChange}
-              value={commentText}/>
-          }
-          {!activeCommentId &&
-            <textarea
-              className='mt-2 form-control h-50'
-              placeholder={`Select a region in the document and click the [+] button to add a note. 
-              \nUse the navigation arrows [<][>] to navigate through your comments, or just click on the comment directly in the document to view and make edits to them. 
+          {/*<select*/}
+          {/*  defaultValue={visCriteria[0].id}*/}
+          {/*  onChange={() => console.log('changed association')}*/}
+          {/*  className="form-control"*/}
+          {/*  id="criterion-selector">*/}
+          {/*  {visCriteria.map(c =>*/}
+          {/*    <option key={c.id} value={c.id}>{c.name}</option>*/}
+          {/*  )}*/}
+          {/*</select>*/}
+          <Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-warning' style={{display: !activeCommentId ? 'block' : 'none'}} onClick={onAddComment} />
+          <textarea
+            ref={commentTextArea}
+            className='mt-2 form-control h-50'
+            onBlur={onBlur}
+            onChange={onChange}
+            placeholder={activeCommentId ? '' : `Select a region in the document and click the [+] button to add a note.
+              \nUse the navigation arrows [<][>] to navigate through your comments, or just click on the comment directly in the document to view and make edits to them.
               \nTo delete a comment, select it and click the trash icon.`}
-              disabled={true}
-            />
-          }
+            disabled={!activeCommentId}
+            value={commentText}/>
+
+          {/*<Button className='position-absolute w-100 h-50 mt-2 bg-warning' onClick={testAdd} />*/}
+
+
           {/*{shownRanks.map((rank, rNum) =>*/}
           {/*  <p key={rNum}><strong>{rank.name}: </strong>{shownCriteria[critIndex].rankSummaries[rNum]}</p>*/}
           {/*)}*/}

@@ -108,18 +108,40 @@ function RootPhaseSettings(props) {
             <FontAwesomeIcon icon={faEllipsisV} />
           </div>
           <div className='card-content'>
-              <div className='rank-name m-1'>
-                <input type='text' value={rank.name} onChange={(e) => handleRankPropChanged(e, index, 'name')} />
-              </div>
-              <div className='rank-points m-1'>
-                <input type='number' min={0} max={100} value={rank.points} onChange={(e) => handleRankPropChanged(e, index, 'points')} />
-              </div>
-              <Button
-                  disabled={isRankVisToggleDisabled(rank)}
-                  className='d-inline-block text-center xbg-dark p-0 rank-visibility-btn'
-                  onClick={() => onToggleRankVisibility(index)} >
-                <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(rank.isVisible) ? faEye : faEyeSlash} />
-              </Button>
+            <div className='rank-name m-1'>
+              <input type='text'
+                value={rank.name}
+                onChange={(e) => handleRankPropChanged(e, index, 'name')}
+                draggable={true}
+                onDragStart={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              />
+            </div>
+            <div className='rank-points m-1'>
+              <input type='number' min={0} max={100}
+                value={rank.points}
+                onChange={(e) => handleRankPropChanged(e, index, 'points')}
+                draggable={true}
+                onDragStart={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              />
+            </div>
+            <Button
+              disabled={isRankVisToggleDisabled(rank)}
+              className='d-inline-block text-center xbg-dark p-0 rank-visibility-btn'
+              onClick={() => onToggleRankVisibility(index)}
+              draggable={true}
+              onDragStart={e => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(rank.isVisible) ? faEye : faEyeSlash} />
+            </Button>
           </div>
         </Card>
         <div className={`drop-sliver${activeDropZoneIndex === index+1 ? ' active-drop-zone' : ''}`}

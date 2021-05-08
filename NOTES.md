@@ -1,6 +1,38 @@
 # OVERVIEW OF NEXT STEPS
 
-1. Instructor should be able to edit the Rubric of Root Assignment before it has begun (this is critical for cloned assignments)
+
+
+
+
+
+
+PeerHomeworkAssessor:
+
+1. It receives defaultActiveCommentId, and toolHomeworkData
+2. When a comment is added, removed, updated... 
+   2. use "onAssessmentUpdated()" to tell parent the new toolHomeworkData and activeCommentId
+   3. Parent recreates the child with updated info using that to
+      build out the comments, critRating selections, and activeComment
+   4. If comments or critRatings do not match what it has from DB, 
+      PARENT saves these changes to DB and refetches data for student
+      
+
+      
+
+
+
+1. When instructor deletes a comment, that change should get saved optimistically(?) in redux such that the
+   InstructorDraftAssessor gets updated with new comment and rebuilds the PeerHomeworkAssessor.
+2. Each change to a comment or rubric rank selection should trigger a save as well.
+   1. onBlur() of the comment text area saves changes
+   2. onAddComment saves changes (an empty "" comment)... focus is set to text area so any updates will get saved
+      when it's focus is lost... so maybe onAddComment we don't save. 
+      ONLY save on textAreaBlur if the comments do NOT match each other
+   3. onDeleteComment saves changes
+   
+
+
+
 2. Grading of student essays... instructor should have basic grading capability
 3. Assessing Students should be able to submit assessments (This is working I think)
    1. When reviewing your recent submission - get rid of submit button!!
@@ -13,8 +45,11 @@
 8. In draft writing assignments, instructors should be able to see student draft and assess it like a peer
 
    
-3. Make right-side panels toggle on/off display
+6. Make right-side panels toggle on/off display
 7. Rubric tabs... what happens when too long
+8. When you create a dupe of an existing assignment it takes you to AssignmentEditor the button
+   to save your changes says "UPDATE" which is a bit confusing. Make is say "SAVE" or maybe "CONTINUE"?
+9. Either make endless draft & review rounds possible, or warn instructor after they create 5th that no more are possible
 
 
 3. Location dots should be set dynamically because resizing the screen width

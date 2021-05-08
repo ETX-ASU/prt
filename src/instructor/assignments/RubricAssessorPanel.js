@@ -52,8 +52,10 @@ function RubricAssessorPanel(props) {
               <NavItem key={crit.id}>
                 {crit.isVisible &&
                   <NavLink key={crit.id} eventKey={crit.id} className='hidden-criterion'>
-                    {/*<span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}*/}
-                    {crit.name}
+                    {props.isShowCriteriaPercents &&
+                      <Fragment><span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}</Fragment>
+                    }
+                    {!props.isShowCriteriaPercents && <Fragment>{crit.name}</Fragment>}
                     {(getRatingNum(crit) > -1) && <FontAwesomeIcon className='tab-icon ml-1 mr-0' icon={faCheck} />}
                   </NavLink>
                 }
