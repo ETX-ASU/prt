@@ -20,6 +20,7 @@ import CommentsPanel from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
 import ReactQuill, {Quill} from "react-quill";
 import { v4 as uuid } from "uuid";
+const Delta = Quill.import("delta");
 
 // import Highlight from '../../tool/Highlight';
 
@@ -186,8 +187,15 @@ function PeerHomeworkAssessor(props) {
     // editor.removeFormat(10, 5, 'comment-tag');
     // editor.setSelection(0,0);
 
-    editor.deleteText(10, 5);
-    editor.setContents(origComment);
+    // editor.updateContents(new Delta().retain(10).retain(5, {bold: true}));
+    console.log('------------> ', {origComment});
+    let myDelta = {ops: [{retain:10}, {delete:5}, origComment.ops[0]]};
+    // editor.setSelection(10, 5);
+    // editor.updateContents(new Delta().retain(10).delete(5));
+    editor.updateContents(new Delta(myDelta));
+
+    // editor.deleteText(10, 5);
+    // editor.setContents(origComment);
 
     // editor.setSelection(10, 5);
     // editor.format('nontag', true, 'api');
