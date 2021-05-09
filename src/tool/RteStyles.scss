@@ -131,11 +131,14 @@
 
 
 span.comment-tag {
-  color: darkred;
-  background-color: #FFD23D !important;
-
-  //margin-right: -12px;
+  background-color: #FFFAD1 !important;
 }
+
+span.comment-tag-active {
+  background-color: #FFD23D !important;
+}
+
+
 
 //div.comtag {
 //  background-color: #f3d11c;

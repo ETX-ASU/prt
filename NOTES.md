@@ -1,5 +1,26 @@
 # OVERVIEW OF NEXT STEPS
 
+1. When adding a new comment, give it the next sequence number (after preceding comment) and renumber all
+   of the other comments
+2. When a comment is unselected, swap highlighting by:
+   1. unhighlight the original
+      1. Select the orig
+      2. remove it's active-highlighting using core "onDelete" code
+      3. add back it's normal-highlighting using core "onAdd" code
+   2. if new selection is a comment, highlight the new selection
+      2. remove it's normal-highlighting using core "onDelete" code
+      3. add the active-highlighting using core "onAdd" code
+      
+   3. if new selection is not a comment but is a range, show the PLUS button on comments panel
+   
+
+
+
+
+
+
+
+
 1. Assessor gets CONTENT from DashAssessor or Redux Store
    1. It stores this in local state TextContent
    2. Quill's defaultValue is set to TextContent

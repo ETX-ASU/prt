@@ -63,80 +63,76 @@ function PeerHomeworkAssessor(props) {
     const tagsElem = document.getElementById('comments-layer-wrapper');
     reactQuillRef.current.editor.addContainer(tagsElem);
 
-    const toolbarElem = document.querySelector('.ql-tooltip.ql-hidden');
-    const buttonsLayer = tagsElem.querySelector('.comment-buttons-layer');
     const editorElem = document.querySelector('.ql-editor');
 
-    onWindowResized();
-    // rehydrateComments(userComments);
-
     window.addEventListener('resize', onWindowResized);
-
-    // TODO: remove event listener!
-    editorElem.addEventListener('scroll', () => buttonsLayer.style.top = toolbarElem.style['margin-top']);
+    editorElem.addEventListener('scroll', onEditorScrolled);
+    onWindowResized();
 
     return () => {
       window.removeEventListener('resize', onWindowResized);
+      editorElem.removeEventListener('scroll', onEditorScrolled);
     }
   }, [])
-
 
   useEffect(() => {
     console.log("============================ toolHomeworkData CHANGED!")
     setNonUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
     setUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
 
+    // TODO: Replace this with looping through and adding ALL comments
     onAddComment(null, {index:10, length:5});
-    // setActiveCommentId(defaultActiveCommentId);
-
-    // const editor = reactQuillRef.current.editor;
-    // let origText = editor.getContents(10, 5);
-
-    // setOrigComment(origText);
-    // editor.setSelection(10, 5);
-
-    // editor.updateContents(new Delta().retain(10).delete(5));
-    // editor.updateContents(new Delta().retain(10).retain(5, {attribute: {'color': 'yellow'}}));
-
-    // reactQuillRef.current.updateContents(new Delta().retain(10).retain(5, {bold: true}));
-
   }, [toolHomeworkData])
 
   useEffect(() => {
     onWindowResized();
   }, [props.excessHeight])
 
-  // useEffect(() => {
-  //   const editor = reactQuillRef.current.editor;
-  //   let activeComment = null;
-  //   console.log("+++++++++++++ setting comment-tags");
-  //   userComments.forEach(c => {
-  //     // const startPt = c.index;
-  //     // editor.setSelection(startPt, c.length);
-  //     // editor.format((activeCommentId) ? 'comtag-active' : 'comtag');
-  //     editor.formatText(c.index, c.length, 'comtag');
-  //     if (c.id === activeCommentId) activeComment = c;
-  //   })
-  //
-  //   if (prevCommentId !== activeCommentId && activeComment) {
-  //     editor.setSelection(activeComment.index + activeComment.length - 1, 0, 'user');
-  //   } else {
-  //     editor.setSelection(null);
-  //   }
-  // }, [userComments, activeCommentId]);
+  useEffect(() => {
+    if (activeCommentId === prevCommentId || !prevCommentId) return;
+    // const altComments = [...userComments];
+    const editor = reactQuillRef.current.editor;
+    const prev = onDeleteComment(prevCommentId, true);
+    editor.formatText(prev.targetComment.index, prev.targetComment.length, 'comment-tag', {id: prevCommentId.id, isActiveBtn: false}, 'api');
+
+    if (!activeCommentId) return;
+    const next = onDeleteComment(activeCommentId, true);
+    editor.formatText(next.targetComment.index, next.targetComment.length, 'comment-tag', {id: activeCommentId.id, isActiveBtn: true}, 'api');
+  }, [activeCommentId])
+
+/*  useEffect(() => {
+    const editor = reactQuillRef.current.editor;
+    let activeComment = null;
+    console.log("+++++++++++++ setting comment-tags");
+    userComments.forEach(c => {
+      // const startPt = c.index;
+      // editor.setSelection(startPt, c.length);
+      // editor.format((activeCommentId) ? 'comtag-active' : 'comtag');
+      editor.formatText(c.index, c.length, 'comtag');
+      if (c.id === activeCommentId) activeComment = c;
+    })
+
+    if (prevCommentId !== activeCommentId && activeComment) {
+      editor.setSelection(activeComment.index + activeComment.length - 1, 0, 'user');
+    } else {
+      editor.setSelection(null);
+    }
+  }, [userComments, activeCommentId]);*/
 
 
   function onWindowResized() {
     console.log(`props.excessHeight = ${props.excessHeight}`);
-    // if (isInstructorAssessment) {
-    //   if (isInstructorAssessment) setAvailableHeight(props.availableHeight);
-    // } else {
-      const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
-      // setAvailableHeight((props.excessHeight) ? height - 48 - props.excessHeight : height - 48);
-      setAvailableHeight(height - 48);
-      rehydrateComments(userComments);
-    // }
+    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
+    setAvailableHeight(height - 48);
   }
+
+  function onEditorScrolled() {
+    const tagsElem = document.getElementById('comments-layer-wrapper');
+    const toolbarElem = document.querySelector('.ql-tooltip.ql-hidden');
+    const buttonsLayer = tagsElem.querySelector('.comment-buttons-layer');
+    buttonsLayer.style.top = toolbarElem.style['margin-top'];
+  }
+
 
   // handle changes to selection if actual highlighted content is clicked
   function onSelectionChanged(range, source) {
@@ -158,7 +154,7 @@ function PeerHomeworkAssessor(props) {
 
 
 
-  function rehydrateComments(comments) {
+/*  function rehydrateComments(comments) {
     const editor = reactQuillRef.current.editor;
 
     const updatedComments = comments.map(c => {
@@ -171,8 +167,11 @@ function PeerHomeworkAssessor(props) {
     })
 
     // props.onAssessmentCommentChanges(updatedComments);
-  }
+  }*/
 
+
+
+  // TODO: NEED to save comments on selection change or similar BLUR event
   // Handle updates, additions to comments and rank selections
   function onUpdateComment(comment, removeFocus) {
     let altComments = [...userComments];
@@ -185,7 +184,7 @@ function PeerHomeworkAssessor(props) {
   }
 
 
-  function onDeleteComment(commentId) {
+  function onDeleteComment(commentId, isOnlyStyleDelete) {
     if (!commentId) return;
     const editor = reactQuillRef.current.editor;
 
@@ -197,8 +196,9 @@ function PeerHomeworkAssessor(props) {
     }
     const targetComment = altComments[cIndex];
 
-    let myDelta = {ops: [{retain: 10}, {delete:5}, ...targetComment.origContent.ops]};
+    let myDelta = {ops: [{retain: targetComment.index}, {delete:targetComment.length}, ...targetComment.origContent.ops]};
     editor.updateContents(new Delta(myDelta));
+    if (isOnlyStyleDelete) return {cIndex, targetComment};
 
     altComments.splice(cIndex, 1);
     setUserComments(altComments);
@@ -461,7 +461,7 @@ function PeerHomeworkAssessor(props) {
             />
           </div>
           <CommentsPanel
-            key={activeCommentId}
+            // key={activeCommentId}
             className='h-auto'
             assessorId={activeUser.id}
             criteria={assignment.toolAssignmentData.rubricCriteria}
