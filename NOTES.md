@@ -1,57 +1,10 @@
 # OVERVIEW OF NEXT STEPS
 
-1. When adding a new comment, give it the next sequence number (after preceding comment) and renumber all
-   of the other comments
-2. When a comment is unselected, swap highlighting by:
-   1. unhighlight the original
-      1. Select the orig
-      2. remove it's active-highlighting using core "onDelete" code
-      3. add back it's normal-highlighting using core "onAdd" code
-   2. if new selection is a comment, highlight the new selection
-      2. remove it's normal-highlighting using core "onDelete" code
-      3. add the active-highlighting using core "onAdd" code
+1. In Assessor, after a comment is updated or a rank selected, save it to DB but do NOT refetch.
+   NOTE if there were ANY changes.
+   2. When navigating to another student or back or the assessor loses focus... THEN you can request
+   a refetch of this student's data.
       
-   3. if new selection is not a comment but is a range, show the PLUS button on comments panel
-   
-
-
-
-
-
-
-
-
-1. Assessor gets CONTENT from DashAssessor or Redux Store
-   1. It stores this in local state TextContent
-   2. Quill's defaultValue is set to TextContent
-   3. All comments are highlighted using editor function, including Active comment
-      1. ADDing new comment just adds the highlight using editor function
-      2. DESELECTING, SELECTING or DELETING a comment requires that we throw out current TextContent
-         and replace it with original, then scan thru comments to re-highlight them again
-         
-      OPT B)
-   
-      2. Grab the Quill html content. Remove the span. Set Quill with updated value, etc.
-         This is pretty identical to OPT A. It still rebuilds Quill and selections/focus are lost.
-         
-      OPT C)
-   
-      3. Comments are given an 'invisible' style. They get a classname in the process. The
-         class is the real style-enforcer. PROB: Does this work, and what "invisible" style can
-         we use... something that cannot be used by a student to style anything in their paper. Perhaps
-         the border of text?
-         
-      OPT D)
-   
-      4. When setting a comment, get the original content and save it to our comments array. 
-         
-         THEN:
-         1. Add highlight.
-         
-         WHEN REMOVING/CHANGING
-         1. Delete the highlighted span.
-         2. Past in the original span.
-
 
 
 

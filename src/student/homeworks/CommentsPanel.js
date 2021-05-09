@@ -107,15 +107,18 @@ function CommentsPanel(props) {
           {/*    <option key={c.id} value={c.id}>{c.name}</option>*/}
           {/*  )}*/}
           {/*</select>*/}
-          <Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-warning' style={{display: !activeCommentId ? 'block' : 'none'}} onClick={onAddComment} />
+          {!!props.showPlusButton && !activeCommentId &&
+            <Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-success' onClick={onAddComment}>
+              <FontAwesomeIcon className='btn-icon' size="3x" icon={faPlus}/>
+            </Button>
+          }
+          {/*<Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-warning' style={{display: !activeCommentId ? 'block' : 'none'}} onClick={onAddComment} />*/}
           <textarea
             ref={commentTextArea}
             className='mt-2 form-control h-50'
             onBlur={onBlur}
             onChange={onChange}
-            placeholder={activeCommentId ? '' : `Select a region in the document and click the [+] button to add a note.
-              \nUse the navigation arrows [<][>] to navigate through your comments, or just click on the comment directly in the document to view and make edits to them.
-              \nTo delete a comment, select it and click the trash icon.`}
+            placeholder={activeCommentId ? '' : `Make a text selection to create a comment.`}
             disabled={!activeCommentId}
             value={commentText}/>
 

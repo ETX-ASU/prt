@@ -48,11 +48,12 @@ function PeerHomeworkAssessor(props) {
   const [availableHeight, setAvailableHeight] = useState(2000);
   const [topZonePercent, setTopZonePercent] = useState(20);
   const [activeCommentId, _setActiveCommentId] = useState(defaultActiveCommentId || '');
-  const [prevCommentId, setPrevCommentId] = useState(defaultActiveCommentId || '');
-  const [origComment, setOrigComment] = useState();
+  const [prevCommentId, setPrevCommentId] = useState('');
+  const [showPlusButton, setShowPlusButton] = useState(false);
 
   const setActiveCommentId = (id) => {
-    setPrevCommentId(activeCommentId);
+    console.log(`======= setting prev to: ${activeCommentId} `)
+    setPrevCommentId(activeCommentId || '');
     _setActiveCommentId(id);
   }
 
@@ -89,15 +90,26 @@ function PeerHomeworkAssessor(props) {
   }, [props.excessHeight])
 
   useEffect(() => {
-    if (activeCommentId === prevCommentId || !prevCommentId) return;
+    if (activeCommentId === prevCommentId) {
+      console.log((activeCommentId === prevCommentId) ? "SKIPPING BCUZ: active !== previous" : "SKIPPING BCUZ: no previous");
+      return;
+    }
     // const altComments = [...userComments];
     const editor = reactQuillRef.current.editor;
-    const prev = onDeleteComment(prevCommentId, true);
-    editor.formatText(prev.targetComment.index, prev.targetComment.length, 'comment-tag', {id: prevCommentId.id, isActiveBtn: false}, 'api');
 
-    if (!activeCommentId) return;
-    const next = onDeleteComment(activeCommentId, true);
-    editor.formatText(next.targetComment.index, next.targetComment.length, 'comment-tag', {id: activeCommentId.id, isActiveBtn: true}, 'api');
+    if (prevCommentId) {
+      const prev = onDeleteComment(prevCommentId, true);
+      if (prev) editor.formatText(prev.targetComment.index, prev.targetComment.length, 'comment-tag', {id: prevCommentId.id, isActiveBtn: false}, 'api');
+    }
+
+    if (activeCommentId) {
+      console.log(`------ activeCommentId: (${activeCommentId})`)
+      const next = onDeleteComment(activeCommentId, true);
+      editor.formatText(next.targetComment.index, next.targetComment.length, 'comment-tag', {
+        id: activeCommentId.id,
+        isActiveBtn: true
+      }, 'api');
+    }
   }, [activeCommentId])
 
 /*  useEffect(() => {
@@ -138,21 +150,33 @@ function PeerHomeworkAssessor(props) {
   function onSelectionChanged(range, source) {
     const editor = reactQuillRef?.current?.editor;
     // console.log("onSelectionChanged", source, range?.length);
-    if (!editor || source !== 'user' || !range || range.length > 0) return;
+    if (!editor || source !== 'user' || !range) return;
 
-    const commentId = getIdOfLeaf(editor, range.index);
+    console.log(`selection index: ${range.index}`);
+    let sel = range.index;
+    let comment = userComments.find(c => {
+      let start = c.index, end = c.index + c.length;
+      return ((sel > start) && (sel < end));
+    });
+    // const commentId = getIdOfLeaf(editor, range.index);
+    let commentId = (comment) ? comment.id : '';
+    if (comment && range.length && range.index + range.length > comment.index + comment.length) {
+      commentId = '';
+      setShowPlusButton(false);
+    } else {
+      setShowPlusButton(!commentId && range.length);
+    }
     setActiveCommentId(commentId);
   }
 
-  function getIdOfLeaf(editor, index) {
-    const leaf = editor.getLeaf(index);
-    const className = leaf[0].parent.domNode.className;
-    if (className !== 'comment-btn' && className !== 'comment-tag') return;
 
-    return leaf[0].parent.domNode.id || '';
-  }
-
-
+  // function getIdOfLeaf(editor, index) {
+  //   const leaf = editor.getLeaf(index);
+  //   const className = leaf[0].parent.domNode.className;
+  //   if (className !== 'comment-btn' && className !== 'comment-tag') return;
+  //
+  //   return leaf[0].parent.domNode.id || '';
+  // }
 
 /*  function rehydrateComments(comments) {
     const editor = reactQuillRef.current.editor;
@@ -170,47 +194,8 @@ function PeerHomeworkAssessor(props) {
   }*/
 
 
-
-  // TODO: NEED to save comments on selection change or similar BLUR event
-  // Handle updates, additions to comments and rank selections
-  function onUpdateComment(comment, removeFocus) {
-    let altComments = [...userComments];
-    let index = altComments.findIndex(c => c.id === comment.id)
-    altComments[index] = comment;
-
-    // rehydrateComments(altComments);
-    setUserComments(altComments);
-    if (removeFocus) setActiveCommentId(null);
-  }
-
-
-  function onDeleteComment(commentId, isOnlyStyleDelete) {
-    if (!commentId) return;
-    const editor = reactQuillRef.current.editor;
-
-    const altComments = [...userComments];
-    const cIndex = altComments.findIndex(c => c.id === commentId);
-    if (cIndex < 0) {
-      console.error("comment not found!");
-      return;
-    }
-    const targetComment = altComments[cIndex];
-
-    let myDelta = {ops: [{retain: targetComment.index}, {delete:targetComment.length}, ...targetComment.origContent.ops]};
-    editor.updateContents(new Delta(myDelta));
-    if (isOnlyStyleDelete) return {cIndex, targetComment};
-
-    altComments.splice(cIndex, 1);
-    setUserComments(altComments);
-    setActiveCommentId(null);
-
-    // After or instead of rehydrate, save changes
-    // rehydrateComments(updatedComments);
-  }
-
   function onAddComment(e, selection) {
     let bounds, newComment, isAvailable;
-    const comCount = userComments.length + 1;
     const editor = reactQuillRef.current.editor;
 
     let sel = selection ? selection : editor.getSelection();
@@ -229,10 +214,12 @@ function PeerHomeworkAssessor(props) {
       return;
     }
 
+    const comCount = userComments.length + 1;
+    const maxTagNum = Math.max(...userComments.map(c => c.tagNum));
     newComment = {
       id: uuid(),
       reviewerId: activeUser.id,
-      tagNum: comCount,
+      tagNum: maxTagNum + 1,
       tagName: (comCount < 10) ? "0" + comCount : "" + comCount,
       content: '',
       index: sel.index,
@@ -245,11 +232,51 @@ function PeerHomeworkAssessor(props) {
     }
 
     editor.formatText(sel.index, sel.length, 'comment-tag', {id: newComment.id, isActiveBtn: false}, 'api');
-    setUserComments([...userComments, newComment]);
+    let altComments = [...userComments, newComment].sort((a,b) => a.index - b.index).map((c, i) => ({...c, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
+    setUserComments(altComments);
+
     if (!selection) setActiveCommentId(newComment.id);
 
     // onAssessmentUpdated({...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...userComments, newComment]}, newComment.id);
   }
+
+  function onDeleteComment(commentId, isOnlyStyleDelete) {
+    if (!commentId) return;
+    const editor = reactQuillRef.current.editor;
+
+    let altComments = [...userComments];
+    const cIndex = altComments.findIndex(c => c.id === commentId);
+    if (cIndex < 0) {
+      if (!isOnlyStyleDelete) console.error("comment not found!");
+      return;
+    }
+    const targetComment = altComments[cIndex];
+
+    let myDelta = {ops: [{retain: targetComment.index}, {delete:targetComment.length}, ...targetComment.origContent.ops]};
+    editor.updateContents(new Delta(myDelta));
+    if (isOnlyStyleDelete) return {cIndex, targetComment};
+
+    altComments.splice(cIndex, 1);
+    altComments = altComments.map((c, i) => ({...c, tagNum:i+1, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
+    setUserComments(altComments);
+    setActiveCommentId('');
+
+    // After or instead of rehydrate, save changes
+    // rehydrateComments(updatedComments);
+  }
+
+  // TODO: NEED to save comments on selection change or similar BLUR event
+  // Handle updates, additions to comments and rank selections
+  function onUpdateComment(comment, removeFocus) {
+    let altComments = [...userComments];
+    let index = altComments.findIndex(c => c.id === comment.id)
+    altComments[index] = comment;
+
+    // rehydrateComments(altComments);
+    setUserComments(altComments);
+    if (removeFocus) setActiveCommentId('');
+  }
+
 
   function onRankSelected(crit, rNum) {
     const ratings = [...toolHomeworkData.criterionRatingsOnDraft];
@@ -274,6 +301,7 @@ function PeerHomeworkAssessor(props) {
     // May need to use this to capture last selection before editor loses focus and a the addComment btn is triggered
     // console.log("Editor Blurred", e)
   }
+
 
   async function saveOrSubmitAssessment(isSubmit = false) {
     const userComments = userComments.map(c => ({
@@ -463,6 +491,7 @@ function PeerHomeworkAssessor(props) {
           <CommentsPanel
             // key={activeCommentId}
             className='h-auto'
+            showPlusButton={showPlusButton}
             assessorId={activeUser.id}
             criteria={assignment.toolAssignmentData.rubricCriteria}
             toolHomeworkData={toolHomeworkData}
