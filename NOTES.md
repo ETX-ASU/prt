@@ -1,6 +1,6 @@
 # OVERVIEW OF NEXT STEPS
 
-1. In Assessor, after a comment is updated or a rank selected, save it to DB but do NOT refetch.
+1. In Assessor, after a comment is updated or a rank selected, save it to DB but do NOT re-fetch.
    NOTE if there were ANY changes.
    2. When navigating to another student or back or the assessor loses focus... THEN you can request
    a refetch of this student's data.

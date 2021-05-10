@@ -40,14 +40,6 @@ function CommentsPanel(props) {
       if (commentTextArea.current) commentTextArea.current.focus();
       console.log("FOCUS SET");
     }, 50)
-    // commentTextArea.createTextRange();
-    // commentTextArea.setSelectionRange(commentTextArea.selectionEnd, commentTextArea.selectionEnd);
-    // console.log("LENGTH: ", commentTextArea?.current, comments.length, prevCommentsLength);
-    // if (commentTextArea?.current && comments.length > prevCommentsLength) {
-    //   commentTextArea.current.focus();
-    //   console.log("FOCUS SET");
-    //   setPrevCommentsLength(comments.length);
-    // }
   }, [comments.length])
 
 
@@ -74,9 +66,7 @@ function CommentsPanel(props) {
   }
 
   function onBlur(e) {
-    console.log("Blur-- updating comment", commentText);
     updateComment({...activeComment, content:commentText})
-    // setActiveComment(null);
   }
 
   return (
@@ -109,7 +99,7 @@ function CommentsPanel(props) {
           {/*</select>*/}
           {!!props.showPlusButton && !activeCommentId &&
             <Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-success' onClick={onAddComment}>
-              <FontAwesomeIcon className='btn-icon' size="3x" icon={faPlus}/>
+              <FontAwesomeIcon className='btn-icon' size="10x" icon={faPlus}/>
             </Button>
           }
           {/*<Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-warning' style={{display: !activeCommentId ? 'block' : 'none'}} onClick={onAddComment} />*/}
@@ -118,9 +108,9 @@ function CommentsPanel(props) {
             className='mt-2 form-control h-50'
             onBlur={onBlur}
             onChange={onChange}
-            placeholder={activeCommentId ? '' : `Make a text selection to create a comment.`}
+            placeholder={((!!props.showPlusButton && !activeCommentId) || activeCommentId) ? '' : `Make a text selection to create a comment.`}
             disabled={!activeCommentId}
-            value={commentText}/>
+            value={(!!props.showPlusButton && !activeCommentId) ? '' : commentText}/>
 
           {/*<Button className='position-absolute w-100 h-50 mt-2 bg-warning' onClick={testAdd} />*/}
 
