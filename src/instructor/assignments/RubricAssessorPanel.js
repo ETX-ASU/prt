@@ -26,8 +26,6 @@ function RubricAssessorPanel(props) {
 
   function onRankSelected(rNum) {
     const curCrit = shownCriteria.find(c => c.id === curTabId);
-    console.log(`Set ${curCrit.label} rank selection to ${rNum}`)
-
     props.onRankSelected(curCrit, rNum);
   }
 

@@ -4,24 +4,8 @@ import {EMPTY_HOMEWORK, HOMEWORK_PROGRESS, UI_SCREEN_MODES} from "../../app/cons
 import {Container, Row, Col} from 'react-bootstrap';
 import "../../student/homeworks/homeworks.scss";
 import GradingBar from "./gradingBar/GradingBar";
-import HomeworkViewer from "../../student/homeworks/HomeworkViewer";
-import HomeworkEngager from "../../student/homeworks/HomeworkEngager";
-import {getAvailableContentDims, getHomeworkStatus} from "../../tool/ToolUtils";
-import RubricAssessorPanel from "./RubricAssessorPanel";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faGripLines} from "@fortawesome/free-solid-svg-icons";
-import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
-import ReactQuill from "react-quill";
-import CommentsPanel from "../../student/homeworks/CommentsPanel";
 import PeerHomeworkAssessor from "../../student/homeworks/PeerHomeworkAssessor";
-import {API} from "aws-amplify";
-import {fullHomeworkByAsmntAndStudentId} from "../../graphql/customQueries";
-import {v4 as uuid} from "uuid";
-import moment from "moment";
-import {createHomework} from "../../graphql/mutations";
-import {setActiveUiScreenMode} from "../../app/store/appReducer";
-import {fetchGradeForStudent} from "../../lmsConnection/RingLeader";
-import {reportError} from "../../developer/DevUtils";
+import {deepCopy} from "../../app/utils/deepCopy";
 
 
 function InstructorDraftAssessor(props) {
@@ -40,7 +24,6 @@ function InstructorDraftAssessor(props) {
 
   const maxPosRatingPoints = Math.max(...assignment.toolAssignmentData.rubricRanks.map(r => r.points));
 
-
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
     onWindowResized();
@@ -51,7 +34,9 @@ function InstructorDraftAssessor(props) {
   }, [gradingBarRef])
 
   useEffect(() => {
+    console.log('+++++ students OR reviewedStudentId changed');
     let targetStudent = students.find(s => s.id === reviewedStudentId);
+
     setReviewedStudent(targetStudent);
     onWindowResized();
   }, [students, reviewedStudentId])
@@ -61,18 +46,18 @@ function InstructorDraftAssessor(props) {
     setGradingBarHeight(height + 120);
   }
 
-  function onAssessmentUpdated(data, curCommentId) {
-    let updatedStudent = Object.assign({}, reviewedStudent, {homework: {...reviewedStudent.homework, toolHomeworkData: data}})
+  function onAssessmentUpdated(studentHomework) {
+    let updatedStudent = deepCopy(reviewedStudent);
+    updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...studentHomework.toolHomeworkData.commentsOnDraft];
+    updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...studentHomework.toolHomeworkData.criterionRatingsOnDraft];
+
+    console.log("+++++ onAssessmentUpdated() comment 1 content: ", updatedStudent.homework.toolHomeworkData.commentsOnDraft[0].content)
     setReviewedStudent(updatedStudent);
-    setActiveCommentId(curCommentId);
-    console.log(`=======> reviewedStudentUpdated()`)
+    props.onStudentUpdated(updatedStudent);
   }
 
 
-  function onAssessmentChanges(data) {
-    console.log(`=======> onAssessmentChanges()`)
-    let instructorRatings = data.criterionRatingsOnDraft.filter(r => r.reviewerId === activeUser.id);
-
+  function onRatingChanges(instructorRatings) {
     let score = instructorRatings.reduce((acc, rating) => {
       let crit = rubricCriteria.find(c => c.id === rating.criterionId);
       const maxPosCritScore = crit.weight / rubricCriteria.reduce((acc, crit) => {
@@ -80,7 +65,6 @@ function InstructorDraftAssessor(props) {
         return acc;
       }, 0);
       let percOfCritPoints = assignment.toolAssignmentData.rubricRanks[rating.ratingGiven].points/maxPosRatingPoints;
-      // let maxPercForCriterion = 100 * crit.weight/percOfCritPoints;
       acc += (maxPosCritScore * percOfCritPoints * 100);
       return acc;
     }, 0)
@@ -144,6 +128,7 @@ function InstructorDraftAssessor(props) {
               assignment={assignment}
               homework={reviewedStudent.homework}
               defaultActiveCommentId={activeCommentId}
+              onRatingChanges={onRatingChanges}
               onAssessmentUpdated={onAssessmentUpdated}
             />
           </Col>

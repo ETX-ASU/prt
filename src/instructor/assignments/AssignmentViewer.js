@@ -7,7 +7,7 @@ import {
   setGradesData,
   addHomeworksData,
   setCurrentlyReviewedStudentId,
-  toggleHideStudentIdentity
+  toggleHideStudentIdentity, replaceHomeworksData
 } from "../../app/store/appReducer";
 import {Button, Container, Row, Col} from 'react-bootstrap';
 import {API, graphqlOperation} from "aws-amplify";
@@ -30,6 +30,7 @@ import {
   getNewToolHomeworkDataForAssignment
 } from "../../tool/ToolUtils";
 import {reportError} from "../../developer/DevUtils";
+import {deepCopy} from "../../app/utils/deepCopy";
 library.add(faEdit, faPen, faChevronLeft);
 
 
@@ -56,6 +57,8 @@ function AssignmentViewer(props) {
   const footerZoneRef = useRef(null);
   const [availableHeight, setAvailableHeight] = useState(300);
 
+  const [cachedStudent, setCachedStudent] = useState(null);
+
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
     onWindowResized();
@@ -65,11 +68,29 @@ function AssignmentViewer(props) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!cachedStudent) return;
+    console.log("+++++ revStudentId changed so replacing cached homework")
+
+    const altHomeworks = [...homeworks];
+    const hIndex = altHomeworks.findIndex(h => (h.studentOwnerId === cachedStudent.id && h.assignmentId === assignment.id));
+    altHomeworks.splice(hIndex, 1, cachedStudent.homework);
+    replaceHomeworksData(altHomeworks);
+
+    const altStudents = [...students];
+    const sIndex = altStudents.findIndex(s => s.id === cachedStudent.id);
+    let updatedStudent = deepCopy(altStudents[sIndex]);
+    updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...cachedStudent.homework.toolHomeworkData.commentsOnDraft];
+    updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...cachedStudent.homework.toolHomeworkData.criterionRatingsOnDraft];
+    altStudents.splice(sIndex, 1, updatedStudent);
+    setStudents(altStudents);
+
+    setCachedStudent(null);
+  }, [reviewedStudentId])
 
   useEffect(() => {
-    console.log('assignment changed')
     if (!assignment?.id) return;
-    console.log('fetching scores etc')
+    console.log('*********************** Assignment changed so fetching scores and all student homework related to this assignment')
     fetchScores();
     fetchBatchOfHomeworks('INIT');
   }, [assignment.id, assignment]);
@@ -80,6 +101,8 @@ function AssignmentViewer(props) {
 
   useEffect(() => {
     if (!assignment?.id || !members.length) return;
+    console.log("+++++ something changed: ", homeworks);
+
     let studentsOnly = members.filter(m => m.roles.indexOf(ROLE_TYPES.learner) > -1);
     let positions = shuffle(studentsOnly.map((h, i) => i + 1));
 
@@ -111,8 +134,10 @@ function AssignmentViewer(props) {
     });
 
     setStudents(enhancedDataStudents);
-    console.log("ENHANCED STUDENTS[29] NOW: ", enhancedDataStudents[29]);
+    // console.log("ENHANCED STUDENTS[0] NOW: ", enhancedDataStudents[0]);
   }, [assignment, members, homeworks, grades, isHideStudentIdentity]);
+
+
 
 
   function onWindowResized() {
@@ -156,7 +181,6 @@ function AssignmentViewer(props) {
 
   async function fetchScores() {
     try {
-      // const scoreMaximum = calcMaxScoreForAssignment(assignment);
       let grades = await fetchAllGrades(assignment.id);
       grades = (grades) ? grades : [];
       grades = grades.map(g => {
@@ -251,6 +275,10 @@ function AssignmentViewer(props) {
     }
   }
 
+  function onStudentUpdated(studentData) {
+    setCachedStudent(studentData);
+  }
+
   return (
     <Fragment>
       {activeModal && renderModal()}
@@ -320,7 +348,7 @@ function AssignmentViewer(props) {
 
         {reviewedStudentId && (students?.length > 0) &&
         <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
-          students={students} reviewedStudentId={reviewedStudentId} />
+          students={students} onStudentUpdated={onStudentUpdated} reviewedStudentId={reviewedStudentId} />
         }
       </Container>
     </Fragment>

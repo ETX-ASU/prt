@@ -66,6 +66,7 @@ function GradingBar(props) {
     // props.refreshHandler();
   }
 
+  // This is not used with the peer review tool because instructor comments are available directly as notes to student work
   function handleCommentUpdated(e) {
     setComment(e.target.value || '')
   }

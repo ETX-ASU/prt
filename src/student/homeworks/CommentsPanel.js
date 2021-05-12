@@ -12,19 +12,10 @@ library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
 function CommentsPanel(props) {
   const {criteria, setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments} = props;
   const visCriteria = criteria.filter(c => c.isVisible);
-  // const editor = (quillRef?.current?.editor) ? quillRef.current.editor : null;
+
   const commentTextArea = useRef(null);
   const [activeComment, setActiveComment] = useState(comments.find(c => c.id === activeCommentId));
-
-
-
-  // console.log("active comment is now: ", activeComment?.content);
-
-
-  // const [commentIndex, setCommentIndex] = useState(0);
-  // const activeComment = comments.find(c => c.id === activeCommentId);
   const [commentText, setCommentText] = useState('');
-  const [prevCommentsLength, setPrevCommentsLength] = useState(comments.length);
 
   useEffect(() => {
     if (!activeCommentId) return;
@@ -37,8 +28,7 @@ function CommentsPanel(props) {
 
   useEffect(() => {
     setTimeout(() => {
-      if (commentTextArea.current) commentTextArea.current.focus();
-      console.log("FOCUS SET");
+      if (commentTextArea.current && activeCommentId) commentTextArea.current.focus();
     }, 50)
   }, [comments.length])
 
@@ -69,6 +59,8 @@ function CommentsPanel(props) {
     updateComment({...activeComment, content:commentText})
   }
 
+  const showPlus = !!props.showPlusButton && !activeCommentId;
+
   return (
     <Container className='comments-panel m-0 p-0'>
       <Row className='criterion-nav m-0 p-2'>
@@ -88,16 +80,7 @@ function CommentsPanel(props) {
       </Row>
       <Row className='criterion-content m-0 p-2'>
         <Col className='p-0 m-0'>
-          {/*<select*/}
-          {/*  defaultValue={visCriteria[0].id}*/}
-          {/*  onChange={() => console.log('changed association')}*/}
-          {/*  className="form-control"*/}
-          {/*  id="criterion-selector">*/}
-          {/*  {visCriteria.map(c =>*/}
-          {/*    <option key={c.id} value={c.id}>{c.name}</option>*/}
-          {/*  )}*/}
-          {/*</select>*/}
-          {!!props.showPlusButton && !activeCommentId &&
+          {showPlus &&
             <Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-success' onClick={onAddComment}>
               <FontAwesomeIcon className='btn-icon' size="10x" icon={faPlus}/>
             </Button>
@@ -108,9 +91,9 @@ function CommentsPanel(props) {
             className='mt-2 form-control h-50'
             onBlur={onBlur}
             onChange={onChange}
-            placeholder={((!!props.showPlusButton && !activeCommentId) || activeCommentId) ? '' : `Make a text selection to create a comment.`}
+            placeholder={(showPlus|| activeCommentId) ? '' : `Make a text selection to create a comment.`}
             disabled={!activeCommentId}
-            value={(!!props.showPlusButton && !activeCommentId) ? '' : commentText}/>
+            value={(showPlus) ? '' : commentText}/>
 
           {/*<Button className='position-absolute w-100 h-50 mt-2 bg-warning' onClick={testAdd} />*/}
 

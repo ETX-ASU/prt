@@ -10,6 +10,7 @@ export const SET_ACTIVE_UI_SCREEN_MODE = APP_NAMESPACE+'.SET_ACTIVE_UI_SCREEN_MO
 export const EDIT_DUPED_ASSIGNMENT = APP_NAMESPACE+'.EDIT_DUPED_ASSIGNMENT';
 export const EDIT_ASSIGNMENT_PHASE = APP_NAMESPACE+'.EDIT_ASSIGNMENT_PHASE';
 export const ADD_HOMEWORKS_DATA = APP_NAMESPACE+'.ADD_HOMEWORKS_DATA';
+export const REPLACE_HOMEWORKS_DATA = APP_NAMESPACE+'.REPLACE_HOMEWORKS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
 
@@ -63,6 +64,13 @@ export function setActiveUiScreenMode(activeUiScreenMode) {
 export function addHomeworksData(homeworks) {
   return {
     type: ADD_HOMEWORKS_DATA,
+    homeworks
+  }
+}
+
+export function replaceHomeworksData(homeworks) {
+  return {
+    type: REPLACE_HOMEWORKS_DATA,
     homeworks
   }
 }
@@ -129,6 +137,9 @@ function appReducer(currentState = defaultState, action) {
 
     case ADD_HOMEWORKS_DATA:
       return Object.assign({}, currentState, {homeworks:[...currentState.homeworks, ...action.homeworks]});
+
+    case REPLACE_HOMEWORKS_DATA:
+      return Object.assign({}, currentState, {homeworks: action.homeworks});
 
     case SET_DRAFTS_TO_BE_REVIEWED_BY_USER:
       return Object.assign({}, currentState, {draftsToBeReviewedByUser: action.draftsToBeReviewedByUser});

@@ -5,7 +5,7 @@ import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from
 import {Button, Container, Row, Col} from 'react-bootstrap';
 import {updateHomework as updateHomeworkMutation} from "../../graphql/mutations";
 import {API} from "aws-amplify";
-import {setActiveUiScreenMode} from "../../app/store/appReducer";
+import {setActiveUiScreenMode, setCurrentlyReviewedStudentId} from "../../app/store/appReducer";
 import {reportError} from "../../developer/DevUtils";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
@@ -31,32 +31,39 @@ const MIN_TOP_ZONE_PERCENT = 10;
 
 
 function PeerHomeworkAssessor(props) {
-  const {homework, assignment, isInstructorAssessment, defaultActiveCommentId, onAssessmentUpdated} = props;
+  const {homework, assignment, isInstructorAssessment, defaultActiveCommentId, onAssessmentUpdated, onRatingChanges} = props;
   const {toolHomeworkData} = homework;
-  const dispatch = useDispatch();
-	const activeUser = useSelector(state => state.app.activeUser);
-
-  const [nonUserComments, setNonUserComments] = useState(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
-  const [userComments, setUserComments] = useState(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
-  const [activeModal, setActiveModal] = useState(null);
 
   const dragBarRef = useRef(null);
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
 
+  const dispatch = useDispatch();
+	const activeUser = useSelector(state => state.app.activeUser);
+
+	const [userCritRatings, setUserCritRatings] = useState([]);
+	const [nonUserCritRatings, setNonUserCritRatings] = useState([]);
+  const [nonUserComments, setNonUserComments] = useState([]);
+  const [userComments, setUserComments] = useState([]);
+  const [activeModal, setActiveModal] = useState(null);
   const [availableHeight, setAvailableHeight] = useState(2000);
   const [topZonePercent, setTopZonePercent] = useState(20);
-  const [activeCommentId, _setActiveCommentId] = useState(defaultActiveCommentId || '');
   const [prevCommentId, setPrevCommentId] = useState('');
   const [showPlusButton, setShowPlusButton] = useState(false);
+  const [activeCommentId, _setActiveCommentId] = useState(defaultActiveCommentId || '');
+
 
   const setActiveCommentId = (id) => {
-    console.log(`======= setting prev to: ${activeCommentId} `)
     setPrevCommentId(activeCommentId || '');
     _setActiveCommentId(id);
   }
 
+  // const setUserComments = (data) => {
+  //   _setUserComments(data);
+  //   let updatedToolHomeworkData = {...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...data], criterionRatingsOnDraft: [...nonUserCritRatings, ...userCritRatings] };
+  //   if (JSON.stringify(userComments) !== JSON.stringify(data)) saveOrSubmitAssessment(false, updatedToolHomeworkData);
+  // }
 
 
   useEffect(() => {
@@ -78,11 +85,12 @@ function PeerHomeworkAssessor(props) {
 
   useEffect(() => {
     console.log("============================ toolHomeworkData CHANGED!")
-    setNonUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
-    setUserComments(toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id));
+    setUserCritRatings((!toolHomeworkData.criterionRatingsOnDraft) ? [] : toolHomeworkData.criterionRatingsOnDraft.filter(r => r.reviewerId === activeUser.id));
+    setNonUserCritRatings((!toolHomeworkData.criterionRatingsOnDraft) ? [] : toolHomeworkData.criterionRatingsOnDraft.filter(r => r.reviewerId !== activeUser.id));
+    setNonUserComments((!toolHomeworkData.commentsOnDraft) ? [] : toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
 
-    // TODO: Replace this with looping through and adding ALL comments
-    onAddComment(null, {index:10, length:5});
+    let userComs = (!toolHomeworkData.commentsOnDraft) ? [] : toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id).sort((a,b) => a.index - b.index);
+    setUserComments(getInitializedUserComments(userComs));
   }, [toolHomeworkData])
 
   useEffect(() => {
@@ -90,11 +98,9 @@ function PeerHomeworkAssessor(props) {
   }, [props.excessHeight])
 
   useEffect(() => {
-    if (activeCommentId === prevCommentId) {
-      console.log((activeCommentId === prevCommentId) ? "SKIPPING BCUZ: active !== previous" : "SKIPPING BCUZ: no previous");
-      return;
-    }
-    // const altComments = [...userComments];
+    console.log("############## ACTIVE COMMENT ID");
+    if (activeCommentId === prevCommentId) return;
+
     const editor = reactQuillRef.current.editor;
 
     if (prevCommentId) {
@@ -103,7 +109,6 @@ function PeerHomeworkAssessor(props) {
     }
 
     if (activeCommentId) {
-      console.log(`------ activeCommentId: (${activeCommentId})`)
       const next = onDeleteComment(activeCommentId, true);
       editor.formatText(next.targetComment.index, next.targetComment.length, 'comment-tag', {
         id: activeCommentId.id,
@@ -112,28 +117,30 @@ function PeerHomeworkAssessor(props) {
     }
   }, [activeCommentId])
 
-/*  useEffect(() => {
+
+  function getInitializedUserComments(comments) {
     const editor = reactQuillRef.current.editor;
-    let activeComment = null;
-    console.log("+++++++++++++ setting comment-tags");
-    userComments.forEach(c => {
-      // const startPt = c.index;
-      // editor.setSelection(startPt, c.length);
-      // editor.format((activeCommentId) ? 'comtag-active' : 'comtag');
-      editor.formatText(c.index, c.length, 'comtag');
-      if (c.id === activeCommentId) activeComment = c;
+    const origSelection = editor.getSelection();
+
+    const altUserComments = comments.map((c,i) => {
+      const bounds = editor.getBounds(c.index, c.length);
+      editor.formatText(c.index, c.length, 'comment-tag', {id: c.id, isActiveBtn: false}, 'silent');
+      return {
+        ...c,
+        tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1),
+        x: bounds.left + bounds.width,
+        y: bounds.top + editor.scrollingContainer.scrollTop,
+        origContent: editor.getContents(c.index, c.length),
+      }
     })
 
-    if (prevCommentId !== activeCommentId && activeComment) {
-      editor.setSelection(activeComment.index + activeComment.length - 1, 0, 'user');
-    } else {
-      editor.setSelection(null);
-    }
-  }, [userComments, activeCommentId]);*/
+    if (origSelection) editor.setSelection(origSelection);
+    return(altUserComments)
+  }
 
 
   function onWindowResized() {
-    console.log(`props.excessHeight = ${props.excessHeight}`);
+    // console.log(`props.excessHeight = ${props.excessHeight}`);
     const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
     setAvailableHeight(height - 48);
   }
@@ -145,20 +152,15 @@ function PeerHomeworkAssessor(props) {
     buttonsLayer.style.top = toolbarElem.style['margin-top'];
   }
 
-
-  // handle changes to selection if actual highlighted content is clicked
   function onSelectionChanged(range, source) {
     const editor = reactQuillRef?.current?.editor;
-    // console.log("onSelectionChanged", source, range?.length);
     if (!editor || source !== 'user' || !range) return;
 
-    console.log(`selection index: ${range.index}`);
     let sel = range.index;
     let comment = userComments.find(c => {
       let start = c.index, end = c.index + c.length;
       return ((sel > start) && (sel < end));
     });
-    // const commentId = getIdOfLeaf(editor, range.index);
     let commentId = (comment) ? comment.id : '';
     if (comment && range.length && range.index + range.length > comment.index + comment.length) {
       commentId = '';
@@ -170,35 +172,11 @@ function PeerHomeworkAssessor(props) {
   }
 
 
-  // function getIdOfLeaf(editor, index) {
-  //   const leaf = editor.getLeaf(index);
-  //   const className = leaf[0].parent.domNode.className;
-  //   if (className !== 'comment-btn' && className !== 'comment-tag') return;
-  //
-  //   return leaf[0].parent.domNode.id || '';
-  // }
-
-/*  function rehydrateComments(comments) {
-    const editor = reactQuillRef.current.editor;
-
-    const updatedComments = comments.map(c => {
-      let bounds = editor.getBounds(c.index, c.length);
-      return ({...c,
-        x: bounds.left + bounds.width,
-        y: bounds.top + editor.scrollingContainer.scrollTop,
-        tagName: (c.tagNum < 10) ? "0" + c.tagNum : "" + c.tagNum
-      })
-    })
-
-    // props.onAssessmentCommentChanges(updatedComments);
-  }*/
-
-
-  function onAddComment(e, selection) {
+  function onAddComment(e) {
     let bounds, newComment, isAvailable;
     const editor = reactQuillRef.current.editor;
 
-    let sel = selection ? selection : editor.getSelection();
+    let sel = editor.getSelection();
     const selEnd = sel?.index + sel?.length;
     if (!sel || !sel.length) {
       // TODO: Notify user of not being a range
@@ -215,7 +193,7 @@ function PeerHomeworkAssessor(props) {
     }
 
     const comCount = userComments.length + 1;
-    const maxTagNum = Math.max(...userComments.map(c => c.tagNum));
+    const maxTagNum = (userComments.length) ? Math.max(...userComments.map(c => c.tagNum)) : 0;
     newComment = {
       id: uuid(),
       reviewerId: activeUser.id,
@@ -235,9 +213,8 @@ function PeerHomeworkAssessor(props) {
     let altComments = [...userComments, newComment].sort((a,b) => a.index - b.index).map((c, i) => ({...c, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
     setUserComments(altComments);
 
-    if (!selection) setActiveCommentId(newComment.id);
-
-    // onAssessmentUpdated({...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...userComments, newComment]}, newComment.id);
+    setActiveCommentId(newComment.id);
+    saveUpdatesToServer({userComments: altComments})
   }
 
   function onDeleteComment(commentId, isOnlyStyleDelete) {
@@ -260,26 +237,22 @@ function PeerHomeworkAssessor(props) {
     altComments = altComments.map((c, i) => ({...c, tagNum:i+1, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
     setUserComments(altComments);
     setActiveCommentId('');
-
-    // After or instead of rehydrate, save changes
-    // rehydrateComments(updatedComments);
+    saveUpdatesToServer({userComments: altComments})
   }
 
-  // TODO: NEED to save comments on selection change or similar BLUR event
-  // Handle updates, additions to comments and rank selections
-  function onUpdateComment(comment, removeFocus) {
+  function onUpdateComment(comment) {
     let altComments = [...userComments];
-    let index = altComments.findIndex(c => c.id === comment.id)
-    altComments[index] = comment;
+    let index = altComments.findIndex(c => c.id === comment.id);
 
-    // rehydrateComments(altComments);
-    setUserComments(altComments);
-    if (removeFocus) setActiveCommentId('');
+    if (!userComments[index] || userComments[index].content !== comment.content) {
+      altComments[index] = comment;
+      setUserComments(altComments);
+      saveUpdatesToServer({userComments: altComments})
+    }
   }
-
 
   function onRankSelected(crit, rNum) {
-    const ratings = [...toolHomeworkData.criterionRatingsOnDraft];
+    const ratings = [...userCritRatings];
     let ratingIndex = ratings.findIndex(r => r.criterionId === crit.id);
     if (ratingIndex >= 0) {
       const oldRating = ratings[ratingIndex];
@@ -294,17 +267,17 @@ function PeerHomeworkAssessor(props) {
       ratings.push(rating);
     }
 
-    onAssessmentUpdated({...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...userComments]}, activeCommentId)
-  }
-
-  function onEditorBlur(e) {
-    // May need to use this to capture last selection before editor loses focus and a the addComment btn is triggered
-    // console.log("Editor Blurred", e)
+    setUserCritRatings(ratings);
+    onRatingChanges(ratings);
+    saveUpdatesToServer({userCritRatings: ratings})
   }
 
 
-  async function saveOrSubmitAssessment(isSubmit = false) {
-    const userComments = userComments.map(c => ({
+  function saveUpdatesToServer(data, isSubmit = false) {
+    let altToolHomeworkData = {...toolHomeworkData};
+
+    const tempComments = (data.userComments) ? data.userComments : userComments;
+    altToolHomeworkData.commentsOnDraft = [...nonUserComments, ...tempComments.map(c => ({
       id: c.id,
       reviewerId: activeUser.id,
       tagNum: c.tagNum,
@@ -313,11 +286,22 @@ function PeerHomeworkAssessor(props) {
       length: c.length,
       commentRating: c.commentRating,
       criterionNum: c.criterionNum
-    }));
+      }))
+    ];
 
+    altToolHomeworkData.criterionRatingsOnDraft = (data.userCritRatings)
+      ? [...nonUserCritRatings, ...data.userCritRatings]
+      : [...nonUserCritRatings, ...userCritRatings];
+
+    saveOrSubmitAssessment(altToolHomeworkData, isSubmit);
+  }
+
+
+  async function saveOrSubmitAssessment(updatedToolHomeworkData, isSubmit) {
+    console.log("########### SAVING ASSESSMENT DATA");
     try {
       const inputData = Object.assign({}, homework, {
-        toolHomeworkData: {...toolHomeworkData, commentsOnDraft: [...nonUserComments, ...userComments]},
+        toolHomeworkData: updatedToolHomeworkData,
         beganOnDate: (homework.beganOnDate) ? homework.beganOnDate : moment().valueOf(),
         submittedOnDate: (homework.submittedOnDate) ? homework.submittedOnDate : (isSubmit) ? moment().valueOf() : 0
       });
@@ -336,6 +320,7 @@ function PeerHomeworkAssessor(props) {
       if (isSubmit) {
         if (result) {
           if (assignment.isUseAutoSubmit) await calcAndSendScore(inputData);
+          onAssessmentUpdated(updatedHomeworkData);
           await setActiveModal({type: MODAL_TYPES.confirmHomeworkSubmitted})
         } else {
           reportError('', `We're sorry. There was a problem submitting your homework for review. Please wait a moment and try again.`);
@@ -344,8 +329,8 @@ function PeerHomeworkAssessor(props) {
         if (!result) {
           console.error("problem saving the assessment");
         } else {
-          console.log("SAVED assessment");
-          if (props.onAssessmentUpdated) props.onAssessmentUpdated(updatedHomeworkData, activeCommentId);
+          console.log("             SAVED assessment");
+          onAssessmentUpdated(updatedHomeworkData);
         }
       }
     } catch (error) {
@@ -390,7 +375,7 @@ function PeerHomeworkAssessor(props) {
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
             {name:'Cancel', onClick: () => setActiveModal(null)},
             // {name:'Submit', onClick:submitAssessment},
-            {name:'Submit', onClick:() => saveOrSubmitAssessment(true)},
+            {name:'Submit', onClick:() => saveUpdatesToServer(true)},
           ]}>
             <p>Once submitted, you cannot go back to make additional edits to your assignment.</p>
           </ConfirmationModal>
@@ -407,6 +392,7 @@ function PeerHomeworkAssessor(props) {
   }
 
   function onCancelButton() {
+    dispatch(setCurrentlyReviewedStudentId(''));
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
   }
 
@@ -451,7 +437,7 @@ function PeerHomeworkAssessor(props) {
             isShowCriteriaPercents={isInstructorAssessment}
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
-            ratings={toolHomeworkData.criterionRatingsOnDraft}
+            ratings={userCritRatings}
             onRankSelected={onRankSelected}
           />
         </div>
@@ -485,7 +471,6 @@ function PeerHomeworkAssessor(props) {
               placeholder={"Write something awesome..."}
               modules={modules}
               formats={formats}
-              onBlur={onEditorBlur}
             />
           </div>
           <CommentsPanel
@@ -494,7 +479,6 @@ function PeerHomeworkAssessor(props) {
             showPlusButton={showPlusButton}
             assessorId={activeUser.id}
             criteria={assignment.toolAssignmentData.rubricCriteria}
-            toolHomeworkData={toolHomeworkData}
             activeCommentId={activeCommentId}
             comments={userComments}
             setActiveCommentId={setActiveCommentId}
@@ -507,7 +491,7 @@ function PeerHomeworkAssessor(props) {
 
       {!isInstructorAssessment &&
       <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
-        <Button className='d-inline mr-2 ql-align-right btn-sm' onClick={saveOrSubmitAssessment}>Save Changes</Button>
+        <Button className='d-inline mr-2 ql-align-right btn-sm' onClick={saveUpdatesToServer}>Save Changes</Button>
         <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assessment</Button>
       </div>
       }
