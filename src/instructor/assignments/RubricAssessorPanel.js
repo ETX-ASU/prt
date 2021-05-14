@@ -72,11 +72,12 @@ function RubricAssessorPanel(props) {
                         <div className='selected-marker'>
                           <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
                         </div>
-                        <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2 rank-btn' onClick={() => onRankSelected(rNum)}>{rank.name}</div>
-                          <textarea
-                            readOnly={true}
-                            value={criterion.rankSummaries[rNum]}
-                            className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block' />
+                        {props.isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2 rank-btn'>{rank.name}</div>}
+                        {!props.isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2 rank-btn' onClick={() => onRankSelected(rNum)}>{rank.name}</div>}
+                        <textarea
+                          readOnly={true}
+                          value={criterion.rankSummaries[rNum]}
+                          className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block' />
                       </div>
                     </Col>
                   )}

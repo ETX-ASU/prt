@@ -17,6 +17,7 @@ library.add(faArrowCircleLeft, faArrowCircleRight, faCheck);
 
 function GradingBar(props) {
   const dispatch = useDispatch();
+  const activeUser = useSelector(state => state.app.activeUser);
   const {assignment, reviewedStudent} = props;
 
   const displayOrder = useSelector(state => state.app.displayOrder);
@@ -51,19 +52,19 @@ function GradingBar(props) {
   async function handleSubmitScore() {
     console.log("SUBMIT BTN WAS PUSHED!");
 
-    // const scoreDataObj = {
-    //   assignmentId: assignment.id,
-    //   studentId: reviewedStudent.id,
-    //   scoreGiven: scoreGiven,
-    //   scoreMaximum: calcMaxScoreForAssignment(assignment),
-    //   comment: comment,
-    //   activityProgress: ACTIVITY_PROGRESS[reviewedStudent.homeworkStatus],
-    //   gradingProgress: HOMEWORK_PROGRESS.fullyGraded
-    // };
-    //
-    // const lmsResult = await sendInstructorGradeToLMS(scoreDataObj);
-    // if (!lmsResult) reportError('', `We're sorry. We encountered an error while posting the grade for this student's work.`);
-    // props.refreshHandler();
+    const scoreDataObj = {
+      assignmentId: assignment.id,
+      studentId: reviewedStudent.id,
+      scoreGiven: scoreGiven,
+      scoreMaximum: calcMaxScoreForAssignment(assignment),
+      comment: comment,
+      activityProgress: ACTIVITY_PROGRESS[reviewedStudent.homeworkStatus],
+      gradingProgress: HOMEWORK_PROGRESS.fullyGraded
+    };
+
+    const lmsResult = await sendInstructorGradeToLMS(scoreDataObj);
+    if (!lmsResult) reportError('', `We're sorry. We encountered an error while posting the grade for this student's work.`);
+    props.refreshHandler();
   }
 
   // This is not used with the peer review tool because instructor comments are available directly as notes to student work
@@ -74,6 +75,12 @@ function GradingBar(props) {
   function onScoreAdjusted(e) {
     console.log(`score adjusted from ${e.target.value}`, scoreGiven, props.manualScore);
     setScoreGiven(parseInt(e.target.value));
+  }
+
+  function isGradingLocked() {
+    if (!props.isDraftAssignment) return true; //TODO: Update this when we have instructor reviews of peer review session homework ready to go
+    let allocation = props.allocations.find(a => a.assessorId === activeUser.id && a.homeworkId === reviewedStudent.homework.id);
+    return (!!allocation?.submittedOnDate);
   }
 
   return (
@@ -119,7 +126,7 @@ function GradingBar(props) {
                     <Button
                       ref={props.submitBtnRef}
                       className='btn-med xbg-darkest'
-                      disabled={reviewedStudent.progress === HOMEWORK_PROGRESS.fullyGraded}
+                      disabled={reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded}
                       onClick={handleSubmitScore}>{(reviewedStudent.scoreGiven !== undefined) ? `Update` : `Submit`}</Button>
                   </span>
                 </div>

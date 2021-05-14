@@ -1,5 +1,5 @@
 
-// export const assignmentHomeworkByStudentId
+
 export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
   query FullHomeworkByAsgnByStudentId(
     $assignmentId: ID
@@ -50,7 +50,7 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
   }
 `;
 
-// export const assignmentHomeworkIdsBySubmittedDate
+
 export const minHomeworkIdsBySubmittedDate = /* GraphQL */ `
   query MinHomeworkIdsBySubmittedDate(
     $assignmentId: ID
@@ -115,6 +115,102 @@ export const listFullHomeworks = /* GraphQL */ `
         updatedAt
       }
       nextToken
+    }
+  }
+`;
+
+
+
+export const getHomeworkReviewData = /* GraphQL */ `
+  query GetHomework($id: ID!) {
+    getHomework(id: $id) {
+      toolHomeworkData {
+        commentsOnDraft {
+          id
+          reviewerId
+          tagNum
+          index
+          length
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft {
+          reviewerId
+          criterionId
+          ratingGiven
+        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const updateHomeworkReviewData = /* GraphQL */ `
+  mutation UpdateHomework(
+    $input: UpdateHomeworkInput!
+    $condition: ModelHomeworkConditionInput
+  ) {
+    updateHomework(input: $input, condition: $condition) {
+      id
+      toolHomeworkData {
+        commentsOnDraft {
+          id
+          reviewerId
+          tagNum
+          index
+          length
+          content
+          commentRating
+          criterionNum
+        }
+        criterionRatingsOnDraft {
+          reviewerId
+          criterionId
+          ratingGiven
+        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const getAssignmentAllocations = /* GraphQL */ `
+  query GetAssignment($id: ID!) {
+    getAssignment(id: $id) {
+      toolAssignmentData {
+        allocations {
+          assessorId
+          homeworkId
+          beganOnDate
+          submittedOnDate
+        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const updateAssignmentAllocations = /* GraphQL */ `
+  mutation UpdateAssignment(
+    $input: UpdateAssignmentInput!
+    $condition: ModelAssignmentConditionInput
+  ) {
+    updateAssignment(input: $input, condition: $condition) {
+      id
+      toolAssignmentData {
+        allocations {
+          assessorId
+          homeworkId
+          beganOnDate
+          submittedOnDate
+        }
+      }
+      createdAt
+      updatedAt
     }
   }
 `;

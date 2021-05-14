@@ -1,11 +1,65 @@
 # OVERVIEW OF NEXT STEPS
 
+
+
+
+1. After saving or submitting I must:
+   1) use query to refetch the specific assessed user's homework and update that in redux
+   2) use query to refetch the specific assignment and update that in redux
+
+
+
+
+
+
+
+
+
+
+
+
+
 1. In Assessor, after a comment is updated or a rank selected, save it to DB but do NOT re-fetch.
    NOTE if there were ANY changes.
    2. When navigating to another student or back or the assessor loses focus... THEN you can request
    a refetch of this student's data.
-      
 
+
+
+
+
+
+
+
+
+### NEED TO CONSIDER REFETCH FOR ASSESSING PEERS
+This breaks DRY principle and I need to assess a fix. The advantage of this solution is that
+the assignment data is really only loaded at the start or after an assignment edit.
+Caching the allocations data means no need to refetch the data from DB on every little save
+because this acts as a kind of optimistic update. We update locally and don't care about what is on
+the server until an edit was made to the assignment itself or the app is reloaded.
+
+BUT HERE'S THE CATCH: As instructor, I'm assessing Student A which changes the homework.commentsOnDraft and .ratingsOnDraft
+and those changes are made to the DB. Each edit is saved each time I click off the notes area. Focus changes,
+student A's commentsOnDraft are changed.
+
+I'm doing this optimistically. Now what happens when I'm a student reviewing peer A. And another student is reviewing
+peer A at the SAME TIME. By NOT refetching, they both assume they have the most recent commentsOnDraft for peer A.
+
+I start making comments using Data Snapshot 1. Other student makes a few comments using Snapshot 1. I save 3 new comments,
+basically SnapShot 1 + My Additions, and I leave. Other student edits a comment and saves SnapShot 1 + Their Edit. It overwrites
+what I did.
+
+Before I can save, I must fetch homeworks to ensure I don't have this problem.
+
+This is not the case as an instructor because I am the ONLY allocated to make comments on a DRAFT writing assignment.
+As an instructor, I'm the only one who will be adding comments and ratings to a student homework during a DRAFT writing assignment,
+and on a REVIEW SESSION assignment, I will be using a different mechanism.
+
+This is also not an issue for allocations data because of the same reason.
+
+AS A STUDENT: Fetch allocations before save or submit.
+AS A STUDENT: Fetch assessedUserHomework before save or submit.
 
 
 

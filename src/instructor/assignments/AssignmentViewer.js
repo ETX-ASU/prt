@@ -11,7 +11,6 @@ import {
 } from "../../app/store/appReducer";
 import {Button, Container, Row, Col} from 'react-bootstrap';
 import {API, graphqlOperation} from "aws-amplify";
-// import {listHomeworks} from "../../graphql/queries";
 import {listFullHomeworks} from "../../graphql/customQueries";
 import InstructorDraftAssessor from "./InstructorDraftAssessor";
 import HomeworkListing from "./HomeworkListing";
@@ -55,9 +54,13 @@ function AssignmentViewer(props) {
 
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
-  const [availableHeight, setAvailableHeight] = useState(300);
 
+  const [availableHeight, setAvailableHeight] = useState(300);
   const [cachedStudent, setCachedStudent] = useState(null);
+
+
+  const [allocations, setAllocations] = useState([]);
+  const [cachedAllocations, setCachedAllocations] = useState(null);
 
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
@@ -69,30 +72,33 @@ function AssignmentViewer(props) {
   }, [])
 
   useEffect(() => {
-    if (!cachedStudent) return;
-    console.log("+++++ revStudentId changed so replacing cached homework")
+    if (cachedStudent) {
+      const altHomeworks = [...homeworks];
+      const hIndex = altHomeworks.findIndex(h => (h.studentOwnerId === cachedStudent.id && h.assignmentId === assignment.id));
+      altHomeworks.splice(hIndex, 1, cachedStudent.homework);
+      replaceHomeworksData(altHomeworks);
 
-    const altHomeworks = [...homeworks];
-    const hIndex = altHomeworks.findIndex(h => (h.studentOwnerId === cachedStudent.id && h.assignmentId === assignment.id));
-    altHomeworks.splice(hIndex, 1, cachedStudent.homework);
-    replaceHomeworksData(altHomeworks);
+      const altStudents = [...students];
+      const sIndex = altStudents.findIndex(s => s.id === cachedStudent.id);
+      let updatedStudent = deepCopy(altStudents[sIndex]);
+      updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...cachedStudent.homework.toolHomeworkData.commentsOnDraft];
+      updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...cachedStudent.homework.toolHomeworkData.criterionRatingsOnDraft];
+      altStudents.splice(sIndex, 1, updatedStudent);
+      setStudents(altStudents);
+      setCachedStudent(null);
+    }
 
-    const altStudents = [...students];
-    const sIndex = altStudents.findIndex(s => s.id === cachedStudent.id);
-    let updatedStudent = deepCopy(altStudents[sIndex]);
-    updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...cachedStudent.homework.toolHomeworkData.commentsOnDraft];
-    updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...cachedStudent.homework.toolHomeworkData.criterionRatingsOnDraft];
-    altStudents.splice(sIndex, 1, updatedStudent);
-    setStudents(altStudents);
-
-    setCachedStudent(null);
+    if (cachedAllocations) {
+      setAllocations(cachedAllocations);
+      setCachedAllocations(null);
+    }
   }, [reviewedStudentId])
 
   useEffect(() => {
     if (!assignment?.id) return;
-    console.log('*********************** Assignment changed so fetching scores and all student homework related to this assignment')
     fetchScores();
     fetchBatchOfHomeworks('INIT');
+    // TODO: Why is assignment a trigger instead of just assignment.id?
   }, [assignment.id, assignment]);
 
   useEffect(() => {
@@ -101,7 +107,6 @@ function AssignmentViewer(props) {
 
   useEffect(() => {
     if (!assignment?.id || !members.length) return;
-    console.log("+++++ something changed: ", homeworks);
 
     let studentsOnly = members.filter(m => m.roles.indexOf(ROLE_TYPES.learner) > -1);
     let positions = shuffle(studentsOnly.map((h, i) => i + 1));
@@ -134,7 +139,7 @@ function AssignmentViewer(props) {
     });
 
     setStudents(enhancedDataStudents);
-    // console.log("ENHANCED STUDENTS[0] NOW: ", enhancedDataStudents[0]);
+    setAllocations(assignment.toolAssignmentData.allocations);
   }, [assignment, members, homeworks, grades, isHideStudentIdentity]);
 
 
@@ -275,15 +280,15 @@ function AssignmentViewer(props) {
     }
   }
 
-  function onStudentUpdated(studentData) {
+  function onStudentUpdated(studentData, allocationsData) {
     setCachedStudent(studentData);
+    if (allocationsData) setCachedAllocations(allocationsData);
   }
 
   return (
     <Fragment>
       {activeModal && renderModal()}
 
-      {/*className={'m-2 p-0 position-relative'}*/}
       {(!reviewedStudentId) ?
         <div ref={headerZoneRef}>
           <HeaderBar title={`Overview: ${(assignment?.title) ? assignment.title : ''}`}>
@@ -348,7 +353,7 @@ function AssignmentViewer(props) {
 
         {reviewedStudentId && (students?.length > 0) &&
         <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
-          students={students} onStudentUpdated={onStudentUpdated} reviewedStudentId={reviewedStudentId} />
+          allocations={allocations} students={students} onStudentUpdated={onStudentUpdated} reviewedStudentId={reviewedStudentId} />
         }
       </Container>
     </Fragment>

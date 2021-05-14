@@ -27,6 +27,15 @@ type Homework @model
   toolHomeworkData: ToolHomeworkData
 }
 
+type Assessment @model {
+  id: ID!
+  assessorId: ID! # id of student who must provide a review/assessment for
+  homeworkId: ID! # id of homework this student must assess
+  beganOnDate: AWSTimestamp
+  submittedOnDate: AWSTimestamp
+  commentsOnDraft: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
+  criterionRatingsOnDraft: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
+}
 
 # ===================================================== RUBRIC
 type Rank {
@@ -45,6 +54,7 @@ type Criterion {
   weight: Int # number indicating what pts... relative to max... of grade should come from this criterion
 }
 
+
 # ===================================================== ASSIGNMENT
 
 type ToolAssignmentData {
@@ -54,6 +64,7 @@ type ToolAssignmentData {
   minReviewsRequired: Int # number of reviews each student should give
   minPeersBeforeAllocating: Int # number of peers that must have turned in work before allocation can begin
   allocations: [Allocation]
+  assessmentIds: [ID] # list of IDs for assessments associated with this assignment
 }
 
 type Allocation {
@@ -69,8 +80,6 @@ type Allocation {
 # must NOT delete homework A, even if student A leaves the class, because B, C & D depend on Homework A for their grades.
 type ToolHomeworkData {
   draftContent: String # this is the actual essay content. (Might eventually be a url). It is NULL "" if it is a REVIEW round.
-  commentsOnDraft: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
-  criterionRatingsOnDraft: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
 }
 
 type CriterionQualityScore {

@@ -11,6 +11,7 @@ export const EDIT_DUPED_ASSIGNMENT = APP_NAMESPACE+'.EDIT_DUPED_ASSIGNMENT';
 export const EDIT_ASSIGNMENT_PHASE = APP_NAMESPACE+'.EDIT_ASSIGNMENT_PHASE';
 export const ADD_HOMEWORKS_DATA = APP_NAMESPACE+'.ADD_HOMEWORKS_DATA';
 export const REPLACE_HOMEWORKS_DATA = APP_NAMESPACE+'.REPLACE_HOMEWORKS_DATA';
+export const REPLACE_ALLOCATIONS_DATA = APP_NAMESPACE+'.REPLACE_ALLOCATIONS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
 
@@ -72,6 +73,13 @@ export function replaceHomeworksData(homeworks) {
   return {
     type: REPLACE_HOMEWORKS_DATA,
     homeworks
+  }
+}
+
+export function replaceAllocationsData(allocations) {
+  return {
+    type: REPLACE_ALLOCATIONS_DATA,
+    allocations
   }
 }
 
@@ -163,6 +171,9 @@ function appReducer(currentState = defaultState, action) {
 
     case SET_ASSIGNMENT_DATA:
       return Object.assign({}, currentState, {assignment: action.assignment});
+
+    case REPLACE_ALLOCATIONS_DATA:
+      return Object.assign({}, currentState, {assignment: {...currentState.assignment, toolAssignmentData: {...currentState.assignment.toolAssignmentData, allocations: action.allocations}}});
 
     case SET_DISPLAY_ORDER:
       return Object.assign({}, currentState, {displayOrder: action.displayOrder});
