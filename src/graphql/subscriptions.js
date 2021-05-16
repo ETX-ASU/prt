@@ -34,12 +34,6 @@ export const onCreateAssignment = /* GraphQL */ `
         sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
       }
       createdAt
       updatedAt
@@ -79,12 +73,6 @@ export const onUpdateAssignment = /* GraphQL */ `
         sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
       }
       createdAt
       updatedAt
@@ -124,12 +112,6 @@ export const onDeleteAssignment = /* GraphQL */ `
         sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
       }
       createdAt
       updatedAt
@@ -147,21 +129,6 @@ export const onCreateHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
       }
       createdAt
       updatedAt
@@ -179,21 +146,6 @@ export const onUpdateHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
       }
       createdAt
       updatedAt
@@ -211,21 +163,84 @@ export const onDeleteHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onCreateReview = /* GraphQL */ `
+  subscription OnCreateReview {
+    onCreateReview {
+      id
+      assignmentId
+      assessorId
+      homeworkId
+      beganOnDate
+      submittedOnDate
+      comments {
+        id
+        tagNum
+        index
+        length
+        content
+        commentRating
+      }
+      criterionRatings {
+        criterionId
+        ratingGiven
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onUpdateReview = /* GraphQL */ `
+  subscription OnUpdateReview {
+    onUpdateReview {
+      id
+      assignmentId
+      assessorId
+      homeworkId
+      beganOnDate
+      submittedOnDate
+      comments {
+        id
+        tagNum
+        index
+        length
+        content
+        commentRating
+      }
+      criterionRatings {
+        criterionId
+        ratingGiven
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onDeleteReview = /* GraphQL */ `
+  subscription OnDeleteReview {
+    onDeleteReview {
+      id
+      assignmentId
+      assessorId
+      homeworkId
+      beganOnDate
+      submittedOnDate
+      comments {
+        id
+        tagNum
+        index
+        length
+        content
+        commentRating
+      }
+      criterionRatings {
+        criterionId
+        ratingGiven
       }
       createdAt
       updatedAt

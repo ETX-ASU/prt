@@ -155,8 +155,7 @@ function AssignmentEditor() {
           {(formData.toolAssignmentData.sequenceIds.length === 0) && <RootPhaseSettings
             formData={formData}
             setFormData={setFormData}
-            isLimitedEditing={true} />}
-            {/*isLimitedEditing={isLimitedEditing} />}*/}
+            isLimitedEditing={isLimitedEditing} />}
 
           {/*THERE ARE NO DRAFT PHASE SPECIFIC PROPERTIES, SO THIS ISN'T USED IN BASIC PRTv2*/}
           {/*{(formData.toolAssignmentData.sequenceIds.length%2 === 0) && <DraftPhaseSettings*/}
@@ -164,10 +163,10 @@ function AssignmentEditor() {
           {/*  setFormData={setFormData}*/}
           {/*  isLimitedEditing={isLimitedEditing} />}*/}
 
-          {/*{(formData.toolAssignmentData.sequenceIds.length%2 === 1) && <ReviewPhaseSettings*/}
-          {/*  formData={formData}*/}
-          {/*  setFormData={setFormData}*/}
-          {/*  isLimitedEditing={isLimitedEditing} />}*/}
+          {(formData.toolAssignmentData.sequenceIds.length%2 === 1) && <ReviewPhaseSettings
+            formData={formData}
+            setFormData={setFormData}
+            isLimitedEditing={isLimitedEditing} />}
         </Container>
       </form>
     </Fragment>

@@ -17,6 +17,7 @@ library.add(faArrowCircleLeft, faArrowCircleRight, faCheck);
 
 function GradingBar(props) {
   const dispatch = useDispatch();
+  const activeUser = useSelector(state => state.app.activeUser);
   const {assignment, reviewedStudent} = props;
 
   const displayOrder = useSelector(state => state.app.displayOrder);
@@ -28,11 +29,12 @@ function GradingBar(props) {
   useEffect(() => {
     setComment(reviewedStudent.comment || '');
     setScoreGiven(calcShownScore(reviewedStudent));
-  }, [reviewedStudent.scoreGiven, reviewedStudent.id, reviewedStudent.comment, reviewedStudent.homeworkStatus])
+  }, [props.manualScore, reviewedStudent.scoreGiven, reviewedStudent.id, reviewedStudent.comment, reviewedStudent.homeworkStatus])
+
 
   function calcShownScore({homeworkStatus, scoreGiven, autoScore}) {
     if (homeworkStatus === HOMEWORK_PROGRESS.fullyGraded) return scoreGiven;
-    return (autoScore) ? autoScore : 0;
+    return (autoScore) ? autoScore : props.manualScore;
   }
 
   const navToPrev = () => {
@@ -48,6 +50,8 @@ function GradingBar(props) {
   }
 
   async function handleSubmitScore() {
+    console.log("SUBMIT BTN WAS PUSHED!");
+
     const scoreDataObj = {
       assignmentId: assignment.id,
       studentId: reviewedStudent.id,
@@ -63,9 +67,16 @@ function GradingBar(props) {
     props.refreshHandler();
   }
 
+  // This is not used with the peer review tool because instructor comments are available directly as notes to student work
   function handleCommentUpdated(e) {
     setComment(e.target.value || '')
   }
+
+  function onScoreAdjusted(e) {
+    console.log(`score adjusted from ${e.target.value}`, scoreGiven, props.manualScore);
+    setScoreGiven(parseInt(e.target.value));
+  }
+
 
   return (
     <Container id={'instructor-grading-bar'} className='p-0 m-0 mt-2 mb-2 login-bar bg-white rounded xt-med xtext-med'>
@@ -76,15 +87,18 @@ function GradingBar(props) {
 
         <Col className='p-0 m-0'>
             <Row className='p-0 m-0'>
-              <Col className='col-4' style={{'width':'calc(100% - 100px)'}}>
+              <Col className='col-3' style={{'width':'calc(100% - 100px)'}}>
                 <h2>{(isHideStudentIdentity) ? `Student #${reviewedStudent.randomOrderNum}` : reviewedStudent.name}</h2>
-                <span className='aside'><h3 className='subtext d-inline-block'>{reviewedStudent.percentCompleted}% Complete | </h3>
-                  {STATUS_TEXT[reviewedStudent.homeworkStatus]}</span>
+                <span className='aside'><h3 className='subtext d-inline-block'>{reviewedStudent.percentCompleted}% Complete</h3>
+                  <br/>
+                  {STATUS_TEXT[reviewedStudent.homeworkStatus]}
+                </span>
               </Col>
-              <Col className='col-8 pt-1 pb-2 xbg-light'>
+              <Col className='col-9 pt-1 pb-2 xbg-light'>
                 <div className='ml-0 mr-4 d-inline-block align-top'>
-                  <label htmlFor='autoScore' className='xtext-darkest'>Auto Score</label>
-                  <div id={`yourScore`}>{`${reviewedStudent.autoScore} of ${calcMaxScoreForAssignment(assignment)}`}</div>
+                  <label htmlFor='autoScore' className='xtext-darkest'>Selected Score</label>
+                  <div className={'selected-score'} id={`yourScore`}>{`${props.manualScore} of 100`}</div>
+                  {/*<div id={`yourScore`}>{`${reviewedStudent.autoScore} of ${calcMaxScoreForAssignment(assignment)}`}</div>*/}
                 </div>
                 <div className='mr-4 d-inline-block align-top'>
                   <label htmlFor='yourScore' className='xtext-darkest'>Given Score</label>
@@ -92,7 +106,8 @@ function GradingBar(props) {
                          type="number"
                          className='form-control'
                          min={0} max={100}
-                         onChange={(e) => setScoreGiven(parseInt(e.target.value))} value={scoreGiven}
+                         onChange={onScoreAdjusted}
+                         value={scoreGiven}
                   />
                 </div>
 
@@ -101,13 +116,18 @@ function GradingBar(props) {
                   <FontAwesomeIcon className={'ml-2 mr-2'} icon={faCheck} />
                 </div>
                 }
+
+                {reviewedStudent.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded &&
                 <div className='mr-1 pt-3 d-inline-block align-middle float-right'>
                   <span className='ml-1 mr-0'>
-                    <Button className='btn-med xbg-darkest'
-                      disabled={reviewedStudent.progress === HOMEWORK_PROGRESS.fullyGraded}
+                    <Button
+                      ref={props.submitBtnRef}
+                      className='btn-med xbg-darkest'
+                      // disabled={reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded}
                       onClick={handleSubmitScore}>{(reviewedStudent.scoreGiven !== undefined) ? `Update` : `Submit`}</Button>
                   </span>
                 </div>
+                }
               </Col>
 
             </Row>

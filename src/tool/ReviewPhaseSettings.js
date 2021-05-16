@@ -27,7 +27,7 @@ function ReviewPhaseSettings(props) {
 						<label htmlFor='dataReviewsPerPeer'><h3>Minimum Peer Submissions Before Allocating Reviews</h3></label>
 						<div className='rank-name m-1'>
 							<input id={'dataMinPeersBeforeAllocating'}
-								type='number'	min={2} max={20}
+								type='number'	min={2} max={10}
 								style={{width: '60px'}}
 								onChange={e => updateAssignmentData({...toolAssignmentData, minPeersBeforeAllocating: e.target.value})}
 								defaultValue={toolAssignmentData.minPeersBeforeAllocating}/>

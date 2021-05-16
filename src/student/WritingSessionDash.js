@@ -61,6 +61,7 @@ function StudentDashboard() {
 
 		// If this is a Review Session Assignment, allocate and fetch homeworks reviewed by this user as needed
 		if (assignment.id && assignment.toolAssignmentData.sequenceIds.length%2) {
+			// TODO: Allocation Change 1
 			let userAllocations = assignment.toolAssignmentData.allocations.filter(a => a.assessorId === activeUser.id);
 			let currentAllocation = userAllocations.find(a => !a.submittedOnDate) || null;
 			let updatedAllocations = [...userAllocations];
@@ -104,6 +105,7 @@ function StudentDashboard() {
 	function getNewAllocationForUser(peerCompletedDraftIds, userAllocations) {
 		// 2. Map out how many times each of these HAVE been allocated
 		// TODO: We may need to track if reviews have been completed to allow those with non-submitted reviews to get submissions?
+		// TODO: Allocation Change 2
 		const {allocations} = assignment.toolAssignmentData;
 		const userAllocatedDraftIds = new Set(userAllocations.map(a => a.homeworkId));
 		let lowestTierCount = 10000; // 10,000 is arbitrary high number greater than size of any likely cohort
@@ -112,6 +114,7 @@ function StudentDashboard() {
 		// Filter out drafts that have already been assessed by this user
 		let lotteryDraftIds = peerCompletedDraftIds.filter(d => !userAllocatedDraftIds.has(d.id))
 		lotteryDraftIds = lotteryDraftIds.map(d => {
+			// TODO: Allocation Change 3
 			let allocationsForDraft = allocations.filter(a => a.homeworkId === d.id);
 			lowestTierCount = Math.min(lowestTierCount, allocationsForDraft.length);
 			highestTierCount = Math.max(highestTierCount, allocationsForDraft.length);
@@ -161,6 +164,7 @@ function StudentDashboard() {
 		}
 	}
 
+	// TODO: Allocation Change 4 & 5
 	async function fetchAndSetDraftsToBeReviewedByUser(allocations) {
 		// Get all of the allocated homeworks,
 		// sort them according to order in the allocations list,

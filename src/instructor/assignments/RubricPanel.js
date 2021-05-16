@@ -77,7 +77,11 @@ function RubricPanel(props) {
           <Nav>
             {shownCriteria.map(crit =>
               <NavItem key={crit.id}>
-                {crit.isVisible && <NavLink key={crit.id} eventKey={crit.id} className='hidden-criterion'><span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}</NavLink>}
+                {crit.isVisible &&
+                <NavLink key={crit.id} eventKey={crit.id} className='hidden-criterion'>
+                  <span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}
+                </NavLink>
+                }
                 {!crit.isVisible && <NavLink key={crit.id} eventKey={crit.id}><FontAwesomeIcon className='tab-icon ml-1 mr-1' icon={faEyeSlash} /> | {crit.name}</NavLink>}
               </NavItem>)
             }
@@ -116,11 +120,18 @@ function RubricPanel(props) {
                   <div className='criterion-name-label'>Name</div>
                   <div className='criterion-name m-1'>
                     <input type='text' value={criterion.name} size={12}
+                      draggable={true}
+                      onDragStart={e => {
+                        console.log("PREVENTING");
+                        e.preventDefault();
+                      }}
                       onChange={(e) => props.onCriterionPropChanged(criterion, 'name', e.target.value)}/>
                   </div>
                   <div className='grade-weight-label'>Grade Weight</div>
                   <div className='grade-weight m-1'>
                     <input type='number' min={0} max={100} value={criterion.weight}
+                      draggable={true}
+                      onDragStart={e => e.preventDefault()}
                       onChange={(e) => props.onCriterionPropChanged(criterion, 'weight', parseInt(e.target.value))}/>
                   </div>
                   <span className='vl'/>

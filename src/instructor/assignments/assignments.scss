@@ -330,18 +330,30 @@
             display: inline-block;
             width: 100px;
             height: 100px;
+            pointer-events: none;
             opacity: 0.75;
           }
         }
 
+
+        &.locked.rank-summary {
+          .rank-btn {
+            cursor: default;
+          }
+        }
+
         .selected-marker {
-          //display: block;
-          //opacity: 0.01;
+          pointer-events: none;
           background-color: limegreen;
         }
+
         &.mark-as-hidden .hidden-marker, &.mark-as-selected .selected-marker {
           display: block;
           //opacity: 0.25;
+        }
+
+        &.mark-as-selected {
+          pointer-events: all;
         }
       }
 

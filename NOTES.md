@@ -1,6 +1,163 @@
 # OVERVIEW OF NEXT STEPS
 
-1. Instructor should be able to edit the Rubric of Root Assignment before it has begun (this is critical for cloned assignments)
+
+
+# The bug
+1. When I create a new comment... I select the text.
+2. I click into the comment text area
+3. The ACTIVE COMMENT ID is now set
+4. This causes the text to get highlighted and the original content is captured with the
+   bright yellow highlight.
+
+## Temp solution
+The worst issue occurs on a deletion... it seems to keep the <span class="comment-tag">
+elemented and never fully removes it. I'm not sure why.
+I may want to use a crude solution in the short-term:
+When a user deletes the comment, we delete it and force-re-render the
+entire document.
+
+
+PART 1: 
+1. To ADD a comment: Add it to comments array and use this value to setComments. Set activeCommentId to new id.
+2. To DELETE: Delete from comments array and use to setComments. Set id to null.
+3. To CHANGE SELECTION: just set new id to new selection (or null)
+
+PART 2:
+1. In the useEffect([comments]) handler if comments.length changes redraw the entire
+   screen tagging the comments.
+
+PART 3:
+1. In the useEffect([activeCommentId]) handler when id changes remove `active` style
+   from prev comment (using id value css selector) from inline element. And then
+   add the `active` style to the activeComment using same technique.
+
+
+
+
+When do I pull assessments data?
+1. As an instructor for a draft assignment:
+   1. When load student homework for reviewing I look for the assessment in redux store `state.assessements`
+   2. If it isn't in there, I create one from scratch, save to redux, and continue.
+   3. After I saving or submitting assessment, I save it to DB and redux.
+   4. I'm the only one who will change that DB table entry so no fear of conflicts.
+2. As an instructor for a review session assignment:
+   1. When I load in a student's homework for reviewing, I look in redux store for all their assessments
+   2. If none exist, I pull from DB. 
+      1. If none in DB, I add entry in redux store to indicate I've pulled DB for this student
+      2. Otherwise I save that to redux store
+      3. NOT sure how I track my own assessment of a review session, but could probably fit in here
+3. As a student reviewing a peer:
+   1. When I load my dashboard I pull DB for all my assessments related to this assignment id
+   2. These get saved to redux store
+   3. If I make any edits or submit, etc., I save to DB and redux store
+   4. No conflicts as I am the only one to write to my own assessments.
+      1. A peer cannot give feedback on my comments until I submit, at which time I can no
+         longer make edits myself.
+      2. An instructor can look at an assessment but never change it directly.
+4. As a student looking at my own paper:
+   1. When I load my dashboard I pull DB for all SUBMITTED comments related to my homework
+   
+
+# EXTRAS
+
+1. Prevent page flashing from 'window resized' event by getting header bar height and saving to redux
+   and potentially saving 'homework height' values in redux as well?
+
+
+
+   
+
+   1. When load student homework for reviewing I look for the assessment in redux store.
+   1. I pull all assessments for a sll assignments at start and save to redux.
+   2. I 
+
+1. After saving or submitting I must:
+   1) use query to refetch the specific assessed user's homework and update that in redux
+   2) use query to refetch the specific assignment and update that in redux
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. In Assessor, after a comment is updated or a rank selected, save it to DB but do NOT re-fetch.
+   NOTE if there were ANY changes.
+   2. When navigating to another student or back or the assessor loses focus... THEN you can request
+   a refetch of this student's data.
+
+
+
+
+
+
+
+
+
+### NEED TO CONSIDER REFETCH FOR ASSESSING PEERS
+This breaks DRY principle and I need to assess a fix. The advantage of this solution is that
+the assignment data is really only loaded at the start or after an assignment edit.
+Caching the allocations data means no need to refetch the data from DB on every little save
+because this acts as a kind of optimistic update. We update locally and don't care about what is on
+the server until an edit was made to the assignment itself or the app is reloaded.
+
+BUT HERE'S THE CATCH: As instructor, I'm assessing Student A which changes the homework.commentsOnDraft and .ratingsOnDraft
+and those changes are made to the DB. Each edit is saved each time I click off the notes area. Focus changes,
+student A's commentsOnDraft are changed.
+
+I'm doing this optimistically. Now what happens when I'm a student reviewing peer A. And another student is reviewing
+peer A at the SAME TIME. By NOT refetching, they both assume they have the most recent commentsOnDraft for peer A.
+
+I start making comments using Data Snapshot 1. Other student makes a few comments using Snapshot 1. I save 3 new comments,
+basically SnapShot 1 + My Additions, and I leave. Other student edits a comment and saves SnapShot 1 + Their Edit. It overwrites
+what I did.
+
+Before I can save, I must fetch homeworks to ensure I don't have this problem.
+
+This is not the case as an instructor because I am the ONLY allocated to make comments on a DRAFT writing assignment.
+As an instructor, I'm the only one who will be adding comments and ratings to a student homework during a DRAFT writing assignment,
+and on a REVIEW SESSION assignment, I will be using a different mechanism.
+
+This is also not an issue for allocations data because of the same reason.
+
+AS A STUDENT: Fetch allocations before save or submit.
+AS A STUDENT: Fetch assessedUserHomework before save or submit.
+
+
+
+PeerHomeworkAssessor:
+
+1. It receives defaultActiveCommentId, and toolHomeworkData
+2. When a comment is added, removed, updated... 
+   2. use "onAssessmentUpdated()" to tell parent the new toolHomeworkData and activeCommentId
+   3. Parent recreates the child with updated info using that to
+      build out the comments, critRating selections, and activeComment
+   4. If comments or critRatings do not match what it has from DB, 
+      PARENT saves these changes to DB and refetches data for student
+      
+
+      
+
+
+
+1. When instructor deletes a comment, that change should get saved optimistically(?) in redux such that the
+   InstructorDraftAssessor gets updated with new comment and rebuilds the PeerHomeworkAssessor.
+2. Each change to a comment or rubric rank selection should trigger a save as well.
+   1. onBlur() of the comment text area saves changes
+   2. onAddComment saves changes (an empty "" comment)... focus is set to text area so any updates will get saved
+      when it's focus is lost... so maybe onAddComment we don't save. 
+      ONLY save on textAreaBlur if the comments do NOT match each other
+   3. onDeleteComment saves changes
+   
+
+
+
 2. Grading of student essays... instructor should have basic grading capability
 3. Assessing Students should be able to submit assessments (This is working I think)
    1. When reviewing your recent submission - get rid of submit button!!
@@ -13,8 +170,11 @@
 8. In draft writing assignments, instructors should be able to see student draft and assess it like a peer
 
    
-3. Make right-side panels toggle on/off display
+6. Make right-side panels toggle on/off display
 7. Rubric tabs... what happens when too long
+8. When you create a dupe of an existing assignment it takes you to AssignmentEditor the button
+   to save your changes says "UPDATE" which is a bit confusing. Make is say "SAVE" or maybe "CONTINUE"?
+9. Either make endless draft & review rounds possible, or warn instructor after they create 5th that no more are possible
 
 
 3. Location dots should be set dynamically because resizing the screen width

@@ -5,9 +5,7 @@ export const PHASE_TYPES = {
 }
 
 export const EMPTY_TOOL_HOMEWORK_DATA = {
-  draftContent: '',
-  commentsOnDraft: [],
-  criterionRatingsOnDraft: []
+  draftContent: ''
 }
 
 export const EMPTY_RANK = {

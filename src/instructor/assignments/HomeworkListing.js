@@ -34,7 +34,6 @@ function HomeworkListing(props) {
   }, [props.students, studentsPerPage])
 
   useEffect(function rePaginateList() {
-    console.log(`pageCount: ${pageCount}`);
     if (pageCount <= 5) {
       let newPageBtns = new Array(pageCount).fill(-1);
       setPageBtns(newPageBtns.map((b, i) => i));

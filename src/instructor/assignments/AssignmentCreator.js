@@ -48,8 +48,7 @@ const emptyAssignment = {
     rubricCriteria: [],
     sequenceIds: [],
     minReviewsRequired: 3,
-    minPeersBeforeAllocating: 6,
-    allocations: []
+    minPeersBeforeAllocating: 6
   }
 };
 

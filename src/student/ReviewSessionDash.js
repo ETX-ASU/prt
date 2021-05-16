@@ -30,6 +30,9 @@ import PeerReviewsSummaryTable from "./homeworks/PeerReviewsSummaryTable";
 import PeerHomeworkAssessor from "./homeworks/PeerHomeworkAssessor";
 
 
+
+// TODO: Allocation Changes 20-30
+
 function ReviewSessionDash() {
 	const dispatch = useDispatch();
 	const activeUiScreenMode = useSelector(state => state.app.activeUiScreenMode);

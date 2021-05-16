@@ -1,12 +1,9 @@
 import React from "react";
 import "./RteStyles.scss";
-import ReactQuill, { Quill } from "react-quill";
-import ComTag from "./ComTag";
-import ComBtn from "./ComBtn";
+import { Quill } from "react-quill";
+import CommentTag from "./CommentTag";
 
-
-Quill.register('formats/comment-tag', ComTag);
-Quill.register('formats/comment-btn', ComBtn);
+Quill.register('formats/comment-tag', CommentTag);
 
 // Custom Undo button icon component for Quill editor. You can import it directly
 // from 'quill/assets/icons/undo.svg' but I found that a number of loaders do not
@@ -96,12 +93,6 @@ export const modules = {
       }
     }
   },
-  // commentsLayer: {
-  //   container: "#commentsLayer",
-  //   handlers: {
-  //     insertStar: insertStar
-  //   }
-  // },
   history: {
     delay: 500,
     maxStack: 100,
@@ -129,16 +120,8 @@ export const formats = [
   "image",
   "color",
   "code-block",
-  "span",
-  "comment-tag",
-  "comment-btn"
+  "comment-tag"
 ];
-
-// export const CommentsLayer = () => (
-//   <div id="commentsLayer">
-//     <span>CRAY CRAY</span>
-//   </div>
-// );
 
 // Quill Toolbar component
 export const QuillToolbar = (props) => {

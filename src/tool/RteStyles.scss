@@ -24,6 +24,10 @@
 .comments-panel {
   height: auto;
 
+  .text-area-overlay-btn {
+    opacity: 0.2;
+  }
+
   textarea {
     font-size: 12px;
   }
@@ -43,12 +47,19 @@
     }
   }
 
+  textarea.form-control.form-control.read-only-mode {
+    background-color: white;
+    color: var(--x-dark-gray);
+  }
+
   h4 {
     display: inline;
   }
 }
 
-
+.comment-tag {
+  background-color: #FFFAD1;
+}
 
 /* Set dropdown font-families */
  #toolbar-container .ql-font span[data-label="Sans Serif"]::before {
@@ -126,11 +137,20 @@
 }
 
 
-span.comment-tag {
-  //background-color: #FFFAD1;
-  //margin-right: -12px;
+//span.comment-tag {
+//  background-color: #FFFAD1 !important;
+//}
+//
+//span.comment-tag-active {
+//  background-color: #FFD23D !important;
+//}
 
-}
+
+
+//div.comtag {
+//  background-color: #f3d11c;
+//  display: inline;
+//}
 
 span.comment-btn {
   font-family: "Lucida Console", sans-serif;

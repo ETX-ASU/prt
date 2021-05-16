@@ -12,7 +12,7 @@ const MAX_NUM_CRITERIA = 10;
 const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricAssessorPanel(props) {
-  const {rubricCriteria, rubricRanks, ratings} = props;
+  const {rubricCriteria, rubricRanks, ratings, isReadOnly} = props;
 
   const shownCriteria = rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const shownRanks = rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
@@ -26,8 +26,6 @@ function RubricAssessorPanel(props) {
 
   function onRankSelected(rNum) {
     const curCrit = shownCriteria.find(c => c.id === curTabId);
-    console.log(`Set ${curCrit.label} rank selection to ${rNum}`)
-
     props.onRankSelected(curCrit, rNum);
   }
 
@@ -52,8 +50,10 @@ function RubricAssessorPanel(props) {
               <NavItem key={crit.id}>
                 {crit.isVisible &&
                   <NavLink key={crit.id} eventKey={crit.id} className='hidden-criterion'>
-                    {/*<span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}*/}
-                    {crit.name}
+                    {props.isShowCriteriaPercents &&
+                      <Fragment><span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}</Fragment>
+                    }
+                    {!props.isShowCriteriaPercents && <Fragment>{crit.name}</Fragment>}
                     {(getRatingNum(crit) > -1) && <FontAwesomeIcon className='tab-icon ml-1 mr-0' icon={faCheck} />}
                   </NavLink>
                 }
@@ -67,16 +67,17 @@ function RubricAssessorPanel(props) {
               <Container className={`p-2 rubrics-panel ${!criterion.isVisible ? 'hidden-criterion' : ''}`} >
                 <Row className='w-100 pt-1 m-0 ranks-row' >
                   {shownRanks.map((rank, rNum) => (rank.isVisible) &&
-                    <Col key={rNum} className={`rank-col p-0`} >
+                    <Col key={rNum} className={`rank-col p-0${isReadOnly ? ' locked' : ''}`} >
                       <div className={`rank-summary w-100 bg-white ${(getRatingNum(criterion) === rNum) ? 'mark-as-selected' : ''}`}>
                         <div className='selected-marker'>
                           <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
                         </div>
-                        <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2 rank-btn' onClick={() => onRankSelected(rNum)}>{rank.name}</div>
-                          <textarea
-                            readOnly={true}
-                            value={criterion.rankSummaries[rNum]}
-                            className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block' />
+                        {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>RO: {rank.name}</div>}
+                        {!isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2 rank-btn' onClick={() => onRankSelected(rNum)}>N: {rank.name}</div>}
+                        <textarea
+                          readOnly={true}
+                          value={criterion.rankSummaries[rNum]}
+                          className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block' />
                       </div>
                     </Col>
                   )}

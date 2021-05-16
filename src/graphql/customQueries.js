@@ -1,5 +1,5 @@
 
-// export const assignmentHomeworkByStudentId
+
 export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
   query FullHomeworkByAsgnByStudentId(
     $assignmentId: ID
@@ -26,21 +26,6 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
         isLocked
         toolHomeworkData {
 					draftContent
-					criterionRatingsOnDraft {
-						criterionId
-						reviewerId
-						ratingGiven
-					}
-					commentsOnDraft {
-						id
-						reviewerId
-						tagNum
-						content
-						commentRating
-						criterionNum
-						index
-						length
-					}
 				}
         createdAt
         updatedAt
@@ -50,7 +35,7 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
   }
 `;
 
-// export const assignmentHomeworkIdsBySubmittedDate
+
 export const minHomeworkIdsBySubmittedDate = /* GraphQL */ `
   query MinHomeworkIdsBySubmittedDate(
     $assignmentId: ID
@@ -95,21 +80,6 @@ export const listFullHomeworks = /* GraphQL */ `
         isLocked
         toolHomeworkData {
 					draftContent
-					criterionRatingsOnDraft {
-						criterionId
-						reviewerId
-						ratingGiven
-					}
-					commentsOnDraft {
-						id
-						reviewerId
-						tagNum
-						content
-						commentRating
-						criterionNum
-						index
-						length
-					}
 				}
         createdAt
         updatedAt

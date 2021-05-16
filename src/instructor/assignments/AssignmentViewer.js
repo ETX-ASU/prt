@@ -7,11 +7,10 @@ import {
   setGradesData,
   addHomeworksData,
   setCurrentlyReviewedStudentId,
-  toggleHideStudentIdentity
+  toggleHideStudentIdentity, replaceHomeworksData
 } from "../../app/store/appReducer";
 import {Button, Container, Row, Col} from 'react-bootstrap';
 import {API, graphqlOperation} from "aws-amplify";
-// import {listHomeworks} from "../../graphql/queries";
 import {listFullHomeworks} from "../../graphql/customQueries";
 import InstructorDraftAssessor from "./InstructorDraftAssessor";
 import HomeworkListing from "./HomeworkListing";
@@ -30,6 +29,7 @@ import {
   getNewToolHomeworkDataForAssignment
 } from "../../tool/ToolUtils";
 import {reportError} from "../../developer/DevUtils";
+import {deepCopy} from "../../app/utils/deepCopy";
 library.add(faEdit, faPen, faChevronLeft);
 
 
@@ -54,7 +54,14 @@ function AssignmentViewer(props) {
 
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
+
   const [availableHeight, setAvailableHeight] = useState(300);
+  const [cachedStudent, setCachedStudent] = useState(null);
+
+
+  // TODO: Allocation Change 8
+  // const [allocations, setAllocations] = useState([]);
+  // const [cachedAllocations, setCachedAllocations] = useState(null);
 
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
@@ -65,13 +72,34 @@ function AssignmentViewer(props) {
     }
   }, [])
 
+  useEffect(() => {
+    if (cachedStudent) {
+      const altHomeworks = [...homeworks];
+      const hIndex = altHomeworks.findIndex(h => (h.studentOwnerId === cachedStudent.id && h.assignmentId === assignment.id));
+      altHomeworks.splice(hIndex, 1, cachedStudent.homework);
+      replaceHomeworksData(altHomeworks);
+
+      const altStudents = [...students];
+      const sIndex = altStudents.findIndex(s => s.id === cachedStudent.id);
+      let updatedStudent = deepCopy(altStudents[sIndex]);
+      updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...cachedStudent.homework.toolHomeworkData.commentsOnDraft];
+      updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...cachedStudent.homework.toolHomeworkData.criterionRatingsOnDraft];
+      altStudents.splice(sIndex, 1, updatedStudent);
+      setStudents(altStudents);
+      setCachedStudent(null);
+    }
+
+    // if (cachedAllocations) {
+    //   // setAllocations(cachedAllocations);
+    //   setCachedAllocations(null);
+    // }
+  }, [reviewedStudentId])
 
   useEffect(() => {
-    console.log('assignment changed')
     if (!assignment?.id) return;
-    console.log('fetching scores etc')
     fetchScores();
     fetchBatchOfHomeworks('INIT');
+    // TODO: Why is assignment a trigger instead of just assignment.id?
   }, [assignment.id, assignment]);
 
   useEffect(() => {
@@ -80,6 +108,7 @@ function AssignmentViewer(props) {
 
   useEffect(() => {
     if (!assignment?.id || !members.length) return;
+
     let studentsOnly = members.filter(m => m.roles.indexOf(ROLE_TYPES.learner) > -1);
     let positions = shuffle(studentsOnly.map((h, i) => i + 1));
 
@@ -111,8 +140,12 @@ function AssignmentViewer(props) {
     });
 
     setStudents(enhancedDataStudents);
-    console.log("ENHANCED STUDENTS[29] NOW: ", enhancedDataStudents[29]);
+
+    // TODO: Allocation Change 9
+    // setAllocations(assignment.toolAssignmentData.allocations);
   }, [assignment, members, homeworks, grades, isHideStudentIdentity]);
+
+
 
 
   function onWindowResized() {
@@ -156,7 +189,6 @@ function AssignmentViewer(props) {
 
   async function fetchScores() {
     try {
-      // const scoreMaximum = calcMaxScoreForAssignment(assignment);
       let grades = await fetchAllGrades(assignment.id);
       grades = (grades) ? grades : [];
       grades = grades.map(g => {
@@ -251,11 +283,15 @@ function AssignmentViewer(props) {
     }
   }
 
+  // function onStudentUpdated(studentData, allocationsData) {
+  //   setCachedStudent(studentData);
+  //   if (allocationsData) setCachedAllocations(allocationsData);
+  // }
+
   return (
     <Fragment>
       {activeModal && renderModal()}
 
-      {/*className={'m-2 p-0 position-relative'}*/}
       {(!reviewedStudentId) ?
         <div ref={headerZoneRef}>
           <HeaderBar title={`Overview: ${(assignment?.title) ? assignment.title : ''}`}>
@@ -318,6 +354,7 @@ function AssignmentViewer(props) {
         </Fragment>
         }
 
+        {/*TODO: Allocation Change 10*/}
         {reviewedStudentId && (students?.length > 0) &&
         <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
           students={students} reviewedStudentId={reviewedStudentId} />
