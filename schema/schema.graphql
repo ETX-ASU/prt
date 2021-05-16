@@ -27,17 +27,17 @@ type Homework @model
   toolHomeworkData: ToolHomeworkData
 }
 
-type Assessment @model {
+type Review @model
+@key(name:"reviewsByHmwkAndAssessorId", fields:["homeworkId", "assessorId"], queryField:"reviewsByHmwkAndAssessorId") {
   id: ID!
   assignmentId: ID! # id of the assignment. Yes, this is accessible via homework data but we need access speed and efficiency
   assessorId: ID! # id of student who must provide a review/assessment for
   homeworkId: ID! # id of homework this student must assess
   beganOnDate: AWSTimestamp
   submittedOnDate: AWSTimestamp
-  commentsOnDraft: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
-  criterionRatingsOnDraft: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
+  comments: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
+  criterionRatings: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
 }
-
 
 # ===================================================== RUBRIC
 type Rank {
@@ -53,9 +53,8 @@ type Criterion {
   isVisible: Boolean
   name: String # Name for this criterion. Example: Compelling Argument, Logicallly Sound, Structure, Grammer & Spelling, etc.
   rankSummaries: [String] # description of what qualifies as Excellent, Good, Average, etc.
-  weight: Int # number indicating what pts... relative to max... of grade should come from this criterion
+  weight: Int # number indicating what percentage of grade should come from this criterion
 }
-
 
 # ===================================================== ASSIGNMENT
 
@@ -77,23 +76,19 @@ type ToolHomeworkData {
 
 
 
-# ===================================================== ASSESSMENT
+# ===================================================== REVIEW
 # An assessment is single review of 1 homework by 1 other user (student or instructor)
-
 type CriterionQualityScore {
   criterionId: ID
-  reviewerId: ID! # should prob be renamed to "assessorId"
   ratingGiven: Int # Note that 0 is first rank, often the best (ex: "excellent")
 }
 
 # An individual review comment about a specific draft
 type Comment {
   id: ID!
-  reviewerId: ID! # should prob be renamed to "assessorId"
   tagNum: Int # number shown to help track the comment
   index: Int
   length: Int
   content: String # the actual comment
   commentRating: Int # 1-5 stars indicating helpfulness of the comment. 0 = unscored.
-  criterionNum: Int! # index of criterion (within rubric's rubric.criteria[] array that the comment is related to (-1 if a general comment)
 }
