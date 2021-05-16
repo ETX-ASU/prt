@@ -1,18 +1,33 @@
 import React, {Fragment, useEffect, useRef, useState} from 'react';
-import {useSelector} from "react-redux";
-import {HOMEWORK_PROGRESS} from "../../app/constants";
+import {useDispatch, useSelector} from "react-redux";
+import {EMPTY_HOMEWORK, EMPTY_REVIEW, HOMEWORK_PROGRESS, UI_SCREEN_MODES} from "../../app/constants";
 import {Row, Col} from 'react-bootstrap';
 import "../../student/homeworks/homeworks.scss";
 import GradingBar from "./gradingBar/GradingBar";
 import PeerHomeworkAssessor from "../../student/homeworks/PeerHomeworkAssessor";
 import {deepCopy} from "../../app/utils/deepCopy";
+import {API, graphqlOperation} from "aws-amplify";
+import {fullHomeworkByAsmntAndStudentId, listFullHomeworks} from "../../graphql/customQueries";
+import {reportError} from "../../developer/DevUtils";
+import {reviewsByHmwkAndAssessorId} from "../../graphql/queries";
+import {v4 as uuid} from "uuid";
+import moment from "moment";
+import {createHomework, createReview} from "../../graphql/mutations";
+import {setActiveUiScreenMode, setReviews, updateSingleReview} from "../../app/store/appReducer";
+import {fetchGradeForStudent} from "../../lmsConnection/RingLeader";
+import {getHomeworkStatus} from "../../tool/ToolUtils";
 
 
 function InstructorDraftAssessor(props) {
+  const dispatch = useDispatch();
   const {students, reviewedStudentId, assignment} = props;
   const rubricCriteria = assignment.toolAssignmentData.rubricCriteria;
 
+  const activeUser = useSelector(state => state.app.activeUser);
+  const reviewsByActiveUser = useSelector(state => state.app.reviews);
   const [reviewedStudent, setReviewedStudent] = useState(students.find(s => s.id === reviewedStudentId));
+  const [reviewOfStudent, setReviewOfStudent] = useState(null);
+
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   const gradingBarRef = useRef(null);
@@ -33,24 +48,83 @@ function InstructorDraftAssessor(props) {
   }, [gradingBarRef])
 
   useEffect(() => {
-    setReviewedStudent(students.find(s => s.id === reviewedStudentId));
-    onWindowResized();
-  }, [students, reviewedStudentId])
+    if (!students.length) return;
+    if (!reviewedStudentId) {
+      setReviewOfStudent(null);
+      return;
+    }
+
+    console.log(`#students = ${students.length}, #instructorReviews = ${reviewsByActiveUser.length}, reviewedStudent = ${reviewedStudentId}`)
+
+
+    let theStudent = students.find(s => s.id === reviewedStudentId);
+    let theReview = reviewsByActiveUser.find(r => r.assessorId === activeUser.id && r.homeworkId === theStudent.homework.id);
+    if (!theReview && theStudent.homework.id) {
+      fetchReviewAndSetReviewedStudent(theStudent);
+    } else {
+      setReviewOfStudent(theReview);
+      setReviewedStudent(theStudent);
+    }
+
+  }, [students, reviewsByActiveUser, reviewedStudentId])
+
+
+
+
+  async function fetchReviewAndSetReviewedStudent(theStudent) {
+    try {
+      const fetchReviewsResult = await API.graphql({
+        query: reviewsByHmwkAndAssessorId,
+        variables: {
+          assessorId: {eq: activeUser.id},
+          homeworkId: theStudent.homework.id
+        },
+      });
+
+      if (!fetchReviewsResult.data.reviewsByHmwkAndAssessorId.items?.length) {
+        console.warn("NO instructor's review exists for this student. Attempting to create.")
+        const freshReview = Object.assign({}, EMPTY_REVIEW, {
+          id: uuid(),
+          beganOnDate: moment().valueOf(),
+          homeworkId: theStudent.homework.id,
+          assessorId: activeUser.id,
+          assignmentId: assignment.id
+        });
+        await API.graphql({query: createReview, variables: {input: freshReview}});
+        await dispatch(updateSingleReview(freshReview));
+      } else {
+        const theReview = fetchReviewsResult.data.reviewsByHmwkAndAssessorId.items[0];
+        const altReviewsByUser = [...reviewsByActiveUser];
+        const rIndex = altReviewsByUser.findIndex(r => r.id === theReview.id);
+        delete theReview.createdAt;
+        delete theReview.updatedAt;
+        if (rIndex >= 0) { altReviewsByUser.splice(rIndex, 1, theReview); } else { altReviewsByUser.push(theReview) }
+        await dispatch(updateSingleReview(theReview));
+      }
+
+      setReviewedStudent(theStudent);
+    } catch (error) {
+      reportError(error, `We're sorry. There was an error while attempting to fetch your review of the current student. Please wait a moment and try again.`);
+    }
+
+  }
 
   function onWindowResized() {
     let height = gradingBarRef.current.getBoundingClientRect().height;
     setGradingBarHeight(height + 120);
   }
 
-  function onAssessmentUpdated(studentHomework, updatedAllocations) {
-    let updatedStudent = deepCopy(reviewedStudent);
-    updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...studentHomework.toolHomeworkData.commentsOnDraft];
-    updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...studentHomework.toolHomeworkData.criterionRatingsOnDraft];
 
-    // if (updatedAllocations) setAllocations(updatedAllocations);
-    setReviewedStudent(updatedStudent);
-    props.onStudentUpdated(updatedStudent, updatedAllocations);
-  }
+
+  // function onReviewUpdated(studentHomework, updatedAllocations) {
+    // let updatedStudent = deepCopy(reviewedStudent);
+    // updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...studentHomework.toolHomeworkData.commentsOnDraft];
+    // updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...studentHomework.toolHomeworkData.criterionRatingsOnDraft];
+    //
+    // // if (updatedAllocations) setAllocations(updatedAllocations);
+    // setReviewedStudent(updatedStudent);
+    // props.onStudentUpdated(updatedStudent, updatedAllocations);
+  // }
 
 
   function onRatingChanges(instructorRatings) {
@@ -124,6 +198,8 @@ function InstructorDraftAssessor(props) {
   AS A STUDENT: Fetch assessedUserHomework before save or submit.
 */
 
+
+  // TODO: Allocation Change 11 & 12
 	return (
 	  <Fragment>
         <div ref={gradingBarRef}>
@@ -133,8 +209,6 @@ function InstructorDraftAssessor(props) {
             refreshHandler={props.refreshGrades}
             assignment={assignment}
             reviewedStudent={reviewedStudent}
-            allocations={props.allocations}
-            isDraftAssignment={true}
           />
         </div>
 
@@ -144,7 +218,7 @@ function InstructorDraftAssessor(props) {
         </Row>
         }
 
-        {hasStudentDoneWork() &&
+        {hasStudentDoneWork() && reviewOfStudent &&
         <Row className={'m-0 p-0 h-100'}>
           <Col className='rounded p-0'>
             <PeerHomeworkAssessor
@@ -153,12 +227,11 @@ function InstructorDraftAssessor(props) {
               excessHeight={gradingBarHeight}
               submitBtnRef={submitBtnRef}
               isInstructorAssessment={true}
-              isEditMode={false}
               assignment={assignment}
               homework={reviewedStudent.homework}
               onRatingChanges={onRatingChanges}
-              onAssessmentUpdated={onAssessmentUpdated}
-              allocations={props.allocations}
+              // onReviewUpdated={onReviewUpdated}
+              review={reviewOfStudent}
             />
           </Col>
         </Row>

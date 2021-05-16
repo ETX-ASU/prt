@@ -3,9 +3,8 @@ import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
 import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
 import {Button, Row} from 'react-bootstrap';
-import {updateAssignment, updateHomework as updateHomeworkMutation} from "../../graphql/mutations";
 import {API, graphqlOperation} from "aws-amplify";
-import {setActiveUiScreenMode, setCurrentlyReviewedStudentId} from "../../app/store/appReducer";
+import {setActiveUiScreenMode, setCurrentlyReviewedStudentId, updateSingleReview} from "../../app/store/appReducer";
 import {reportError} from "../../developer/DevUtils";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
@@ -20,13 +19,8 @@ import CommentsPanel from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
 import ReactQuill, {Quill} from "react-quill";
 import { v4 as uuid } from "uuid";
-import {
-  getAssignmentAllocations,
-  getHomeworkReviewData,
-  updateAssignmentAllocations,
-  updateHomeworkReviewData
-} from "../../graphql/customQueries";
-import {getAssignment} from "../../graphql/queries";
+import {updateAssignment as updateAssignmentMutation, updateReview} from "../../graphql/mutations";
+
 const Delta = Quill.import("delta");
 
 library.add(faCheck, faTimes, faGripLines);
@@ -35,8 +29,9 @@ const MAX_TOP_ZONE_PERCENT = 80;
 const MIN_TOP_ZONE_PERCENT = 10;
 
 
+
 function PeerHomeworkAssessor(props) {
-  const {homework, assignment, isInstructorAssessment, onAssessmentUpdated, onRatingChanges} = props;
+  const {homework, assignment, isInstructorAssessment, submitBtnRef, onReviewUpdated, onRatingChanges, review} = props;
   const {toolHomeworkData} = homework;
 
   const dragBarRef = useRef(null);
@@ -47,9 +42,6 @@ function PeerHomeworkAssessor(props) {
   const dispatch = useDispatch();
 	const activeUser = useSelector(state => state.app.activeUser);
 
-	const [userCritRatings, setUserCritRatings] = useState([]);
-	const [nonUserCritRatings, setNonUserCritRatings] = useState([]);
-  const [nonUserComments, setNonUserComments] = useState([]);
   const [userComments, setUserComments] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
   const [availableHeight, setAvailableHeight] = useState(2000);
@@ -58,6 +50,7 @@ function PeerHomeworkAssessor(props) {
   const [showPlusButton, setShowPlusButton] = useState(false);
   const [activeCommentId, _setActiveCommentId] = useState('');
 
+  const [origContent, setOrigContent] = useState(null);
 
   const setActiveCommentId = (id) => {
     setPrevCommentId(activeCommentId || '');
@@ -71,9 +64,13 @@ function PeerHomeworkAssessor(props) {
     reactQuillRef.current.editor.addContainer(tagsElem);
 
     const editorElem = document.querySelector('.ql-editor');
-
     window.addEventListener('resize', onWindowResized);
     editorElem.addEventListener('scroll', onEditorScrolled);
+
+    setOrigContent(reactQuillRef.current.editor.getContents(0));
+    setUserComments(getInitializedUserComments(review.comments));
+
+    if (submitBtnRef.current) submitBtnRef.current.onclick = onSubmit;
     onWindowResized();
 
     return () => {
@@ -83,53 +80,45 @@ function PeerHomeworkAssessor(props) {
   }, [])
 
   useEffect(() => {
-    setUserCritRatings((!toolHomeworkData.criterionRatingsOnDraft) ? [] : toolHomeworkData.criterionRatingsOnDraft.filter(r => r.reviewerId === activeUser.id));
-    setNonUserCritRatings((!toolHomeworkData.criterionRatingsOnDraft) ? [] : toolHomeworkData.criterionRatingsOnDraft.filter(r => r.reviewerId !== activeUser.id));
-    setNonUserComments((!toolHomeworkData.commentsOnDraft) ? [] : toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id));
-
-    let userComs = (!toolHomeworkData.commentsOnDraft) ? [] : toolHomeworkData.commentsOnDraft.filter(c => c.reviewerId === activeUser.id).sort((a,b) => a.index - b.index);
-    setUserComments(getInitializedUserComments(userComs));
-  }, [toolHomeworkData])
-
-  useEffect(() => {
     onWindowResized();
   }, [props.excessHeight])
 
   useEffect(() => {
-    console.log("############## ACTIVE COMMENT ID");
     if (activeCommentId === prevCommentId) return;
 
-    const editor = reactQuillRef.current.editor;
-
     if (prevCommentId) {
-      const prev = onDeleteComment(prevCommentId, true);
-      if (prev) editor.formatText(prev.targetComment.index, prev.targetComment.length, 'comment-tag', {id: prevCommentId.id, isActiveBtn: false}, 'api');
+      const prevElems = document.querySelectorAll(`span[data-id='${prevCommentId}']`);
+      prevElems.forEach(elem => elem.style.backgroundColor = null);
     }
 
     if (activeCommentId) {
-      const next = onDeleteComment(activeCommentId, true);
-      editor.formatText(next.targetComment.index, next.targetComment.length, 'comment-tag', {
-        id: activeCommentId.id,
-        isActiveBtn: true
-      }, 'api');
+      const activeElems = document.querySelectorAll(`span[data-id='${activeCommentId}']`);
+      activeElems.forEach(elem => elem.style.backgroundColor = '#FFD23D');
     }
   }, [activeCommentId])
 
+
+  function onSubmit() {
+    console.log("SUBMIT PUSHED, YO!!!!!!!!!!!!!!!!!!!!!!!")
+    saveUpdatesToServer(review, true);
+  }
 
   function getInitializedUserComments(comments) {
     const editor = reactQuillRef.current.editor;
     const origSelection = editor.getSelection();
 
+    console.log("--- getInitializedUserComments() polling origContents");
     const altUserComments = comments.map((c,i) => {
       const bounds = editor.getBounds(c.index, c.length);
-      editor.formatText(c.index, c.length, 'comment-tag', {id: c.id, isActiveBtn: false}, 'silent');
-      return {
+      const theComment = {
         ...c,
         tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1),
         x: bounds.left + bounds.width,
         y: bounds.top + editor.scrollingContainer.scrollTop,
         origContent: editor.getContents(c.index, c.length),
       }
+      editor.formatText(c.index, c.length, 'comment-tag', {id: c.id}, 'silent');
+      return theComment;
     })
 
     if (origSelection) editor.setSelection(origSelection);
@@ -192,9 +181,9 @@ function PeerHomeworkAssessor(props) {
 
     const comCount = userComments.length + 1;
     const maxTagNum = (userComments.length) ? Math.max(...userComments.map(c => c.tagNum)) : 0;
+
     newComment = {
       id: uuid(),
-      reviewerId: activeUser.id,
       tagNum: maxTagNum + 1,
       tagName: (comCount < 10) ? "0" + comCount : "" + comCount,
       content: '',
@@ -203,20 +192,22 @@ function PeerHomeworkAssessor(props) {
       x: bounds.left + bounds.width,
       y: bounds.top + editor.scrollingContainer.scrollTop,
       origContent: editor.getContents(sel.index, sel.length),
-      commentRating: -1,
-      criterionNum: -1
+      commentRating: -1
     }
+    console.log("--- onAddComment():", newComment.origContent);
 
-    editor.formatText(sel.index, sel.length, 'comment-tag', {id: newComment.id, isActiveBtn: false}, 'api');
+    editor.formatText(sel.index, sel.length, 'comment-tag', {id: newComment.id}, 'api');
     let altComments = [...userComments, newComment].sort((a,b) => a.index - b.index).map((c, i) => ({...c, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
     setUserComments(altComments);
 
+    saveUpdatesToServer({...review, comments:altComments})
+    // TODO: This is why the id isn't getting set. Not sure why.
     setActiveCommentId(newComment.id);
-    saveUpdatesToServer({userComments: altComments})
   }
 
   function onDeleteComment(commentId, isOnlyStyleDelete) {
     if (!commentId) return;
+
     const editor = reactQuillRef.current.editor;
 
     let altComments = [...userComments];
@@ -225,17 +216,16 @@ function PeerHomeworkAssessor(props) {
       if (!isOnlyStyleDelete) console.error("comment not found!");
       return;
     }
-    const targetComment = altComments[cIndex];
-
-    let myDelta = {ops: [{retain: targetComment.index}, {delete:targetComment.length}, ...targetComment.origContent.ops]};
-    editor.updateContents(new Delta(myDelta));
-    if (isOnlyStyleDelete) return {cIndex, targetComment};
 
     altComments.splice(cIndex, 1);
     altComments = altComments.map((c, i) => ({...c, tagNum:i+1, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
     setUserComments(altComments);
+
     setActiveCommentId('');
-    saveUpdatesToServer({userComments: altComments})
+    editor.setContents(origContent);
+    setUserComments(getInitializedUserComments(altComments));
+
+    saveUpdatesToServer({...review, comments:altComments})
   }
 
   function onUpdateComment(comment) {
@@ -245,121 +235,122 @@ function PeerHomeworkAssessor(props) {
     if (!userComments[index] || userComments[index].content !== comment.content) {
       altComments[index] = comment;
       setUserComments(altComments);
-      saveUpdatesToServer({userComments: altComments})
+      saveUpdatesToServer({...review, comments:altComments})
     }
   }
 
-  function onRankSelected(crit, rNum) {
-    const ratings = [...userCritRatings];
-    let ratingIndex = ratings.findIndex(r => r.criterionId === crit.id);
+  function onRankSelected(selectedCriterion, rNum) {
+    const ratings = [...review.criterionRatings];
+    let ratingIndex = ratings.findIndex(r => r.criterionId === selectedCriterion.id);
     if (ratingIndex >= 0) {
       const oldRating = ratings[ratingIndex];
       oldRating.ratingGiven = rNum;
       ratings.splice(ratingIndex, 1, oldRating)
     } else {
       const rating = {
-        reviewerId: activeUser.id,
         ratingGiven: rNum,
-        criterionId: crit.id
+        criterionId: selectedCriterion.id
       }
       ratings.push(rating);
     }
 
-    setUserCritRatings(ratings);
+    const altReview = {...review, criterionRatings: ratings};
+    saveUpdatesToServer(altReview)
     onRatingChanges(ratings);
-    saveUpdatesToServer({userCritRatings: ratings})
   }
 
 
+
+
   async function saveUpdatesToServer(data, isSubmit = false) {
-    let altToolHomeworkData = {...toolHomeworkData};
 
-    const tempComments = (data.userComments) ? data.userComments : userComments;
+    // console.log(`saveUpdatesToServer`, data, moment.valueOf());
+    if (!data.beganOnDate) data.beganOnDate = moment().valueOf();
+    if (isSubmit) data.submittedOnDate = moment().valueOf();
 
+    const inputData = {...data};
+    delete inputData.createdAt;
+    delete inputData.updatedAt;
 
-    const homeworkResults = await API.graphql(graphqlOperation(getHomeworkReviewData, {id:homework.id}));
-    const nowReviewsData = homeworkResults.data.getHomework.toolHomeworkData;
-    const nonUserCommentsNow = nowReviewsData.commentsOnDraft.filter(c => c.reviewerId !== activeUser.id);
-    const nonUserCritRatingsNow = nowReviewsData.criterionRatingsOnDraft.filter(c => c.reviewerId !== activeUser.id);
-
-    altToolHomeworkData.commentsOnDraft = [...nonUserCommentsNow, ...tempComments.map(c => ({
+    inputData.comments = inputData.comments.map(c => ({
       id: c.id,
-      reviewerId: activeUser.id,
       tagNum: c.tagNum,
       content: c.content,
       index: c.index,
       length: c.length,
-      commentRating: c.commentRating,
-      criterionNum: c.criterionNum
-      }))
-    ];
+      commentRating: c.commentRating
+    }));
 
-    altToolHomeworkData.criterionRatingsOnDraft = (data.userCritRatings)
-      ? [...nonUserCritRatingsNow, ...data.userCritRatings]
-      : [...nonUserCritRatingsNow, ...userCritRatings];
-
-    saveOrSubmitAssessment(altToolHomeworkData, isSubmit);
-  }
-
-
-  async function saveOrSubmitAssessment(updatedToolHomeworkData, isSubmit) {
     try {
-      const updatedHomeworkData = Object.assign({}, homework, {toolHomeworkData: updatedToolHomeworkData});
-      const inputData = Object.assign({}, {id: homework.id, toolHomeworkData: updatedToolHomeworkData});
-      const result = await API.graphql({query: updateHomeworkReviewData, variables: {input: inputData}});
+      // console.log(`using input data: `, inputData);
+      const result = await API.graphql({query: updateReview, variables: {input: inputData}});
+      dispatch(updateSingleReview(data))
 
-      // We must also update the toolAssignmentData to capture the data about if/when an assessment was submitted for this homework
-      let isAllocationsUpdated = false, assignmentResult;
-      let a = props.allocations.findIndex(a => a.assessorId === activeUser.id && a.homeworkId === homework.id);
-      let allocation = props.allocations[a];
-      if (!allocation) {
-        isAllocationsUpdated = true;
-        allocation = {
-          assessorId: activeUser.id,
-          homeworkId: homework.id,
-          beganOnDate: moment().valueOf(),
-          submittedOnDate: (isSubmit) ? moment().valueOf() : 0,
-        };
-      } else if (isSubmit) {
-        isAllocationsUpdated = true;
-        allocation.submittedOnDate = moment().valueOf();
-      }
-
-      let allocationsNow = [allocation];
-      if (isAllocationsUpdated) {
-        const allocationResults = await API.graphql(graphqlOperation(getAssignmentAllocations, {id:assignment.id}));
-        allocationsNow = [...allocationResults.data.getAssignment.toolAssignmentData.allocations];
-        let oldIndex = allocationsNow.findIndex(a => a.assessorId === activeUser.id && a.homeworkId === homework.id);
-        if (oldIndex >= 0) {
-          allocationsNow.splice(oldIndex, 1, allocation);
-        } else {
-          allocationsNow.push(allocation);
-        }
-
-        const assignmentInputData = Object.assign({}, {id: assignment.id, toolAssignmentData: {allocations: allocationsNow}});
-        console.log('updating allocations', allocationsNow);
-        assignmentResult = await API.graphql({query: updateAssignmentAllocations, variables: {input: assignmentInputData}});
-      }
-
-      if (isSubmit) {
-        if (result && (!isAllocationsUpdated || (isAllocationsUpdated && assignmentResult))) {
-          if (assignment.isUseAutoSubmit) await calcAndSendScore(inputData);
-          onAssessmentUpdated(updatedHomeworkData, isAllocationsUpdated ? allocationsNow : null);
-          await setActiveModal({type: MODAL_TYPES.confirmHomeworkSubmitted})
-        } else {
-          reportError('', `We're sorry. There was a problem submitting your homework for review. Please wait a moment and try again.`);
-        }
-      } else {
-        if (result && (!isAllocationsUpdated || (isAllocationsUpdated && assignmentResult))) {
-          onAssessmentUpdated(updatedHomeworkData, isAllocationsUpdated ? allocationsNow : null);
-        } else {
-          console.error("problem saving the assessment");
-        }
-      }
+      console.log("saveRatingUpdatesToServer()", result)
     } catch (error) {
-      reportError(error, `We're sorry. There was a problem submitting your homework for review. Please wait a moment and try again.`);
+      reportError(error, `We're sorry. An error occurred while trying to save your assessment changes. Please wait a moment and try again.`);
     }
   }
+
+
+  // async function saveOrSubmitAssessment(updatedToolHomeworkData, isSubmit) {
+  //   try {
+  //     const updatedHomeworkData = Object.assign({}, homework, {toolHomeworkData: updatedToolHomeworkData});
+  //     const inputData = Object.assign({}, {id: homework.id, toolHomeworkData: updatedToolHomeworkData});
+  //     const result = await API.graphql({query: updateHomeworkReviewData, variables: {input: inputData}});
+  //
+  //     // We must also update the toolAssignmentData to capture the data about if/when an assessment was submitted for this homework
+  //     let isAllocationsUpdated = false, assignmentResult;
+  //     let a = props.allocations.findIndex(a => a.assessorId === activeUser.id && a.homeworkId === homework.id);
+  //     let allocation = props.allocations[a];
+  //     if (!allocation) {
+  //       isAllocationsUpdated = true;
+  //       allocation = {
+  //         assessorId: activeUser.id,
+  //         homeworkId: homework.id,
+  //         beganOnDate: moment().valueOf(),
+  //         submittedOnDate: (isSubmit) ? moment().valueOf() : 0,
+  //       };
+  //     } else if (isSubmit) {
+  //       isAllocationsUpdated = true;
+  //       allocation.submittedOnDate = moment().valueOf();
+  //     }
+  //
+  //     let allocationsNow = [allocation];
+  //     if (isAllocationsUpdated) {
+  //       const allocationResults = await API.graphql(graphqlOperation(getAssignmentAllocations, {id:assignment.id}));
+  //       allocationsNow = [...allocationResults.data.getAssignment.toolAssignmentData.allocations];
+  //       let oldIndex = allocationsNow.findIndex(a => a.assessorId === activeUser.id && a.homeworkId === homework.id);
+  //       if (oldIndex >= 0) {
+  //         allocationsNow.splice(oldIndex, 1, allocation);
+  //       } else {
+  //         allocationsNow.push(allocation);
+  //       }
+  //
+  //       const assignmentInputData = Object.assign({}, {id: assignment.id, toolAssignmentData: {allocations: allocationsNow}});
+  //       console.log('updating allocations', allocationsNow);
+  //       assignmentResult = await API.graphql({query: updateAssignmentAllocations, variables: {input: assignmentInputData}});
+  //     }
+  //
+  //     if (isSubmit) {
+  //       if (result && (!isAllocationsUpdated || (isAllocationsUpdated && assignmentResult))) {
+  //         if (assignment.isUseAutoSubmit) await calcAndSendScore(inputData);
+  //         onReviewUpdated(updatedHomeworkData, isAllocationsUpdated ? allocationsNow : null);
+  //         await setActiveModal({type: MODAL_TYPES.confirmHomeworkSubmitted})
+  //       } else {
+  //         reportError('', `We're sorry. There was a problem submitting your homework for review. Please wait a moment and try again.`);
+  //       }
+  //     } else {
+  //       if (result && (!isAllocationsUpdated || (isAllocationsUpdated && assignmentResult))) {
+  //         onReviewUpdated(updatedHomeworkData, isAllocationsUpdated ? allocationsNow : null);
+  //       } else {
+  //         console.error("problem saving the assessment");
+  //       }
+  //     }
+  //   } catch (error) {
+  //     reportError(error, `We're sorry. There was a problem submitting your homework for review. Please wait a moment and try again.`);
+  //   }
+  // }
 
   async function calcAndSendScore(homework) {
     try {
@@ -398,7 +389,7 @@ function PeerHomeworkAssessor(props) {
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
             {name:'Cancel', onClick: () => setActiveModal(null)},
             // {name:'Submit', onClick:submitAssessment},
-            {name:'Submit', onClick:() => saveUpdatesToServer({}, true)},
+            {name:'Submit', onClick:() => saveUpdatesToServer(review, true)},
           ]}>
             <p>Once submitted, you cannot go back to make additional edits to your assignment.</p>
           </ConfirmationModal>
@@ -443,12 +434,6 @@ function PeerHomeworkAssessor(props) {
     }
   }
 
-  function isGradingLocked() {
-    let allocation = props.allocations.find(a => a.assessorId === activeUser.id && a.homeworkId === homework.id);
-    return (!!allocation?.submittedOnDate);
-  }
-
-
 	return (
 		<Fragment>
       {activeModal && renderModal()}
@@ -463,11 +448,11 @@ function PeerHomeworkAssessor(props) {
 			<div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
         <div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>
           <RubricAssessorPanel
-            isReadOnly={isGradingLocked()}
+            isReadOnly={!!review.submittedOnDate}
             isShowCriteriaPercents={isInstructorAssessment}
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
-            ratings={userCritRatings}
+            ratings={review.criterionRatings}
             onRankSelected={onRankSelected}
           />
         </div>
@@ -504,7 +489,7 @@ function PeerHomeworkAssessor(props) {
             />
           </div>
           <CommentsPanel
-            // key={activeCommentId}
+            isReadOnly={!!review.submittedOnDate}
             className='h-auto'
             showPlusButton={showPlusButton}
             assessorId={activeUser.id}
@@ -521,7 +506,7 @@ function PeerHomeworkAssessor(props) {
 
       {!isInstructorAssessment &&
       <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
-        <Button className='d-inline mr-2 ql-align-right btn-sm' onClick={saveUpdatesToServer}>Save Changes</Button>
+        <Button className='d-inline mr-2 ql-align-right btn-sm' onClick={() => saveUpdatesToServer(review)}>Save Changes</Button>
         <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assessment</Button>
       </div>
       }

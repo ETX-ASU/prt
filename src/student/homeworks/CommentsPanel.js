@@ -10,7 +10,7 @@ library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
 
 
 function CommentsPanel(props) {
-  const {criteria, setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments} = props;
+  const {criteria, setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments, isReadOnly} = props;
   const visCriteria = criteria.filter(c => c.isVisible);
 
   const commentTextArea = useRef(null);
@@ -29,7 +29,7 @@ function CommentsPanel(props) {
   useEffect(() => {
     setTimeout(() => {
       if (commentTextArea.current && activeCommentId) commentTextArea.current.focus();
-    }, 50)
+    }, 100)
   }, [comments.length])
 
 
@@ -52,11 +52,11 @@ function CommentsPanel(props) {
   }
 
   function onChange(e) {
-    setCommentText(e.target.value);
+    if (!isReadOnly) setCommentText(e.target.value);
   }
 
   function onBlur(e) {
-    updateComment({...activeComment, content:commentText})
+    if (!isReadOnly) updateComment({...activeComment, content:commentText})
   }
 
   const showPlus = !!props.showPlusButton && !activeCommentId;
@@ -66,9 +66,11 @@ function CommentsPanel(props) {
       <Row className='criterion-nav m-0 p-2'>
         <Col className='p-0 m-0'>
           <div className='comment-buttons'>
+            {!isReadOnly &&
             <Button className='align-middle' onClick={() => onDeleteComment(activeCommentId)}>
               <FontAwesomeIcon className='btn-icon' icon={faTrash}/>
             </Button>
+            }
           </div>
           {activeCommentId && activeComment && <h4>Note #{activeComment.tagName}</h4>}
           {!activeCommentId && <h4>Notes</h4>}
@@ -88,12 +90,13 @@ function CommentsPanel(props) {
           {/*<Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-warning' style={{display: !activeCommentId ? 'block' : 'none'}} onClick={onAddComment} />*/}
           <textarea
             ref={commentTextArea}
-            className='mt-2 form-control h-50'
+            // readOnly={isReadOnly}
+            className={`mt-2 form-control h-50${isReadOnly ? ' read-only-mode' : ''}`}
             onBlur={onBlur}
             onChange={onChange}
             placeholder={(showPlus|| activeCommentId) ? '' : `Make a text selection to create a comment.`}
-            disabled={!activeCommentId}
-            value={(showPlus) ? '' : commentText}/>
+            disabled={!activeCommentId || isReadOnly}
+            value={commentText}/>
 
           {/*<Button className='position-absolute w-100 h-50 mt-2 bg-warning' onClick={testAdd} />*/}
 

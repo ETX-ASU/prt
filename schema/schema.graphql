@@ -29,6 +29,7 @@ type Homework @model
 
 type Assessment @model {
   id: ID!
+  assignmentId: ID! # id of the assignment. Yes, this is accessible via homework data but we need access speed and efficiency
   assessorId: ID! # id of student who must provide a review/assessment for
   homeworkId: ID! # id of homework this student must assess
   beganOnDate: AWSTimestamp
@@ -36,6 +37,7 @@ type Assessment @model {
   commentsOnDraft: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
   criterionRatingsOnDraft: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
 }
+
 
 # ===================================================== RUBRIC
 type Rank {
@@ -63,15 +65,6 @@ type ToolAssignmentData {
   sequenceIds: [ID] # list of ids for previous rounds. Empty array means this is origin assignment. If this = [A, B] then A is origin, B is 1st draft review, and THIS is 2nd draft
   minReviewsRequired: Int # number of reviews each student should give
   minPeersBeforeAllocating: Int # number of peers that must have turned in work before allocation can begin
-  allocations: [Allocation]
-  assessmentIds: [ID] # list of IDs for assessments associated with this assignment
-}
-
-type Allocation {
-  assessorId: ID! # id of student who must provide a review/assessment for
-  homeworkId: ID! # id of homework this student must assess
-  beganOnDate: AWSTimestamp
-  submittedOnDate: AWSTimestamp
 }
 
 
@@ -81,6 +74,11 @@ type Allocation {
 type ToolHomeworkData {
   draftContent: String # this is the actual essay content. (Might eventually be a url). It is NULL "" if it is a REVIEW round.
 }
+
+
+
+# ===================================================== ASSESSMENT
+# An assessment is single review of 1 homework by 1 other user (student or instructor)
 
 type CriterionQualityScore {
   criterionId: ID

@@ -77,11 +77,6 @@ function GradingBar(props) {
     setScoreGiven(parseInt(e.target.value));
   }
 
-  function isGradingLocked() {
-    if (!props.isDraftAssignment) return true; //TODO: Update this when we have instructor reviews of peer review session homework ready to go
-    let allocation = props.allocations.find(a => a.assessorId === activeUser.id && a.homeworkId === reviewedStudent.homework.id);
-    return (!!allocation?.submittedOnDate);
-  }
 
   return (
     <Container id={'instructor-grading-bar'} className='p-0 m-0 mt-2 mb-2 login-bar bg-white rounded xt-med xtext-med'>
@@ -121,15 +116,18 @@ function GradingBar(props) {
                   <FontAwesomeIcon className={'ml-2 mr-2'} icon={faCheck} />
                 </div>
                 }
+
+                {reviewedStudent.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded &&
                 <div className='mr-1 pt-3 d-inline-block align-middle float-right'>
                   <span className='ml-1 mr-0'>
                     <Button
                       ref={props.submitBtnRef}
                       className='btn-med xbg-darkest'
-                      disabled={reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded}
+                      // disabled={reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded}
                       onClick={handleSubmitScore}>{(reviewedStudent.scoreGiven !== undefined) ? `Update` : `Submit`}</Button>
                   </span>
                 </div>
+                }
               </Col>
 
             </Row>

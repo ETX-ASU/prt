@@ -136,8 +136,7 @@ function AssignmentNewOrDupe() {
         toolAssignmentData: {
           sequenceIds: rootDetails.previousSequenceIds,
           minReviewsRequired: 3,
-          minPeersBeforeAllocating: 6,
-          allocations: []
+          minPeersBeforeAllocating: 6
         }
       });
       delete inputData.createdAt;

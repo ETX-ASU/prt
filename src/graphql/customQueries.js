@@ -26,21 +26,6 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
         isLocked
         toolHomeworkData {
 					draftContent
-					criterionRatingsOnDraft {
-						criterionId
-						reviewerId
-						ratingGiven
-					}
-					commentsOnDraft {
-						id
-						reviewerId
-						tagNum
-						content
-						commentRating
-						criterionNum
-						index
-						length
-					}
 				}
         createdAt
         updatedAt
@@ -95,122 +80,11 @@ export const listFullHomeworks = /* GraphQL */ `
         isLocked
         toolHomeworkData {
 					draftContent
-					criterionRatingsOnDraft {
-						criterionId
-						reviewerId
-						ratingGiven
-					}
-					commentsOnDraft {
-						id
-						reviewerId
-						tagNum
-						content
-						commentRating
-						criterionNum
-						index
-						length
-					}
 				}
         createdAt
         updatedAt
       }
       nextToken
-    }
-  }
-`;
-
-
-
-export const getHomeworkReviewData = /* GraphQL */ `
-  query GetHomework($id: ID!) {
-    getHomework(id: $id) {
-      toolHomeworkData {
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
-      }
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-export const updateHomeworkReviewData = /* GraphQL */ `
-  mutation UpdateHomework(
-    $input: UpdateHomeworkInput!
-    $condition: ModelHomeworkConditionInput
-  ) {
-    updateHomework(input: $input, condition: $condition) {
-      id
-      toolHomeworkData {
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
-      }
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-export const getAssignmentAllocations = /* GraphQL */ `
-  query GetAssignment($id: ID!) {
-    getAssignment(id: $id) {
-      toolAssignmentData {
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
-      }
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-export const updateAssignmentAllocations = /* GraphQL */ `
-  mutation UpdateAssignment(
-    $input: UpdateAssignmentInput!
-    $condition: ModelAssignmentConditionInput
-  ) {
-    updateAssignment(input: $input, condition: $condition) {
-      id
-      toolAssignmentData {
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
-      }
-      createdAt
-      updatedAt
     }
   }
 `;

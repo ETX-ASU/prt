@@ -34,12 +34,6 @@ export const getAssignment = /* GraphQL */ `
         sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
       }
       createdAt
       updatedAt
@@ -89,21 +83,6 @@ export const getHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
       }
       createdAt
       updatedAt
@@ -126,6 +105,65 @@ export const listHomeworks = /* GraphQL */ `
         isLocked
         toolHomeworkData {
           draftContent
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const getReview = /* GraphQL */ `
+  query GetReview($id: ID!) {
+    getReview(id: $id) {
+      id
+      assignmentId
+      assessorId
+      homeworkId
+      beganOnDate
+      submittedOnDate
+      comments {
+        id
+        tagNum
+        index
+        length
+        content
+        commentRating
+      }
+      criterionRatings {
+        criterionId
+        ratingGiven
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listReviews = /* GraphQL */ `
+  query ListReviews(
+    $filter: ModelReviewFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listReviews(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        assignmentId
+        assessorId
+        homeworkId
+        beganOnDate
+        submittedOnDate
+        comments {
+          id
+          tagNum
+          index
+          length
+          content
+          commentRating
+        }
+        criterionRatings {
+          criterionId
+          ratingGiven
         }
         createdAt
         updatedAt
@@ -194,6 +232,49 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
         isLocked
         toolHomeworkData {
           draftContent
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const reviewsByHmwkAndAssessorId = /* GraphQL */ `
+  query ReviewsByHmwkAndAssessorId(
+    $homeworkId: ID
+    $assessorId: ModelIDKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelReviewFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    reviewsByHmwkAndAssessorId(
+      homeworkId: $homeworkId
+      assessorId: $assessorId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        assignmentId
+        assessorId
+        homeworkId
+        beganOnDate
+        submittedOnDate
+        comments {
+          id
+          tagNum
+          index
+          length
+          content
+          commentRating
+        }
+        criterionRatings {
+          criterionId
+          ratingGiven
         }
         createdAt
         updatedAt

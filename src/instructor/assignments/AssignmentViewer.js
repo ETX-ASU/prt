@@ -59,8 +59,9 @@ function AssignmentViewer(props) {
   const [cachedStudent, setCachedStudent] = useState(null);
 
 
-  const [allocations, setAllocations] = useState([]);
-  const [cachedAllocations, setCachedAllocations] = useState(null);
+  // TODO: Allocation Change 8
+  // const [allocations, setAllocations] = useState([]);
+  // const [cachedAllocations, setCachedAllocations] = useState(null);
 
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
@@ -88,10 +89,10 @@ function AssignmentViewer(props) {
       setCachedStudent(null);
     }
 
-    if (cachedAllocations) {
-      setAllocations(cachedAllocations);
-      setCachedAllocations(null);
-    }
+    // if (cachedAllocations) {
+    //   // setAllocations(cachedAllocations);
+    //   setCachedAllocations(null);
+    // }
   }, [reviewedStudentId])
 
   useEffect(() => {
@@ -139,7 +140,9 @@ function AssignmentViewer(props) {
     });
 
     setStudents(enhancedDataStudents);
-    setAllocations(assignment.toolAssignmentData.allocations);
+
+    // TODO: Allocation Change 9
+    // setAllocations(assignment.toolAssignmentData.allocations);
   }, [assignment, members, homeworks, grades, isHideStudentIdentity]);
 
 
@@ -280,10 +283,10 @@ function AssignmentViewer(props) {
     }
   }
 
-  function onStudentUpdated(studentData, allocationsData) {
-    setCachedStudent(studentData);
-    if (allocationsData) setCachedAllocations(allocationsData);
-  }
+  // function onStudentUpdated(studentData, allocationsData) {
+  //   setCachedStudent(studentData);
+  //   if (allocationsData) setCachedAllocations(allocationsData);
+  // }
 
   return (
     <Fragment>
@@ -351,9 +354,10 @@ function AssignmentViewer(props) {
         </Fragment>
         }
 
+        {/*TODO: Allocation Change 10*/}
         {reviewedStudentId && (students?.length > 0) &&
         <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
-          allocations={allocations} students={students} onStudentUpdated={onStudentUpdated} reviewedStudentId={reviewedStudentId} />
+          students={students} reviewedStudentId={reviewedStudentId} />
         }
       </Container>
     </Fragment>

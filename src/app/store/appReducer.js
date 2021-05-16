@@ -14,6 +14,24 @@ export const REPLACE_HOMEWORKS_DATA = APP_NAMESPACE+'.REPLACE_HOMEWORKS_DATA';
 export const REPLACE_ALLOCATIONS_DATA = APP_NAMESPACE+'.REPLACE_ALLOCATIONS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
+export const SET_REVIEWS = 'SET_REVIEWS';
+export const UPDATE_REVIEW = 'UPDATE_REVIEW';
+
+
+
+export function setReviews(reviews) {
+  return {
+    type: SET_REVIEWS,
+    reviews
+  }
+}
+
+export function updateSingleReview(review) {
+  return {
+    type: UPDATE_REVIEW,
+    review
+  }
+}
 
 export function setSessionData(courseId, assignmentId, activeUser, members, lineItemId) {
   return {
@@ -76,6 +94,8 @@ export function replaceHomeworksData(homeworks) {
   }
 }
 
+
+// TODO: Allocation Change 6
 export function replaceAllocationsData(allocations) {
   return {
     type: REPLACE_ALLOCATIONS_DATA,
@@ -123,6 +143,7 @@ const defaultState = {
     activeRole: '',
     roles: []
   },
+  reviews: [],
   assignment: {},
   members: [],
   homeworks: [],
@@ -137,6 +158,16 @@ const defaultState = {
 
 function appReducer(currentState = defaultState, action) {
   switch (action.type) {
+    case SET_REVIEWS:
+      return Object.assign({}, currentState, {reviews: action.reviews});
+
+    case UPDATE_REVIEW:
+      const rIndex = currentState.reviews.findIndex(r => r.id === action.review.id);
+      const altReviews = [...currentState.reviews];
+      if (rIndex >= 0) { altReviews.splice(rIndex, 1, action.review); }
+      else { altReviews.push(action.review); }
+      return Object.assign({}, currentState, {reviews: altReviews});
+
     case SET_ACTIVE_UI_SCREEN_MODE:
       return Object.assign({}, currentState, {activeUiScreenMode: action.activeUiScreenMode});
 
@@ -172,6 +203,8 @@ function appReducer(currentState = defaultState, action) {
     case SET_ASSIGNMENT_DATA:
       return Object.assign({}, currentState, {assignment: action.assignment});
 
+
+    // TODO: Allocation Change 7
     case REPLACE_ALLOCATIONS_DATA:
       return Object.assign({}, currentState, {assignment: {...currentState.assignment, toolAssignmentData: {...currentState.assignment.toolAssignmentData, allocations: action.allocations}}});
 

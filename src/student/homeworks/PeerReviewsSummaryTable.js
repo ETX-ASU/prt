@@ -4,6 +4,7 @@ import PeerReviewSummaryRow from "./PeerReviewSummaryRow";
 import LoadingIndicator from "../../app/components/LoadingIndicator";
 
 
+// TODO: Allocation Change 15
 function PeerReviewsSummaryTable(props) {
 	const {draftsToBeReviewedByUser, activeUser, assignment, allocationMsg, onReviewPeerDraft} = props;
 	const allocations = assignment.toolAssignmentData.allocations;

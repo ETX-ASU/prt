@@ -37,12 +37,6 @@ export const createAssignment = /* GraphQL */ `
         sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
       }
       createdAt
       updatedAt
@@ -85,12 +79,6 @@ export const updateAssignment = /* GraphQL */ `
         sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
       }
       createdAt
       updatedAt
@@ -133,12 +121,6 @@ export const deleteAssignment = /* GraphQL */ `
         sequenceIds
         minReviewsRequired
         minPeersBeforeAllocating
-        allocations {
-          assessorId
-          homeworkId
-          beganOnDate
-          submittedOnDate
-        }
       }
       createdAt
       updatedAt
@@ -159,21 +141,6 @@ export const createHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
       }
       createdAt
       updatedAt
@@ -194,21 +161,6 @@ export const updateHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
       }
       createdAt
       updatedAt
@@ -229,21 +181,93 @@ export const deleteHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
-        commentsOnDraft {
-          id
-          reviewerId
-          tagNum
-          index
-          length
-          content
-          commentRating
-          criterionNum
-        }
-        criterionRatingsOnDraft {
-          reviewerId
-          criterionId
-          ratingGiven
-        }
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const createReview = /* GraphQL */ `
+  mutation CreateReview(
+    $input: CreateReviewInput!
+    $condition: ModelReviewConditionInput
+  ) {
+    createReview(input: $input, condition: $condition) {
+      id
+      assignmentId
+      assessorId
+      homeworkId
+      beganOnDate
+      submittedOnDate
+      comments {
+        id
+        tagNum
+        index
+        length
+        content
+        commentRating
+      }
+      criterionRatings {
+        criterionId
+        ratingGiven
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const updateReview = /* GraphQL */ `
+  mutation UpdateReview(
+    $input: UpdateReviewInput!
+    $condition: ModelReviewConditionInput
+  ) {
+    updateReview(input: $input, condition: $condition) {
+      id
+      assignmentId
+      assessorId
+      homeworkId
+      beganOnDate
+      submittedOnDate
+      comments {
+        id
+        tagNum
+        index
+        length
+        content
+        commentRating
+      }
+      criterionRatings {
+        criterionId
+        ratingGiven
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const deleteReview = /* GraphQL */ `
+  mutation DeleteReview(
+    $input: DeleteReviewInput!
+    $condition: ModelReviewConditionInput
+  ) {
+    deleteReview(input: $input, condition: $condition) {
+      id
+      assignmentId
+      assessorId
+      homeworkId
+      beganOnDate
+      submittedOnDate
+      comments {
+        id
+        tagNum
+        index
+        length
+        content
+        commentRating
+      }
+      criterionRatings {
+        criterionId
+        ratingGiven
       }
       createdAt
       updatedAt

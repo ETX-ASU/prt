@@ -56,6 +56,17 @@ export const EMPTY_HOMEWORK = {
   isLocked: false
 };
 
+export const EMPTY_REVIEW = {
+  id: '',
+  assignmentId: '',
+  assessorId: '',
+  homeworkId: '',
+  beganOnDate: 0,
+  submittedOnDate: 0,
+  comments: [],
+  criterionRatings: []
+};
+
 
 
 export const ALLOCATION_MESSAGES = {

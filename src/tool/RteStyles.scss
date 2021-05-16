@@ -47,12 +47,19 @@
     }
   }
 
+  textarea.form-control.form-control.read-only-mode {
+    background-color: white;
+    color: var(--x-dark-gray);
+  }
+
   h4 {
     display: inline;
   }
 }
 
-
+.comment-tag {
+  background-color: #FFFAD1;
+}
 
 /* Set dropdown font-families */
  #toolbar-container .ql-font span[data-label="Sans Serif"]::before {

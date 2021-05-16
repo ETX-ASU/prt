@@ -2,6 +2,74 @@
 
 
 
+# The bug
+1. When I create a new comment... I select the text.
+2. I click into the comment text area
+3. The ACTIVE COMMENT ID is now set
+4. This causes the text to get highlighted and the original content is captured with the
+   bright yellow highlight.
+
+## Temp solution
+The worst issue occurs on a deletion... it seems to keep the <span class="comment-tag">
+elemented and never fully removes it. I'm not sure why.
+I may want to use a crude solution in the short-term:
+When a user deletes the comment, we delete it and force-re-render the
+entire document.
+
+
+PART 1: 
+1. To ADD a comment: Add it to comments array and use this value to setComments. Set activeCommentId to new id.
+2. To DELETE: Delete from comments array and use to setComments. Set id to null.
+3. To CHANGE SELECTION: just set new id to new selection (or null)
+
+PART 2:
+1. In the useEffect([comments]) handler if comments.length changes redraw the entire
+   screen tagging the comments.
+
+PART 3:
+1. In the useEffect([activeCommentId]) handler when id changes remove `active` style
+   from prev comment (using id value css selector) from inline element. And then
+   add the `active` style to the activeComment using same technique.
+
+
+
+
+When do I pull assessments data?
+1. As an instructor for a draft assignment:
+   1. When load student homework for reviewing I look for the assessment in redux store `state.assessements`
+   2. If it isn't in there, I create one from scratch, save to redux, and continue.
+   3. After I saving or submitting assessment, I save it to DB and redux.
+   4. I'm the only one who will change that DB table entry so no fear of conflicts.
+2. As an instructor for a review session assignment:
+   1. When I load in a student's homework for reviewing, I look in redux store for all their assessments
+   2. If none exist, I pull from DB. 
+      1. If none in DB, I add entry in redux store to indicate I've pulled DB for this student
+      2. Otherwise I save that to redux store
+      3. NOT sure how I track my own assessment of a review session, but could probably fit in here
+3. As a student reviewing a peer:
+   1. When I load my dashboard I pull DB for all my assessments related to this assignment id
+   2. These get saved to redux store
+   3. If I make any edits or submit, etc., I save to DB and redux store
+   4. No conflicts as I am the only one to write to my own assessments.
+      1. A peer cannot give feedback on my comments until I submit, at which time I can no
+         longer make edits myself.
+      2. An instructor can look at an assessment but never change it directly.
+4. As a student looking at my own paper:
+   1. When I load my dashboard I pull DB for all SUBMITTED comments related to my homework
+   
+
+# EXTRAS
+
+1. Prevent page flashing from 'window resized' event by getting header bar height and saving to redux
+   and potentially saving 'homework height' values in redux as well?
+
+
+
+   
+
+   1. When load student homework for reviewing I look for the assessment in redux store.
+   1. I pull all assessments for a sll assignments at start and save to redux.
+   2. I 
 
 1. After saving or submitting I must:
    1) use query to refetch the specific assessed user's homework and update that in redux
