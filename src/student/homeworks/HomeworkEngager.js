@@ -1,18 +1,16 @@
-import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import React, {Fragment, useEffect, useRef, useState} from 'react';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
-import {ACTIVITY_PROGRESS, APP_TOP_PADDING, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
-import {Button, Container, Row, Col} from 'react-bootstrap';
+import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
+import {Button, Row} from 'react-bootstrap';
 import {updateHomework as updateHomeworkMutation} from "../../graphql/mutations";
 import {API} from "aws-amplify";
 import {setActiveUiScreenMode} from "../../app/store/appReducer";
-import HeaderBar from "../../app/components/HeaderBar";
 import {reportError} from "../../developer/DevUtils";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faCheck, faChevronLeft, faTimes} from '@fortawesome/free-solid-svg-icons'
 import ConfirmationModal from "../../app/components/ConfirmationModal";
-import QuizViewerAndEngager from "../../tool/QuizViewerAndEngager";
 import {sendAutoGradeToLMS} from "../../lmsConnection/RingLeader";
 import {
   calcAutoScore,
@@ -20,18 +18,11 @@ import {
   getAvailableContentDims, useInterval
 } from "../../tool/ToolUtils";
 import DraftWriter from "../../tool/DraftWriter";
-import ResizePanel from "react-resize-panel";
-
-import IconBackArrow from "../../assets/icon-back-arrow.svg";
-import RubricPanel from "../../instructor/assignments/RubricPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import ReactQuill from "react-quill";
-import WritersRubricViewer from "../../instructor/assignments/WritersRubricViewer";
-import userEvent from "@testing-library/user-event";
 
 library.add(faCheck, faTimes);
 
-const AUTO_SAVE_INTERVAL = 10000; // Save every 90 seconds
+const AUTO_SAVE_INTERVAL = 12000; // Save every 120 seconds
 
 /** This screen is shown to the student so they can "engage" with the homework assignment.
  * Any work they do or changes or interactions they make would be recorded and the updates
@@ -142,7 +133,7 @@ function HomeworkEngager(props) {
   }
 
   function autoSave() {
-    if (hasChangedSinceLastSave) saveOrSubmitHomework(false, true);
+    if (hasChangedSinceLastSave && !activeModal) saveOrSubmitHomework(false, true);
   }
 
   function renderModal() {
@@ -181,12 +172,6 @@ function HomeworkEngager(props) {
         <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon icon={faChevronLeft}/></Button>
         {!props.isReadOnly && <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>}
         {props.isReadOnly && <h2 id='assignmentTitle' className="inline-header">{assignment.title} <span className="inline-header-sub">(Submitted)</span></h2>}
-
-        {!props.isReadOnly &&
-        <div className={'right-side-buttons saved-status-ms'}>
-          {(isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date"}
-        </div>
-        }
       </Row>
 
       <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight}px - 3em)`}}>
@@ -202,10 +187,15 @@ function HomeworkEngager(props) {
       </div>
 
       {!props.isReadOnly &&
-      <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
-        <Button className='d-inline mr-2 ql-align-right btn-sm' disabled={isSaving} onClick={() => saveOrSubmitHomework(false)}>{isSaving ? 'Saving...' : 'Save'}</Button>
-        <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assignment</Button>
-      </div>
+      <Fragment>
+        <div className={'left-side-buttons saved-status-ms'}>
+          {(isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date"}
+        </div>
+        <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
+          <Button className='d-inline mr-2 ql-align-right btn-sm' disabled={isSaving} onClick={() => saveOrSubmitHomework(false)}>{isSaving ? 'Saving...' : 'Save'}</Button>
+          <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assignment</Button>
+        </div>
+      </Fragment>
       }
 
 		</Fragment>

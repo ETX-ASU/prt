@@ -27,12 +27,12 @@ function WritersRubricViewer(props) {
   return (
     <Container className='rubric-viewer-panel m-0 p-0'>
       <Row className='criterion-nav m-0 p-2'>
-        <Col className='p-0 m-0'>
-          <h3>{shownCriteria[critIndex].name}</h3>
+        <Col className='p-0 m-0 mb-2 col-8'>
+          <h3>{critIndex+1} of {shownCriteria.length}: {shownCriteria[critIndex].name}</h3>
         </Col>
-        <Col className='p-0 m-0 text-right'>
-          <FontAwesomeIcon className='btn-icon mr-2' icon={faChevronLeft} onClick={onPrevBtn}/>
-          <FontAwesomeIcon className='btn-icon mr-2' icon={faChevronRight} onClick={onNextBtn}/>
+        <Col className='p-0 m-0 mb-2 text-right'>
+          <Button className='d-inline mr-1 btn-sm btn-primary' onClick={onPrevBtn}><FontAwesomeIcon icon={faChevronLeft} /></Button>
+          <Button className='d-inline btn-sm btn-primary' onClick={onNextBtn}><FontAwesomeIcon icon={faChevronRight} /></Button>
         </Col>
       </Row>
       <Row className='criterion-content m-0 p-2'>

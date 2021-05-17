@@ -1,35 +1,12 @@
 # OVERVIEW OF NEXT STEPS
 
-
-
-# The bug
-1. When I create a new comment... I select the text.
-2. I click into the comment text area
-3. The ACTIVE COMMENT ID is now set
-4. This causes the text to get highlighted and the original content is captured with the
-   bright yellow highlight.
-
-## Temp solution
-The worst issue occurs on a deletion... it seems to keep the <span class="comment-tag">
-elemented and never fully removes it. I'm not sure why.
-I may want to use a crude solution in the short-term:
-When a user deletes the comment, we delete it and force-re-render the
-entire document.
-
-
-PART 1: 
-1. To ADD a comment: Add it to comments array and use this value to setComments. Set activeCommentId to new id.
-2. To DELETE: Delete from comments array and use to setComments. Set id to null.
-3. To CHANGE SELECTION: just set new id to new selection (or null)
-
-PART 2:
-1. In the useEffect([comments]) handler if comments.length changes redraw the entire
-   screen tagging the comments.
-
-PART 3:
-1. In the useEffect([activeCommentId]) handler when id changes remove `active` style
-   from prev comment (using id value css selector) from inline element. And then
-   add the `active` style to the activeComment using same technique.
+1. When instructor EDITs assignment and clicks UPDATE to save... it shows error and tells you to close the window to
+   complete creation of the assignment. HOWEVER... it DOES save the changes properly. Instead, this should just take the
+   instructor back to the previous screen showing the list of homeworks.
+   
+2. When using an image... it seems the placement value of the dots gets thrown off
+3. Sometimes, when submitting an assignment during the modal window popup... it gets
+   cancelled becuz of autosave (I think)
 
 
 

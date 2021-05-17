@@ -7,7 +7,6 @@ import {UI_SCREEN_MODES, MODAL_TYPES} from "../../app/constants";
 import {Button, Col, Container, Row} from "react-bootstrap";
 import "./assignments.scss";
 import HeaderBar from "../../app/components/HeaderBar";
-import ToggleSwitch from "../../app/components/ToggleSwitch";
 import RootPhaseSettings from "../../tool/RootPhaseSettings";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faExclamationTriangle} from "@fortawesome/free-solid-svg-icons";
@@ -16,7 +15,6 @@ import {reportError} from "../../developer/DevUtils";
 import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
 import { v4 as uuid } from "uuid";
 import BasicAssignmentSettings from "./BasicAssignmentSettings";
-import DraftPhaseSettings from "../../tool/DraftPhaseSettings";
 import ReviewPhaseSettings from "../../tool/ReviewPhaseSettings";
 import {deepCopy} from "../../app/utils/deepCopy";
 
@@ -28,7 +26,6 @@ function AssignmentEditor() {
   const isLimitedEditing = useSelector(state => Boolean(state.app.homeworks?.length));
   const [activeModal, setActiveModal] = useState(null);
 
-  // const phaseType = (formData.toolAssignmentData.roundNum%2) ? PHASE_TYPES.draft : PHASE_TYPES.reviewSession;
 
   async function handleCancelBtn(e) {
     if (!urlAssignmentId) {
@@ -75,18 +72,8 @@ function AssignmentEditor() {
       data: [formData.title]
     });
 
-
-    if (!inputData.lineItemId) {
-      await handleConnectToLMS(inputData);
-      if (window.isDevMode) {
-        inputData.lineItemId = (`FAKE-${uuid()}`);
-        await API.graphql({query: updateAssignmentMutation, variables: {input: inputData}});
-      }
-      dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.returnToLmsScreen));
-    } else {
-      dispatch(setAssignmentData(formData));
-      dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
-    }
+    dispatch(setAssignmentData(formData));
+    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
   }
 
   function returnToNewOrDupeAssignmentScreen(e) {

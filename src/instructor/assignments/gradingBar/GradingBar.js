@@ -8,7 +8,7 @@ import {sendInstructorGradeToLMS} from "../../../lmsConnection/RingLeader";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faArrowCircleLeft, faArrowCircleRight, faCaretUp, faCheck} from "@fortawesome/free-solid-svg-icons";
+import {faArrowCircleLeft, faArrowCircleRight, faCheck} from "@fortawesome/free-solid-svg-icons";
 import {calcMaxScoreForAssignment} from "../../../tool/ToolUtils";
 import {reportError} from "../../../developer/DevUtils";
 
@@ -17,12 +17,10 @@ library.add(faArrowCircleLeft, faArrowCircleRight, faCheck);
 
 function GradingBar(props) {
   const dispatch = useDispatch();
-  const activeUser = useSelector(state => state.app.activeUser);
   const {assignment, reviewedStudent} = props;
 
   const displayOrder = useSelector(state => state.app.displayOrder);
   const [scoreGiven, setScoreGiven] = useState(calcShownScore(reviewedStudent));
-  // const [homeworkStatus, setHomeworkStatus] = useState(reviewedStudent.homeworkStatus);
   const [comment, setComment] = useState('');
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
@@ -50,8 +48,6 @@ function GradingBar(props) {
   }
 
   async function handleSubmitScore() {
-    console.log("SUBMIT BTN WAS PUSHED!");
-
     const scoreDataObj = {
       assignmentId: assignment.id,
       studentId: reviewedStudent.id,
@@ -68,12 +64,11 @@ function GradingBar(props) {
   }
 
   // This is not used with the peer review tool because instructor comments are available directly as notes to student work
-  function handleCommentUpdated(e) {
-    setComment(e.target.value || '')
-  }
+  // function handleCommentUpdated(e) {
+  //   setComment(e.target.value || '')
+  // }
 
   function onScoreAdjusted(e) {
-    console.log(`score adjusted from ${e.target.value}`, scoreGiven, props.manualScore);
     setScoreGiven(parseInt(e.target.value));
   }
 
@@ -86,51 +81,50 @@ function GradingBar(props) {
         </div>
 
         <Col className='p-0 m-0'>
-            <Row className='p-0 m-0'>
-              <Col className='col-3' style={{'width':'calc(100% - 100px)'}}>
-                <h2>{(isHideStudentIdentity) ? `Student #${reviewedStudent.randomOrderNum}` : reviewedStudent.name}</h2>
-                <span className='aside'><h3 className='subtext d-inline-block'>{reviewedStudent.percentCompleted}% Complete</h3>
-                  <br/>
-                  {STATUS_TEXT[reviewedStudent.homeworkStatus]}
+          <Row className='p-0 m-0'>
+            <Col className='col-3' style={{'width':'calc(100% - 100px)'}}>
+              <h2>{(isHideStudentIdentity) ? `Student #${reviewedStudent.randomOrderNum}` : reviewedStudent.name}</h2>
+              <span className='aside'><h3 className='subtext d-inline-block'>{reviewedStudent.percentCompleted}% Complete</h3>
+                <br/>
+                {STATUS_TEXT[reviewedStudent.homeworkStatus]}
+              </span>
+            </Col>
+            <Col className='col-9 pt-1 pb-2 xbg-light'>
+              <div className='ml-0 mr-4 d-inline-block align-top'>
+                <label htmlFor='autoScore' className='xtext-darkest'>Selected Score</label>
+                <div className={'selected-score'} id={`yourScore`}>{`${props.manualScore} of 100`}</div>
+                {/*<div id={`yourScore`}>{`${reviewedStudent.autoScore} of ${calcMaxScoreForAssignment(assignment)}`}</div>*/}
+              </div>
+              <div className='mr-4 d-inline-block align-top'>
+                <label htmlFor='yourScore' className='xtext-darkest'>Given Score</label>
+                <input id={`yourScore`}
+                       type="number"
+                       className='form-control'
+                       min={0} max={100}
+                       onChange={onScoreAdjusted}
+                       value={scoreGiven}
+                />
+              </div>
+
+              {reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded &&
+              <div className='mr-2 mt-4 d-inline-block align-top'>
+                <FontAwesomeIcon className={'ml-2 mr-2'} icon={faCheck} />
+              </div>
+              }
+
+              {reviewedStudent.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded &&
+              <div className='mr-1 pt-3 d-inline-block align-middle float-right'>
+                <span className='ml-1 mr-0'>
+                  <Button
+                    ref={props.submitBtnRef}
+                    className='btn-med xbg-darkest'
+                    // disabled={reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded}
+                    onClick={handleSubmitScore}>{(reviewedStudent.scoreGiven !== undefined) ? `Update` : `Submit`}</Button>
                 </span>
-              </Col>
-              <Col className='col-9 pt-1 pb-2 xbg-light'>
-                <div className='ml-0 mr-4 d-inline-block align-top'>
-                  <label htmlFor='autoScore' className='xtext-darkest'>Selected Score</label>
-                  <div className={'selected-score'} id={`yourScore`}>{`${props.manualScore} of 100`}</div>
-                  {/*<div id={`yourScore`}>{`${reviewedStudent.autoScore} of ${calcMaxScoreForAssignment(assignment)}`}</div>*/}
-                </div>
-                <div className='mr-4 d-inline-block align-top'>
-                  <label htmlFor='yourScore' className='xtext-darkest'>Given Score</label>
-                  <input id={`yourScore`}
-                         type="number"
-                         className='form-control'
-                         min={0} max={100}
-                         onChange={onScoreAdjusted}
-                         value={scoreGiven}
-                  />
-                </div>
-
-                {reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded &&
-                <div className='mr-2 mt-4 d-inline-block align-top'>
-                  <FontAwesomeIcon className={'ml-2 mr-2'} icon={faCheck} />
-                </div>
-                }
-
-                {reviewedStudent.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded &&
-                <div className='mr-1 pt-3 d-inline-block align-middle float-right'>
-                  <span className='ml-1 mr-0'>
-                    <Button
-                      ref={props.submitBtnRef}
-                      className='btn-med xbg-darkest'
-                      // disabled={reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded}
-                      onClick={handleSubmitScore}>{(reviewedStudent.scoreGiven !== undefined) ? `Update` : `Submit`}</Button>
-                  </span>
-                </div>
-                }
-              </Col>
-
-            </Row>
+              </div>
+              }
+            </Col>
+          </Row>
         </Col>
 
         <div className='d-inline-block p-0 m-0 text-right my-auto' style={{'maxWidth':'40px'}}>
