@@ -279,6 +279,12 @@
 
           &.rank-btn {
             cursor: pointer;
+            background-color: #007bffaa; // primary blue
+            color: white;
+
+            &:hover {
+              background-color: black;
+            }
           }
         }
 
@@ -339,6 +345,7 @@
         &.locked.rank-summary {
           .rank-btn {
             cursor: default;
+            background-color: limegreen;
           }
         }
 
@@ -354,6 +361,11 @@
 
         &.mark-as-selected {
           pointer-events: all;
+
+          .rank-title.rank-btn {
+            pointer-events: none;
+            background-color: limegreen;
+          }
         }
       }
 
