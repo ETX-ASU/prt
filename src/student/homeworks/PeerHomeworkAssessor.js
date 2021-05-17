@@ -31,7 +31,7 @@ const MIN_TOP_ZONE_PERCENT = 10;
 
 
 function PeerHomeworkAssessor(props) {
-  const {homework, assignment, isInstructorAssessment, submitBtnRef, onReviewUpdated, onRatingChanges, review} = props;
+  const {homework, assignment, isInstructorAssessment, triggerSubmit, clearTrigger, onRatingChanges, review} = props;
   const {toolHomeworkData} = homework;
 
   const dragBarRef = useRef(null);
@@ -60,6 +60,7 @@ function PeerHomeworkAssessor(props) {
 
 
   useEffect(() => {
+    console.log(` >>> PeerHomeworkAssessor: []`)
     const tagsElem = document.getElementById('comments-layer-wrapper');
     reactQuillRef.current.editor.addContainer(tagsElem);
 
@@ -70,7 +71,7 @@ function PeerHomeworkAssessor(props) {
     setOrigContent(reactQuillRef.current.editor.getContents(0));
     setUserComments(getInitializedUserComments(review.comments));
 
-    if (submitBtnRef.current) submitBtnRef.current.onclick = onSubmit;
+    // if (submitBtnRef.current) submitBtnRef.current.onclick = onSubmit;
     onWindowResized();
 
     return () => {
@@ -84,6 +85,7 @@ function PeerHomeworkAssessor(props) {
   }, [props.excessHeight])
 
   useEffect(() => {
+    console.log(` >>> PeerHomeworkAssessor: [activeCommentId]`)
     if (activeCommentId === prevCommentId) return;
 
     if (prevCommentId) {
@@ -97,11 +99,13 @@ function PeerHomeworkAssessor(props) {
     }
   }, [activeCommentId])
 
-
-  function onSubmit() {
-    console.log("SUBMIT PUSHED, YO!!!!!!!!!!!!!!!!!!!!!!!")
+  useEffect(() => {
+    if (!triggerSubmit) return;
+    console.log("SUBMIT PUSHED, YO.", review.criterionRatings)
     saveUpdatesToServer(review, true);
-  }
+    clearTrigger();
+  }, [triggerSubmit])
+
 
   function getInitializedUserComments(comments) {
     const editor = reactQuillRef.current.editor;
@@ -254,9 +258,9 @@ function PeerHomeworkAssessor(props) {
       ratings.push(rating);
     }
 
+    onRatingChanges(ratings);
     const altReview = {...review, criterionRatings: ratings};
     saveUpdatesToServer(altReview)
-    onRatingChanges(ratings);
   }
 
 
@@ -282,11 +286,13 @@ function PeerHomeworkAssessor(props) {
     }));
 
     try {
-      // console.log(`using input data: `, inputData);
+      console.log(`using input data: `, inputData);
       const result = await API.graphql({query: updateReview, variables: {input: inputData}});
+      console.log("result from saveRatingUpdatesToServer()", result)
+
+      console.log(`updateSingleReview() data: `, data);
       dispatch(updateSingleReview(data))
 
-      console.log("saveRatingUpdatesToServer()", result)
     } catch (error) {
       reportError(error, `We're sorry. An error occurred while trying to save your assessment changes. Please wait a moment and try again.`);
     }

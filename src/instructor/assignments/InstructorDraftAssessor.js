@@ -14,8 +14,6 @@ import {v4 as uuid} from "uuid";
 import moment from "moment";
 import {createHomework, createReview} from "../../graphql/mutations";
 import {setActiveUiScreenMode, setReviews, updateSingleReview} from "../../app/store/appReducer";
-import {fetchGradeForStudent} from "../../lmsConnection/RingLeader";
-import {getHomeworkStatus} from "../../tool/ToolUtils";
 
 
 function InstructorDraftAssessor(props) {
@@ -32,8 +30,10 @@ function InstructorDraftAssessor(props) {
 
   const gradingBarRef = useRef(null);
   const submitBtnRef = useRef(null);
+  const peerAssessorRef = useRef(null);
   const [gradingBarHeight, setGradingBarHeight] = useState(200);
   const [manualScore, setManualScore] = useState(0);
+  const [triggerSubmit, setTriggerSubmit] = useState(false);
 
   const maxPosRatingPoints = Math.max(...assignment.toolAssignmentData.rubricRanks.map(r => r.points));
   // const [allocations, setAllocations] = useState(assignment.toolAssignmentData.allocations);
@@ -48,13 +48,15 @@ function InstructorDraftAssessor(props) {
   }, [gradingBarRef])
 
   useEffect(() => {
+    console.log(` >>> InstructorDraftAssessor: [ reviewsByActiveUser | reviewedStudentId]`)
+
     if (!students.length) return;
     if (!reviewedStudentId) {
       setReviewOfStudent(null);
       return;
     }
 
-    console.log(`#students = ${students.length}, #instructorReviews = ${reviewsByActiveUser.length}, reviewedStudent = ${reviewedStudentId}`)
+    console.log(`#instructorReviews = ${reviewsByActiveUser.length}, reviewedStudent = ${reviewedStudentId}`)
 
 
     let theStudent = students.find(s => s.id === reviewedStudentId);
@@ -66,7 +68,7 @@ function InstructorDraftAssessor(props) {
       setReviewedStudent(theStudent);
     }
 
-  }, [students, reviewsByActiveUser, reviewedStudentId])
+  }, [reviewsByActiveUser, reviewedStudentId])
 
 
 
@@ -167,46 +169,22 @@ function InstructorDraftAssessor(props) {
       reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded);
   }
 
-  // TODO: we are passing allocations separate from assignment.toolAssignmentData.allocations.
-/*
-  This breaks DRY principle and I need to assess a fix. The advantage of this solution is that
-  the assignment data is really only loaded at the start or after an assignment edit.
-  Caching the allocations data means no need to refetch the data from DB on every little save
-  because this acts as a kind of optimistic update. We update locally and don't care about what is on
-  the server until an edit was made to the assignment itself or the app is reloaded.
+  function refreshHandler() {
+    console.log('InstructorDraftAssessor.refreshHandler() called');
+    setTriggerSubmit(true);
+    props.refreshGrades();
+  }
 
-  BUT HERE'S THE CATCH: As instructor, I'm assessing Student A which changes the homework.commentsOnDraft and .ratingsOnDraft
-  and those changes are made to the DB. Each edit is saved each time I click off the notes area. Focus changes,
-  student A's commentsOnDraft are changed.
+  function clearTrigger() {
+    setTriggerSubmit(false);
+  }
 
-  I'm doing this optimistically. Now what happens when I'm a student reviewing peer A. And another student is reviewing
-  peer A at the SAME TIME. By NOT refetching, they both assume they have the most recent commentsOnDraft for peer A.
-
-  I start making comments using Data Snapshot 1. Other student makes a few comments using Snapshot 1. I save 3 new comments,
-  basically SnapShot 1 + My Additions, and I leave. Other student edits a comment and saves SnapShot 1 + Their Edit. It overwrites
-  what I did.
-
-  Before I can save, I must fetch homeworks to ensure I don't have this problem.
-
-  This is not the case as an instructor because I am the ONLY allocated to make comments on a DRAFT writing assignment.
-  As an instructor, I'm the only one who will be adding comments and ratings to a student homework during a DRAFT writing assignment,
-  and on a REVIEW SESSION assignment, I will be using a different mechanism.
-
-  This is also not an issue for allocations data because of the same reason.
-
-  AS A STUDENT: Fetch allocations before save or submit.
-  AS A STUDENT: Fetch assessedUserHomework before save or submit.
-*/
-
-
-  // TODO: Allocation Change 11 & 12
 	return (
 	  <Fragment>
         <div ref={gradingBarRef}>
           <GradingBar
-            submitBtnRef={submitBtnRef}
             manualScore={manualScore}
-            refreshHandler={props.refreshGrades}
+            refreshHandler={refreshHandler}
             assignment={assignment}
             reviewedStudent={reviewedStudent}
           />
@@ -222,10 +200,11 @@ function InstructorDraftAssessor(props) {
         <Row className={'m-0 p-0 h-100'}>
           <Col className='rounded p-0'>
             <PeerHomeworkAssessor
-              // refreshHandler={fetchAndSetActiveUserCurrentHomework}
+              triggerSubmit={triggerSubmit}
+              clearTrigger={clearTrigger}
+
               key={reviewedStudent.id}
               excessHeight={gradingBarHeight}
-              submitBtnRef={submitBtnRef}
               isInstructorAssessment={true}
               assignment={assignment}
               homework={reviewedStudent.homework}

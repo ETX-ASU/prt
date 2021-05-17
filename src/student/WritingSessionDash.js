@@ -255,7 +255,7 @@ function StudentDashboard() {
 
 
 	return (
-		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100'>
+		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100 position-relative'>
 
 			{isLoading &&
 			<Row className='m-0 p-0'>
