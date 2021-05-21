@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useState} from 'react';
 import {API} from 'aws-amplify';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
@@ -7,20 +7,16 @@ import { v4 as uuid } from "uuid";
 import {createAssignment as createAssignmentMutation} from '../../graphql/mutations';
 import {MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
 import {setActiveUiScreenMode} from "../../app/store/appReducer";
-import "./assignments.scss";
+import {Button, Container, Row} from "react-bootstrap";
 
-import {Button, Col, Container, Row} from "react-bootstrap";
 import HeaderBar from "../../app/components/HeaderBar";
-import ToggleSwitch from "../../app/components/ToggleSwitch";
-
 import RootPhaseSettings from "../../tool/RootPhaseSettings";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {reportError} from "../../developer/DevUtils";
-import {createAssignmentInLms, handleConnectToLMS} from "../../lmsConnection/RingLeader";
-import {calcMaxScoreForAssignment, generateDefaultRubric} from "../../tool/ToolUtils";
+import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
+import {generateDefaultRubric} from "../../tool/ToolUtils";
 import BasicAssignmentSettings from "./BasicAssignmentSettings";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faChevronLeft} from "@fortawesome/free-solid-svg-icons";
+import "./assignments.scss";
 
 
 const tempRanks = [

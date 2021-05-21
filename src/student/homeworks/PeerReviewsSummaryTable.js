@@ -6,30 +6,28 @@ import LoadingIndicator from "../../app/components/LoadingIndicator";
 
 // TODO: Allocation Change 15
 function PeerReviewsSummaryTable(props) {
-	const {draftsToBeReviewedByUser, activeUser, assignment, allocationMsg, onReviewPeerDraft} = props;
-	const allocations = assignment.toolAssignmentData.allocations;
+	const {reviewsByUser, draftsToBeReviewedByUser, roundNum, allocationMsg, onReviewPeerDraft} = props;
 
-	if (!draftsToBeReviewedByUser && !assignment) return (<LoadingIndicator loadingMsg={'LOADING PEER REVIEW DRAFT ASSIGNMENTS'} size={3} />);
+	if (!draftsToBeReviewedByUser) return (<LoadingIndicator loadingMsg={'LOADING PEER REVIEW DRAFT ASSIGNMENTS'} size={3} />);
 	if (allocationMsg) return (<div className={'m-3'}>{allocationMsg}</div>);
 
-	const roundNum = assignment.toolAssignmentData.sequenceIds.length - 1;
 	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][roundNum] + ' Draft';
 
 	let enhancedDraftsToBeReviewed = draftsToBeReviewedByUser.map((d,i) => {
-		const allocation = allocations.find(a => a.assessorId === activeUser.id && a.homeworkId === d.id);
-		let btnLabel = (allocation.submittedOnDate) ? PEER_REVIEW_BTN_LABELS.Submitted :
-			(allocation.beganOnDate) ? PEER_REVIEW_BTN_LABELS.InProgress : PEER_REVIEW_BTN_LABELS.NotBegun;
+		const review = reviewsByUser.find(r => r.homeworkId === d.id);
+		let btnLabel = (review.submittedOnDate) ? PEER_REVIEW_BTN_LABELS.Submitted :
+			(review.beganOnDate) ? PEER_REVIEW_BTN_LABELS.InProgress : PEER_REVIEW_BTN_LABELS.NotBegun;
 
 		return ({
 			key: d.id,
 			versionName: draftName,
 			feedbackRating: 'not available',
 			btnLabel,
-			allocation
+			review
 		})
 	});
 
-	enhancedDraftsToBeReviewed.sort((a,b) => a.allocation.submittedOnDate - b.allocation.submittedOnDate);
+	enhancedDraftsToBeReviewed.sort((a,b) => a.review.submittedOnDate - b.review.submittedOnDate);
 
 
 	return (

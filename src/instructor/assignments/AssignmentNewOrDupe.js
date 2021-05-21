@@ -21,8 +21,6 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import { faPlus, faCopy } from '@fortawesome/free-solid-svg-icons'
 import {reportError} from "../../developer/DevUtils";
-import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
-// import AssignmentsSelectionList from "../lmsLinkage/AssignmentsSelectionList";
 library.add(faCopy, faPlus);
 
 const ASSIGNMENT_CHOICE = {

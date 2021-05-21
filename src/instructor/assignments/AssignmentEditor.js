@@ -12,8 +12,6 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faExclamationTriangle} from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {reportError} from "../../developer/DevUtils";
-import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
-import { v4 as uuid } from "uuid";
 import BasicAssignmentSettings from "./BasicAssignmentSettings";
 import ReviewPhaseSettings from "../../tool/ReviewPhaseSettings";
 import {deepCopy} from "../../app/utils/deepCopy";
@@ -108,6 +106,8 @@ function AssignmentEditor() {
             <p>Canceling will loose any changes you may have made to your {activeModal.data[0]} assignment.</p>
           </ConfirmationModal>
         )
+      default:
+        return;
     }
   }
 

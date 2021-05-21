@@ -1,27 +1,7 @@
-import {APP_TOP_PADDING, EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
+import {EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
 import {EMPTY_CRITERION, EMPTY_RUBRIC} from "./constants";
 import {v4 as uuid} from "uuid";
 import React from "react";
-import {useEffect} from "react";
-
-
-
-// export function sizerFunc(zoneRefs, widthSetter, heightSetter, toolBarHeightSetter) {
-//   return () => {
-//
-//     function onWindowResized() {
-//       const {width, height} = getAvailableContentDims(zoneRefs.headerZoneRef, zoneRefs.footerZoneRef, zoneRefs.rteToolbar)
-//       if (heightSetter) heightSetter(height - (zoneRefs.extraHeight || 0));
-//       if (widthSetter) widthSetter(width - (zoneRefs.extraWidth || 0));
-//     }
-//     window.addEventListener('resize', onWindowResized);
-//     onWindowResized();
-//
-//     return () => {
-//       window.removeEventListener('resize', onWindowResized);
-//     }
-//   }
-// }
 
 
 export function getAvailableContentDims(headerElem, footerElem, extra) {

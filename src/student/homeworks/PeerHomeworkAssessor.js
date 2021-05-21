@@ -24,7 +24,7 @@ import {updateReview} from "../../graphql/mutations";
 library.add(faCheck, faTimes, faGripLines);
 
 const MAX_TOP_ZONE_PERCENT = 80;
-const MIN_TOP_ZONE_PERCENT = 10;
+const MIN_TOP_ZONE_PIXELS = 70;
 
 
 
@@ -249,7 +249,7 @@ function PeerHomeworkAssessor(props) {
       ratings.push(rating);
     }
 
-    onRatingChanges(ratings);
+    if (onRatingChanges) onRatingChanges(ratings);
     const altReview = {...review, criterionRatings: ratings};
     saveUpdatesToServer(altReview)
   }
@@ -345,11 +345,14 @@ function PeerHomeworkAssessor(props) {
       let curY = e.clientY;
       let pixelDeltaY = curY - dragStartY;
       let percentDeltaY = pixelDeltaY/availableHeight * 100;
-      let btnHeightPerc = 22/availableHeight * 100;
+      // let btnHeightPerc = 22/availableHeight * 100;
+      let btnHeightPerc = 48/availableHeight * 100;
 
       let newPerc = origTopZonePerc + percentDeltaY;
       let nextTopPerc = Math.min(newPerc, MAX_TOP_ZONE_PERCENT-btnHeightPerc);
-      nextTopPerc = Math.max(nextTopPerc, MIN_TOP_ZONE_PERCENT+btnHeightPerc);
+
+      let minTopPercent = MIN_TOP_ZONE_PIXELS/availableHeight * 100
+      nextTopPerc = Math.max(nextTopPerc, minTopPercent+btnHeightPerc);
       setTopZonePercent(nextTopPerc);
     }
 
@@ -372,7 +375,8 @@ function PeerHomeworkAssessor(props) {
       }
 
 			<div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
-        <div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>
+        {/*<div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>*/}
+        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent/100)}px)`}}>
           <RubricAssessorPanel
             isReadOnly={!!review.submittedOnDate}
             isShowCriteriaPercents={isInstructorAssessment}

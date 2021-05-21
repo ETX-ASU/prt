@@ -1,12 +1,11 @@
-import React, {Fragment, useEffect, useRef, useState} from 'react';
+import React, {Fragment, useEffect, useState} from 'react';
 import {Container, Row, Col, Button, Card} from 'react-bootstrap';
 import { v4 as uuid } from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faTrash, faPlus, faEye, faCopy, faEllipsisV, faEyeSlash} from '@fortawesome/free-solid-svg-icons'
+import {faTrash, faPlus, faEye, faEllipsisV, faEyeSlash} from '@fortawesome/free-solid-svg-icons'
 import RubricPanel from "../instructor/assignments/RubricPanel";
 import {deepCopy} from "../app/utils/deepCopy";
-import {PHASE_TYPES} from "./constants";
 library.add(faTrash, faPlus, faEllipsisV, faEyeSlash);
 
 

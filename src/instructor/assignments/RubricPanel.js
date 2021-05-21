@@ -1,5 +1,5 @@
-import React, {Fragment, useEffect, useState} from 'react';
-import {Tabs, Tab, Button, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
+import React, {Fragment, useState} from 'react';
+import {Tab, Button, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
@@ -12,7 +12,7 @@ const MAX_NUM_CRITERIA = 10;
 const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricPanel(props) {
-  const {rubricCriteria, rubricRanks, isReviewerMode, isLimitedEditing} = props;
+  const {rubricCriteria, rubricRanks, isLimitedEditing} = props;
   // Note: In instructor/edit mode, ALL criteria and ranks are shown even when they are marked to be hidden from students
   const shownCriteria = (props.isEditMode) ? deepCopy(rubricCriteria) : rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);;
   const shownRanks = (props.isEditMode) ? deepCopy(rubricRanks) : rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);

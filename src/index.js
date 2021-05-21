@@ -13,7 +13,7 @@ import store from './app/combinedStore';
 
 
 // THIS SHOULD BE SET TO FALSE FOR LIVE PRODUCTION VERSION
-window.isDevMode = false;
+window.isDevMode = true;
 window.isMockingFailures = false;
 
 Amplify.configure(config);

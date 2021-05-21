@@ -11,7 +11,7 @@ import {
 } from "../../app/store/appReducer";
 import {Button, Container, Row, Col} from 'react-bootstrap';
 import {API, graphqlOperation} from "aws-amplify";
-import {listFullHomeworks} from "../../graphql/customQueries";
+import {listHomeworks} from "../../graphql/queries";
 import InstructorDraftAssessor from "./InstructorDraftAssessor";
 import HomeworkListing from "./HomeworkListing";
 import {fetchAllGrades, sendInstructorGradeToLMS} from "../../lmsConnection/RingLeader";
@@ -19,7 +19,7 @@ import HeaderBar from "../../app/components/HeaderBar";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faEdit, faPen, faChevronLeft, faCheck} from "@fortawesome/free-solid-svg-icons";
+import {faEdit, faPen, faChevronLeft} from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
 import {shuffle} from "../../app/utils/shuffle";
 import {
@@ -88,11 +88,6 @@ function AssignmentViewer(props) {
       setStudents(altStudents);
       setCachedStudent(null);
     }
-
-    // if (cachedAllocations) {
-    //   // setAllocations(cachedAllocations);
-    //   setCachedAllocations(null);
-    // }
   }, [reviewedStudentId])
 
   useEffect(() => {
@@ -167,7 +162,7 @@ function AssignmentViewer(props) {
   async function fetchBatchOfHomeworks(token) {
     if (token === "INIT") token = null;
 
-    API.graphql(graphqlOperation(listFullHomeworks, {
+    API.graphql(graphqlOperation(listHomeworks, {
       filter: {assignmentId: {eq: assignment.id}},
       nextToken: token
     }))

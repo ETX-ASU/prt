@@ -1,19 +1,17 @@
 import React, {Fragment, useEffect, useRef, useState} from 'react';
 import {useDispatch, useSelector} from "react-redux";
-import {EMPTY_HOMEWORK, EMPTY_REVIEW, HOMEWORK_PROGRESS, UI_SCREEN_MODES} from "../../app/constants";
+import {EMPTY_REVIEW, HOMEWORK_PROGRESS} from "../../app/constants";
 import {Row, Col} from 'react-bootstrap';
 import "../../student/homeworks/homeworks.scss";
 import GradingBar from "./gradingBar/GradingBar";
 import PeerHomeworkAssessor from "../../student/homeworks/PeerHomeworkAssessor";
-import {deepCopy} from "../../app/utils/deepCopy";
-import {API, graphqlOperation} from "aws-amplify";
-import {fullHomeworkByAsmntAndStudentId, listFullHomeworks} from "../../graphql/customQueries";
+import {API} from "aws-amplify";
 import {reportError} from "../../developer/DevUtils";
 import {reviewsByHmwkAndAssessorId} from "../../graphql/queries";
 import {v4 as uuid} from "uuid";
 import moment from "moment";
-import {createHomework, createReview} from "../../graphql/mutations";
-import {setActiveUiScreenMode, setReviews, updateSingleReview} from "../../app/store/appReducer";
+import {createReview} from "../../graphql/mutations";
+import {updateSingleReview} from "../../app/store/appReducer";
 
 
 function InstructorDraftAssessor(props) {
@@ -29,14 +27,12 @@ function InstructorDraftAssessor(props) {
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   const gradingBarRef = useRef(null);
-  const submitBtnRef = useRef(null);
-  const peerAssessorRef = useRef(null);
   const [gradingBarHeight, setGradingBarHeight] = useState(200);
   const [manualScore, setManualScore] = useState(0);
   const [triggerSubmit, setTriggerSubmit] = useState(false);
 
   const maxPosRatingPoints = Math.max(...assignment.toolAssignmentData.rubricRanks.map(r => r.points));
-  // const [allocations, setAllocations] = useState(assignment.toolAssignmentData.allocations);
+
 
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
@@ -69,8 +65,6 @@ function InstructorDraftAssessor(props) {
     }
 
   }, [reviewsByActiveUser, reviewedStudentId])
-
-
 
 
   async function fetchReviewAndSetReviewedStudent(theStudent) {
@@ -115,7 +109,6 @@ function InstructorDraftAssessor(props) {
     let height = gradingBarRef.current.getBoundingClientRect().height;
     setGradingBarHeight(height + 120);
   }
-
 
 
   // function onReviewUpdated(studentHomework, updatedAllocations) {

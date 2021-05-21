@@ -206,6 +206,7 @@ export const minHomeworkIdsBySubmittedDate = /* GraphQL */ `
     }
   }
 `;
+
 export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
   query FullHomeworkByAsmntAndStudentId(
     $assignmentId: ID
@@ -252,6 +253,47 @@ export const reviewsByHmwkAndAssessorId = /* GraphQL */ `
     reviewsByHmwkAndAssessorId(
       homeworkId: $homeworkId
       assessorId: $assessorId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        assignmentId
+        assessorId
+        homeworkId
+        beganOnDate
+        submittedOnDate
+        comments {
+          id
+          tagNum
+          index
+          length
+          content
+          commentRating
+        }
+        criterionRatings {
+          criterionId
+          ratingGiven
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const reviewsByAsmntId = /* GraphQL */ `
+  query ReviewsByAsmntId(
+    $assignmentId: ID
+    $sortDirection: ModelSortDirection
+    $filter: ModelReviewFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    reviewsByAsmntId(
+      assignmentId: $assignmentId
       sortDirection: $sortDirection
       filter: $filter
       limit: $limit

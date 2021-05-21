@@ -34,14 +34,14 @@ function App() {
   const mode = params.get('mode');
 
   useEffect(() => {
-    console.log(`------------ initialize`);
+    // console.log(`------------ initialize`);
     // in selection mode I have userId, courseId, mode="selectAssignment", activeRole="instructor"
     const userIdParam = params.get('userId');
     const activeRoleParam = params.get('role');
     const assignmentIdParam = params.get('assignmentId');
     const courseIdParam = params.get('courseId');
 
-    console.warn(`uId, role, resId, cId, lineItemId: ${userIdParam} | ${activeRoleParam} | ${assignmentIdParam} | ${courseIdParam} | ${lineItemId}`)
+    // console.warn(`uId, role, resId, cId, lineItemId: ${userIdParam} | ${activeRoleParam} | ${assignmentIdParam} | ${courseIdParam} | ${lineItemId}`)
 
 
     if (activeRoleParam === ROLE_TYPES.dev && !window.isDevMode) { throw new Error("Can NOT use dev role when not in DevMode. Set DevMode to true in codebase.") }
@@ -63,7 +63,6 @@ function App() {
    * and fetch homework associated with each student
    */
 	useEffect(() => {
-    console.log(`------------ assignmentId changed to: ${assignmentId}`);
 	  if (assignmentId && activeUser.id) {
 	    initializeAssignmentAndHomeworks()
     }
@@ -136,7 +135,7 @@ function App() {
         delete inputData.updatedAt;
 
         const updateResult = await API.graphql({query: updateAssignment, variables: {input: inputData}});
-        if (updateResult) console.log(`linking assignment ${assignment.id} in DB to use lineItemId: ${lineItemId}`);
+        // if (updateResult) console.log(`linking assignment ${assignment.id} in DB to use lineItemId: ${lineItemId}`);
         if (!updateResult) reportError('', 'Could not update lineItemId link in tool database');
       }
 		} catch (error) {
@@ -146,7 +145,7 @@ function App() {
 
 	return (
 		<Container id='app-container' className="app pt-4 mb-0 p-0 vh-100">
-			<div id='version-number'>v3.2</div>
+			<div id='version-number'>v3.3</div>
 			<Row className='main-content-row'>
 				{!activeUser?.id && <LoadingIndicator msgClasses='xtext-white' loadingMsg='LOADING'/>}
 				{activeUser.activeRole === ROLE_TYPES.dev && <DevUtilityDashboard />}

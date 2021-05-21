@@ -291,6 +291,7 @@
         textarea.rank-text {
           border: none;
           width: 100%;
+          min-height: 1px;
           height: calc(100% - 1.75rem);
           overflow-y: auto;
           resize: none;
@@ -331,6 +332,7 @@
           color: white;
           text-align: center;
           vertical-align: middle;
+          overflow-y: hidden;
 
           .hidden-indicator, .selected-indicator {
             display: inline-block;
@@ -343,6 +345,7 @@
 
 
         &.locked.rank-summary {
+          overflow-y: hidden;
           .rank-btn {
             cursor: default;
             background-color: limegreen;
@@ -352,10 +355,12 @@
         .selected-marker {
           pointer-events: none;
           background-color: limegreen;
+          overflow-y: hidden;
         }
 
         &.mark-as-hidden .hidden-marker, &.mark-as-selected .selected-marker {
           display: block;
+          overflow-y: hidden;
           //opacity: 0.25;
         }
 
