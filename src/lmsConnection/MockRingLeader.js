@@ -1,4 +1,4 @@
-import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, ROLE_TYPES} from "../app/constants";
+import {ROLE_TYPES} from "../app/constants";
 
 
 const getAsyncSpecs = () => {
@@ -10,35 +10,9 @@ const getAsyncSpecs = () => {
 
 export const mockHasValidSession = () => window.isDevMode;
 
-export const mockSubmitResourceSelection = (submissionContentItem) => new Promise(function (resolve, reject) {
+export const mockSubmitResourceSelection = () => new Promise(function (resolve, reject) {
   const {isMockFailureResult, mockDuration} = getAsyncSpecs();
 
-  // const fakeFormScript = `
-  //   <form id="ltijs_submit"
-  //     style="display: none;"
-  //     action="platform.deepLinkingSettings.deep_link_return_url"
-  //     method="POST">
-  //       <input type="hidden" name="JWT" value="message" />
-  //   </form>
-  //   <script>
-  //   document.getElementById("ltijs_submit").submit()
-  //   </script>;
-  // `;
-
-  // console.log('got result of ', dataResult);
-  // let scriptElem = document.createElement('div');
-  // scriptElem.innerHTML = dataResult;
-  // document.body.appendChild(scriptElem);
-  // const fakeForm = `
-  //   <form id='ltijs_submit' style:"display:none">
-  //     <input type="hidden" name="JWT" value="fakeVals" />
-  //   </form>
-  //   <script>
-  //     // document.getElementById("ltijs_submit").submit()
-  //     console.log("running fake form submission script");
-  //     // window.location.replace("http://www.w3schools.com");
-  //   </script>
-  // `
 
   if (isMockFailureResult) {
     setTimeout(() => reject(new Error("====> MOCK ERROR triggered by MOCKED mockGetResourceId()")), mockDuration);
@@ -223,14 +197,15 @@ export const generateMockMembers = (total)=> {
   let studentId = 10;
 
   while(members.length <= total) {
+    const thePrefix = prefixes[prefixNum];
     const memberSet = testNames.map((n,i) => {
       return {
         id: (studentId+i).toString(),
         status: "Active",
-        name: `${n.givenName} ${n.familyName}${prefixes[prefixNum]}`,
+        name: `${n.givenName} ${n.familyName}${thePrefix}`,
         givenName: n.givenName,
-        familyName: `${n.familyName}${prefixes[prefixNum]}`,
-        email: `${n.givenName}.${n.familyName}${prefixes[prefixNum]}@FakeMail.com`,
+        familyName: `${n.familyName}${thePrefix}`,
+        email: `${n.givenName}.${n.familyName}${thePrefix}@FakeMail.com`,
         roles: ["learner"],
         picture: ""
       }

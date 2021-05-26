@@ -14,6 +14,7 @@ export const REPLACE_HOMEWORKS_DATA = APP_NAMESPACE+'.REPLACE_HOMEWORKS_DATA';
 export const REPLACE_ALLOCATIONS_DATA = APP_NAMESPACE+'.REPLACE_ALLOCATIONS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
+export const SET_HOMEWORK_STUBS = 'SET_HOMEWORK_STUBS';
 export const SET_REVIEWS = 'SET_REVIEWS';
 export const UPDATE_REVIEW = 'UPDATE_REVIEW';
 
@@ -23,6 +24,13 @@ export function setReviews(reviews) {
   return {
     type: SET_REVIEWS,
     reviews
+  }
+}
+
+export function setHomeworkStubs(homeworkStubs) {
+  return {
+    type: SET_HOMEWORK_STUBS,
+    homeworkStubs
   }
 }
 
@@ -147,6 +155,7 @@ const defaultState = {
   assignment: {},
   members: [],
   homeworks: [],
+  homeworkStubs: [],
   draftsToBeReviewedByUser: [],
   grades: [],
   currentlyReviewedStudentId: '',
@@ -160,6 +169,9 @@ function appReducer(currentState = defaultState, action) {
   switch (action.type) {
     case SET_REVIEWS:
       return Object.assign({}, currentState, {reviews: action.reviews});
+
+    case SET_HOMEWORK_STUBS:
+      return Object.assign({}, currentState, {homeworkStubs: action.homeworkStubs});
 
     case UPDATE_REVIEW:
       const rIndex = currentState.reviews.findIndex(r => r.id === action.review.id);

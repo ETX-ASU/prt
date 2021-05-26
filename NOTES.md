@@ -1,5 +1,20 @@
 # OVERVIEW OF NEXT STEPS
 
+http://localhost:3000/assignment?userId=11&courseId=course-002&role=learner&assignmentId=5a8cd647-00dc-40f5-b307-3a0436c16a6e
+
+
+1. When giving a review, I should not be able to "SUBMIT" until I've provided at least 1 comment and
+   selected a rank for every criterion
+2. When student sees ReviewSessionDash, selects "BeginReview", makes rank selection and returns the button doesn't get updated 
+   to say "continue review" when student returns to ReviewSessionDash
+3. When student reviews assessments received from peers, they should see indication it is from instructor
+4. Instead of button to show next review received, perhaps show text link buttons: INSTRUCTOR | PEER A | PEER B | PEER C
+5. Perhaps change placement of those buttons
+6. Add "assessment saved" msg to bottom left of screen
+7. Add automatic saving interval
+8. Add in ability to provide 1-5 star feedback
+
+   
 1. When instructor EDITs assignment and clicks UPDATE to save... it shows error and tells you to close the window to
    complete creation of the assignment. HOWEVER... it DOES save the changes properly. Instead, this should just take the
    instructor back to the previous screen showing the list of homeworks.
@@ -108,7 +123,7 @@ AS A STUDENT: Fetch assessedUserHomework before save or submit.
 
 
 
-PeerHomeworkAssessor:
+HomeworkAssessor:
 
 1. It receives defaultActiveCommentId, and toolHomeworkData
 2. When a comment is added, removed, updated... 
@@ -124,7 +139,7 @@ PeerHomeworkAssessor:
 
 
 1. When instructor deletes a comment, that change should get saved optimistically(?) in redux such that the
-   InstructorDraftAssessor gets updated with new comment and rebuilds the PeerHomeworkAssessor.
+   InstructorDraftAssessor gets updated with new comment and rebuilds the HomeworkAssessor.
 2. Each change to a comment or rubric rank selection should trigger a save as well.
    1. onBlur() of the comment text area saves changes
    2. onAddComment saves changes (an empty "" comment)... focus is set to text area so any updates will get saved

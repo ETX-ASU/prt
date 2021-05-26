@@ -3,10 +3,9 @@ import {Container, Row, Col, Button, Card} from 'react-bootstrap';
 import { v4 as uuid } from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faTrash, faPlus, faEye, faCopy, faEllipsisV, faEyeSlash} from '@fortawesome/free-solid-svg-icons'
+import {faTrash, faPlus, faEye, faEllipsisV, faEyeSlash} from '@fortawesome/free-solid-svg-icons'
 import RubricPanel from "../instructor/assignments/RubricPanel";
 import {deepCopy} from "../app/utils/deepCopy";
-import {PHASE_TYPES} from "./constants";
 library.add(faTrash, faPlus, faEllipsisV, faEyeSlash);
 
 
@@ -16,17 +15,20 @@ const MIN_NUM_ACTIVE_RANKS = 2;
 // TOOL-DEV: You will provide your own component to act as a UI for creating your tool's specific assignment data
 function RootPhaseSettings(props) {
   const {setFormData, isLimitedEditing, formData, formData:{toolAssignmentData}} = props;
+
+  const hasUpdatedAssignmentData = useRef(false);
   const {rubricRanks, rubricCriteria} = toolAssignmentData;
   const [activeDropZoneIndex, setActiveDropZoneIndex] = useState(-1);
   const [activeDraggedRankIndex, setActiveDraggedRankIndex] = useState(-1);
   const [orderedRanks, setOrderedRanks] = useState(rubricRanks.sort((a,b) => a.orderNum - b.orderNum));
 
-
-
   // Save a copy of the rubric upon initialization, otherwise drag-n-drop triggers re-render and data goes out of sync
   useEffect(() => {
-    updateToolAssignmentData(deepCopy(toolAssignmentData));
-  }, [])
+    if (!hasUpdatedAssignmentData.current) {
+      setFormData({...formData, toolAssignmentData: deepCopy(toolAssignmentData)});
+      hasUpdatedAssignmentData.current = true;
+    }
+  }, [toolAssignmentData, formData, setFormData])
 
   useEffect(() => {
     setOrderedRanks(rubricRanks.sort((a,b) => a.orderNum - b.orderNum));

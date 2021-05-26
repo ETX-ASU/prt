@@ -1,13 +1,12 @@
-import React, {Fragment} from "react";
+import React from "react";
 import IconPencil from "../../assets/icon-edit.svg";
 import {Button} from "react-bootstrap";
-import {DRAFT_BTN_LABELS} from "../../app/constants";
 
 function PeerReviewSummaryRow(props) {
 
 	function handleReviewButton(e) {
 		e.preventDefault();
-		props.onReviewPeerDraft(props.draftData.allocation.homeworkId);
+		props.onReviewPeerDraft(props.draftData.review.homeworkId);
 	}
 
 	const {btnLabel, versionName, feedbackRating} = props.draftData;

@@ -1,27 +1,7 @@
-import {APP_TOP_PADDING, EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
+import {EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
 import {EMPTY_CRITERION, EMPTY_RUBRIC} from "./constants";
 import {v4 as uuid} from "uuid";
-import React from "react";
-import {useEffect} from "react";
-
-
-
-// export function sizerFunc(zoneRefs, widthSetter, heightSetter, toolBarHeightSetter) {
-//   return () => {
-//
-//     function onWindowResized() {
-//       const {width, height} = getAvailableContentDims(zoneRefs.headerZoneRef, zoneRefs.footerZoneRef, zoneRefs.rteToolbar)
-//       if (heightSetter) heightSetter(height - (zoneRefs.extraHeight || 0));
-//       if (widthSetter) widthSetter(width - (zoneRefs.extraWidth || 0));
-//     }
-//     window.addEventListener('resize', onWindowResized);
-//     onWindowResized();
-//
-//     return () => {
-//       window.removeEventListener('resize', onWindowResized);
-//     }
-//   }
-// }
+import React, {useEffect, useRef, useCallback} from "react";
 
 
 export function getAvailableContentDims(headerElem, footerElem, extra) {
@@ -166,14 +146,14 @@ export function generateDefaultRubric() {
 }
 
 export function useInterval(callback, delay) {
-  const intervalRef = React.useRef();
-  const callbackRef = React.useRef(callback);
+  const intervalRef = useRef();
+  const callbackRef = useRef(callback);
 
-  React.useEffect(() => {
+  useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof delay === 'number') {
       intervalRef.current = window.setInterval(() => callbackRef.current(), delay);
 
@@ -183,3 +163,21 @@ export function useInterval(callback, delay) {
 
   return intervalRef;
 }
+
+
+export function useThrottle(callback, delay) {
+  function throttle(callback, delay) {
+    let isThrottled = false;
+    return (...args) => {
+      if (isThrottled) return;
+      isThrottled = true;
+      callback(...args);
+      setTimeout(() => {isThrottled = false}, delay);
+    };
+  };
+
+  const callbackRef = useRef(callback);
+  useEffect(() => {callbackRef.current = callback});
+  return useCallback(throttle((...args) => callbackRef.current(...args), delay), [delay]);
+}
+

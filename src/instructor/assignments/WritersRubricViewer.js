@@ -1,11 +1,10 @@
-import React, {Fragment, useEffect, useState} from 'react';
-import {Tabs, Tab, Button, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
+import React, {Fragment, useState} from 'react';
+import {Button, Col, Container, Row} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faChevronLeft, faChevronRight, faPlus, faTrash, faEyeSlash} from "@fortawesome/free-solid-svg-icons";
+import {faChevronLeft, faChevronRight, faPlus, faEyeSlash} from "@fortawesome/free-solid-svg-icons";
 import {deepCopy} from "../../app/utils/deepCopy";
-import {v4 as uuid} from "uuid";
 library.add(faPlus, faEyeSlash, faChevronLeft, faChevronRight);
 
 

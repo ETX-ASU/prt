@@ -7,7 +7,6 @@ import {
   mockGetAssignedStudents,
   mockGetUnassignedStudents,
   mockGetGrades,
-  mockGetStudentGrade,
   mockInstructorSendGradeToLMS,
   mockAutoSendGradeToLMS,
   mockSubmitResourceSelection
@@ -28,16 +27,6 @@ import {
 } from '@asu-etx/rl-client-lib';
 import {calcMaxScoreForAssignment} from "../tool/ToolUtils";
 import {reportError} from "../developer/DevUtils";
-
-// const realHasValidSession = () => {};
-// const realGetUsers = () => {};
-// const realGetUnassignedStudents = () => {};
-// const realGetAssignedStudents = () => {};
-// const realGetGrades = () => {};
-// const realGetGrade = () => {};
-// const realInstructorSubmitGrade = () => {};
-// const realAutoSubmitGrade = () => {};
-// const realSubmitResourceSelection = () => {};
 
 
 /**

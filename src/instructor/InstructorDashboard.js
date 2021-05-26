@@ -1,6 +1,6 @@
 import React from 'react';
 import {useSelector} from "react-redux";
-import {ROLE_TYPES, UI_SCREEN_MODES} from "../app/constants";
+import {UI_SCREEN_MODES} from "../app/constants";
 import AssignmentViewer from "./assignments/AssignmentViewer";
 import AssignmentCreator from "./assignments/AssignmentCreator";
 import AssignmentNewOrDupe from "./assignments/AssignmentNewOrDupe";
@@ -8,7 +8,6 @@ import AssignmentEditor from "./assignments/AssignmentEditor";
 import {Col, Container, Row} from "react-bootstrap";
 import {hasValidSession} from "../lmsConnection/RingLeader";
 import aws_exports from '../aws-exports';
-import {useLocation} from "react-router-dom";
 
 
 function InstructorDashboard() {

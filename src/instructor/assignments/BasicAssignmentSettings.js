@@ -1,14 +1,13 @@
 import React, {Fragment} from "react";
-import {Button, Col, Container, Row} from "react-bootstrap";
-import ToggleSwitch from "../../app/components/ToggleSwitch";
+import {Col, Row} from "react-bootstrap";
 
 
 function BasicAssignmentSettings(props) {
 	const {isLimitedEditing, formData, setFormData} = props;
 
-	function toggleUseAutoScore() {
-		setFormData({...formData, isUseAutoScore: !formData.isUseAutoScore, isUseAutoSubmit: false});
-	}
+	// function toggleUseAutoScore() {
+	// 	setFormData({...formData, isUseAutoScore: !formData.isUseAutoScore, isUseAutoSubmit: false});
+	// }
 
 	return (
 		<Fragment>

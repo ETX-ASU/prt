@@ -1,17 +1,15 @@
-import React, {Fragment, useEffect, useState, useRef} from 'react';
-import {Tabs, Tab, Button, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
+import React, {useEffect, useState, useRef} from 'react';
+import {Button, Col, Container, Row} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faChevronLeft, faChevronRight, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {deepCopy} from "../../app/utils/deepCopy";
-import {v4 as uuid} from "uuid";
 library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
 
 
 function CommentsPanel(props) {
-  const {criteria, setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments, isReadOnly} = props;
-  const visCriteria = criteria.filter(c => c.isVisible);
+  const {setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments, isReadOnly} = props;
+  // const visCriteria = criteria.filter(c => c.isVisible);
 
   const commentTextArea = useRef(null);
   const [activeComment, setActiveComment] = useState(comments.find(c => c.id === activeCommentId));
@@ -27,10 +25,11 @@ function CommentsPanel(props) {
 
 
   useEffect(() => {
+    if (!activeCommentId) return;
     setTimeout(() => {
       if (commentTextArea.current && activeCommentId) commentTextArea.current.focus();
     }, 100)
-  }, [comments.length])
+  }, [comments.length, activeCommentId])
 
 
   function onNavBtn(isFwd) {
@@ -59,7 +58,8 @@ function CommentsPanel(props) {
     if (!isReadOnly) updateComment({...activeComment, content:commentText})
   }
 
-  const showPlus = !!props.showPlusButton && !activeCommentId;
+  const showPlus = !!props.showPlusButton && !activeCommentId && !isReadOnly;
+  const placeholderText = (isReadOnly) ? `Select highlight to see comment notes.` : `Select a range of text to create a comment.`;
 
   return (
     <Container className='comments-panel m-0 p-0'>
@@ -94,7 +94,7 @@ function CommentsPanel(props) {
             className={`mt-2 form-control h-50${isReadOnly ? ' read-only-mode' : ''}`}
             onBlur={onBlur}
             onChange={onChange}
-            placeholder={(showPlus|| activeCommentId) ? '' : `Make a text selection to create a comment.`}
+            placeholder={(showPlus || activeCommentId) ? '' : placeholderText}
             disabled={!activeCommentId || isReadOnly}
             value={commentText}/>
 

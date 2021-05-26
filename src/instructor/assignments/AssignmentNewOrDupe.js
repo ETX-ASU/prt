@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useCallback, useEffect, useState} from 'react';
 import {API, graphqlOperation} from 'aws-amplify';
 import {useDispatch, useSelector} from "react-redux";
 import { v4 as uuid } from "uuid";
@@ -21,8 +21,6 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import { faPlus, faCopy } from '@fortawesome/free-solid-svg-icons'
 import {reportError} from "../../developer/DevUtils";
-import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
-// import AssignmentsSelectionList from "../lmsLinkage/AssignmentsSelectionList";
 library.add(faCopy, faPlus);
 
 const ASSIGNMENT_CHOICE = {
@@ -46,12 +44,7 @@ function AssignmentNewOrDupe() {
 
   const [choice, setChoice] = useState('');
 
-  useEffect(() => {
-    fetchAssignmentList();
-  }, []);
-
-
-  async function fetchAssignmentList() {
+  const fetchAssignmentList = useCallback(async(activeUserId) => {
     setIsFetchingAssignments(true);
 
     try {
@@ -60,7 +53,7 @@ function AssignmentNewOrDupe() {
 
       do {
         const assignmentQueryResults = await API.graphql(graphqlOperation(listAssignments,
-            {filter:{ownerId:{eq:activeUser.id}}, nextToken:nextTokenVal}));
+            {filter:{ownerId:{eq:activeUserId}}, nextToken:nextTokenVal}));
         nextTokenVal = assignmentQueryResults.data.listAssignments.nextToken;
         allAssignments.push(...assignmentQueryResults.data.listAssignments.items);
       } while (nextTokenVal);
@@ -89,8 +82,11 @@ function AssignmentNewOrDupe() {
     } catch (error) {
       reportError(error, `We're sorry. There was an error while attempting to fetch the list of your existing assignments for duplication.`);
     }
-  }
+  }, [])
 
+  useEffect(() => {
+    fetchAssignmentList(activeUser.id);
+  }, [fetchAssignmentList, activeUser.id]);
 
   function getPhaseSequenceIds(all, originId) {
     const siblingAssignments = all.filter(a => a.toolAssignmentData.sequenceIds.length && a.toolAssignmentData.sequenceIds[0] === originId);
@@ -222,6 +218,8 @@ function AssignmentNewOrDupe() {
               edit and customize this recovered assignment.</p>
           </ConfirmationModal>
         );
+      default:
+        return;
     }
   }
 

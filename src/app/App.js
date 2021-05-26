@@ -5,20 +5,18 @@ import {API, graphqlOperation} from "aws-amplify";
 import {useDispatch, useSelector} from "react-redux";
 
 import { setActiveUiScreenMode, setSessionData, setAssignmentData } from "./store/appReducer";
-import {HOMEWORK_PROGRESS, ROLE_TYPES, UI_SCREEN_MODES} from "./constants";
+import {ROLE_TYPES, UI_SCREEN_MODES} from "./constants";
 import {Container, Row} from "react-bootstrap";
 import InstructorDashboard from "../instructor/InstructorDashboard";
 import StudentDashboard from "../student/StudentDashboard";
 import LoadingIndicator from "./components/LoadingIndicator";
 import {useLocation} from "react-router-dom";
-import {getAssignment, listAssignments} from "../graphql/queries";
-import {shuffle} from "./utils/shuffle";
+import {getAssignment} from "../graphql/queries";
 import DevUtilityDashboard from "../developer/DevUtilityDashboard";
 
 import {createMockCourseMembers} from "../lmsConnection/MockRingLeader";
 import {fetchUsers, hasValidSession} from "../lmsConnection/RingLeader";
 import aws_exports from '../aws-exports';
-import SelectionDashboard from "../instructor/lmsLinkage/SelectionDashboard";
 import {reportError} from "../developer/DevUtils";
 import {updateAssignment} from "../graphql/mutations";
 
@@ -27,22 +25,14 @@ function App() {
 	const dispatch = useDispatch();
 	const activeUser = useSelector(state => state.app.activeUser);
   const assignmentId = useSelector(state => state.app.assignmentId);
-  const [isFetchingAssignments, setIsFetchingAssignments] = useState(true);
-  const [strandedAssignments, setStrandedAssignments] = useState(true);
   const params = new URLSearchParams(useLocation().search);
   const lineItemId = params.get('lineItemId');
-  const mode = params.get('mode');
 
   useEffect(() => {
-    console.log(`------------ initialize`);
-    // in selection mode I have userId, courseId, mode="selectAssignment", activeRole="instructor"
     const userIdParam = params.get('userId');
     const activeRoleParam = params.get('role');
     const assignmentIdParam = params.get('assignmentId');
     const courseIdParam = params.get('courseId');
-
-    console.warn(`uId, role, resId, cId, lineItemId: ${userIdParam} | ${activeRoleParam} | ${assignmentIdParam} | ${courseIdParam} | ${lineItemId}`)
-
 
     if (activeRoleParam === ROLE_TYPES.dev && !window.isDevMode) { throw new Error("Can NOT use dev role when not in DevMode. Set DevMode to true in codebase.") }
     if (!assignmentIdParam && activeRoleParam === ROLE_TYPES.learner) { throw new Error("User role of student trying to access app with no assignmentId value.") }
@@ -53,7 +43,6 @@ function App() {
     // Required params: role=dev, userId=any, courseId=any, assignmentId=null or existing assignment id
     if (window.isDevMode) createMockCourseMembers(courseIdParam, 80);
 
-    // if (mode === 'selectAssignment') dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.assignmentSelectorTool));
     initializeSessionData(courseIdParam, assignmentIdParam, userIdParam, activeRoleParam, lineItemId);
 	}, []);
 
@@ -63,7 +52,6 @@ function App() {
    * and fetch homework associated with each student
    */
 	useEffect(() => {
-    console.log(`------------ assignmentId changed to: ${assignmentId}`);
 	  if (assignmentId && activeUser.id) {
 	    initializeAssignmentAndHomeworks()
     }
@@ -136,7 +124,6 @@ function App() {
         delete inputData.updatedAt;
 
         const updateResult = await API.graphql({query: updateAssignment, variables: {input: inputData}});
-        if (updateResult) console.log(`linking assignment ${assignment.id} in DB to use lineItemId: ${lineItemId}`);
         if (!updateResult) reportError('', 'Could not update lineItemId link in tool database');
       }
 		} catch (error) {
@@ -146,7 +133,7 @@ function App() {
 
 	return (
 		<Container id='app-container' className="app pt-4 mb-0 p-0 vh-100">
-			<div id='version-number'>v3.2</div>
+			<div id='version-number'>v3.4</div>
 			<Row className='main-content-row'>
 				{!activeUser?.id && <LoadingIndicator msgClasses='xtext-white' loadingMsg='LOADING'/>}
 				{activeUser.activeRole === ROLE_TYPES.dev && <DevUtilityDashboard />}

@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {API, graphqlOperation} from 'aws-amplify';
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {Button, Col, Container, Row} from "react-bootstrap";
 import moment from "moment";
 import {testComments, createMockGrades, deleteMockGrades} from "../lmsConnection/MockRingLeader";
@@ -15,7 +15,7 @@ import aws_exports from "../aws-exports";
 import {reportError} from "./DevUtils";
 
 function DevUtilityDashboard() {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const assignment = useSelector(state => state.app.assignment);
   const members = useSelector(state => state.app.members);
 

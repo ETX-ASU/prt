@@ -1,7 +1,6 @@
 import {EMPTY_TOOL_HOMEWORK_DATA} from '../tool/constants'
 
 export const APP_NAMESPACE = 'QUIZ_APP'; // Change this to name of tool
-export const APP_TOP_PADDING = 24; // Temporary. We need padding of the app container, and other means are more convoluted than should be.
 
 
 export const MODAL_TYPES = {
@@ -41,6 +40,7 @@ export const UI_SCREEN_MODES = {
   editAssignment: 'UI_SCREEN_MODES.editAssignment',
   reviewHomework: 'UI_SCREEN_MODES.reviewHomework',
   assessPeerHomework: 'UI_SCREEN_MODES.assessPeerHomework',
+  viewAssessedHomework: 'UI_SCREEN_MODES.viewAssessedHomework',
   devUtilityDashboard: 'UI_SCREEN_MODES.devUtilityDashboard',
   assignmentSelectorTool: 'UI_SCREEN_MODES.assignmentSelectorTool',
   returnToLmsScreen: 'UI_SCREEN_MODES.returnToLmsScreen'
@@ -121,7 +121,8 @@ export const DRAFT_BTN_LABELS = {
 };
 
 export const PEER_REVIEW_BTN_LABELS = {
-  Submitted: 'See Feedback',
+  Feedback: 'See Feedback',
+  Submitted: 'See Assessment',
   InProgress: 'Continue Review',
   NotBegun: 'Begin Review',
 };

@@ -83,18 +83,15 @@ table.student-assignment-drafts {
   th:nth-child(2) {
     width: 12%;
   }
-  th:nth-child(3) {
-    width: 16%;
-  }
-  th:nth-child(4), td:nth-child(4) {
+  th:nth-child(3), td:nth-child(3) {
     width: auto;
   }
-  th:nth-child(5), td:nth-child(5) {
-    width: 140px;
+  th:nth-child(4) {
+    width: 12%;
   }
-  th:nth-child(6), td:nth-child(6) {
+  th:nth-child(5), td:nth-child(5) {
     text-align: right;
-    width: 200px;
+    width: 240px;
   }
 
   td:nth-child(2) {

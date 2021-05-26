@@ -1,15 +1,12 @@
 import React, {Fragment, useEffect, useState} from 'react';
-import {Tabs, Tab, Button, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
+import { Tab, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faCopy, faEye, faPlus, faTrash, faEyeSlash, faCheck} from "@fortawesome/free-solid-svg-icons";
-import {deepCopy} from "../../app/utils/deepCopy";
-import {v4 as uuid} from "uuid";
+import {faPlus, faEyeSlash, faCheck} from "@fortawesome/free-solid-svg-icons";
 library.add(faPlus, faEyeSlash, faCheck);
 
-const MAX_NUM_CRITERIA = 10;
-const MIN_NUM_ACTIVE_CRITERIA = 1;
+// const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricAssessorPanel(props) {
   const {rubricCriteria, rubricRanks, ratings, isReadOnly} = props;
@@ -34,10 +31,10 @@ function RubricAssessorPanel(props) {
   }
 
 
-  function isVisibilityToggleDisabled(crit) {
-    const totalVisible = shownCriteria.filter(c => c.isVisible).length;
-    return (crit.isVisible && totalVisible <= MIN_NUM_ACTIVE_CRITERIA);
-  }
+  // function isVisibilityToggleDisabled(crit) {
+  //   const totalVisible = shownCriteria.filter(c => c.isVisible).length;
+  //   return (crit.isVisible && totalVisible <= MIN_NUM_ACTIVE_CRITERIA);
+  // }
 
   function getWeightPercentage(crit) {
     if (!crit.isVisible) return 0;
@@ -79,6 +76,7 @@ function RubricAssessorPanel(props) {
                         {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}</div>}
                         {!isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2 rank-btn' onClick={() => onRankSelected(rNum)}>{rank.name}</div>}
                         <textarea
+                          rows={1}
                           readOnly={true}
                           value={criterion.rankSummaries[rNum]}
                           className='rank-text pt-1 pb-2 pl-2 pr-2 d-inline-block' />
