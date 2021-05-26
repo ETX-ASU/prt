@@ -1,4 +1,4 @@
-import React, {useEffect, useState, Fragment} from 'react';
+import React, {useEffect, useState, useRef, Fragment, useCallback} from 'react';
 import {API} from 'aws-amplify';
 import {useDispatch, useSelector} from "react-redux";
 import { v4 as uuid } from "uuid";
@@ -34,20 +34,11 @@ function WritingSessionDash() {
 	const assignment = useSelector(state => state.app.assignment);
 
 	const [homework, setHomework] = useState(null);
-	const [isLoading, setIsLoading] = useState(true);
-
-	// NOTE: We need information about userAssessmentDrafts and userPreviousDrafts
-	// 1) any current OR previous draft 'essay' (homework) written by THIS ACTIVE USER (student)
-	// 2) any CURRENT draft 'essay' (homework) that is allocated to be reviewed by THIS ACTIVE USER (student)
-	// If this assignment is a Writing Session, we need #1.
-	// If this assignment is a Review Session, we need #2.
-	useEffect(() => {
-		if (!assignment.id && !homework?.id) return;
-		if (assignment.id && !homework?.id) {fetchAndSetActiveUserCurrentHomework();} else {setIsLoading(false);}
-	}, [assignment, homework]);
+	const isLoading = useRef(true);
 
 
-	async function fetchAndSetActiveUserCurrentHomework(isSilent = false) {
+	// async function fetchAndSetActiveUserCurrentHomework(isSilent = false) {
+	const fetchAndSetActiveUserCurrentHomework = useCallback(async(isSilent = false) => {
 		try {
 			const fetchHomeworkResult = await API.graphql({
 				query: fullHomeworkByAsmntAndStudentId,
@@ -84,12 +75,26 @@ function WritingSessionDash() {
 				await setHomework(theHomework);
 
 				if (!isSilent) dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
-				setIsLoading(false);
+				isLoading.current=false;
 			}
 		} catch (error) {
 			reportError(error, `We're sorry. There was an error while attempting to fetch your current assignment. Please wait a moment and try again.`);
 		}
-	}
+	}, []);
+
+	// NOTE: We need information about userAssessmentDrafts and userPreviousDrafts
+	// 1) any current OR previous draft 'essay' (homework) written by THIS ACTIVE USER (student)
+	// 2) any CURRENT draft 'essay' (homework) that is allocated to be reviewed by THIS ACTIVE USER (student)
+	// If this assignment is a Writing Session, we need #1.
+	// If this assignment is a Review Session, we need #2.
+	useEffect(() => {
+		if (!isLoading) return;
+		if (assignment.id && !homework?.id) {
+			fetchAndSetActiveUserCurrentHomework();
+		} else {
+			isLoading.current=false;
+		}
+	}, [assignment, homework, fetchAndSetActiveUserCurrentHomework]);
 
 	function handleEditButton() {
 		console.log("handleEditButton() called")
@@ -101,7 +106,7 @@ function WritingSessionDash() {
 	return (
 		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100 position-relative'>
 
-			{isLoading &&
+			{isLoading.current &&
 			<Row className='m-0 p-0'>
 				<Col className='rounded p-0'>
 					<LoadingIndicator loadingMsg='LOADING STUDENT ASSIGNMENTS'/>
@@ -109,7 +114,7 @@ function WritingSessionDash() {
 			</Row>
 			}
 
-			{!isLoading && activeUiScreenMode === UI_SCREEN_MODES.showStudentDashboard &&
+			{!isLoading.current && activeUiScreenMode === UI_SCREEN_MODES.showStudentDashboard &&
 			<Fragment>
 				<Row className='m-0 p-0'>
 					<Col className='rounded p-0'>
@@ -156,11 +161,11 @@ function WritingSessionDash() {
 			</Fragment>
 			}
 
-			{!isLoading && (activeUiScreenMode === UI_SCREEN_MODES.reviewHomework) &&
+			{!isLoading.current && (activeUiScreenMode === UI_SCREEN_MODES.reviewHomework) &&
 			<HomeworkEngager isReadOnly={true} refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment} homework={homework}/>
 			}
 
-			{!isLoading && (activeUiScreenMode === UI_SCREEN_MODES.editHomework) &&
+			{!isLoading.current && (activeUiScreenMode === UI_SCREEN_MODES.editHomework) &&
 			<HomeworkEngager isReadOnly={false} refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment} homework={homework}/>
 			}
 		</Container>

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import "./GradingBar.scss";
 import {Container, Col, Row, Button} from 'react-bootstrap';
@@ -17,23 +17,26 @@ library.add(faArrowCircleLeft, faArrowCircleRight, faCheck);
 
 function GradingBar(props) {
   const dispatch = useDispatch();
-  const {assignment, reviewedStudent} = props;
+  const prevReviewedStudentId = useRef(null);
+  const {assignment, reviewedStudent, manualScore} = props;
 
   const displayOrder = useSelector(state => state.app.displayOrder);
-  const [scoreGiven, setScoreGiven] = useState(calcShownScore(reviewedStudent));
+  const [scoreGiven, setScoreGiven] = useState(0);
   const [comment, setComment] = useState('');
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   useEffect(() => {
+    if (prevReviewedStudentId.current === reviewedStudent.id) return;
+    const calcShownScore = ({homeworkStatus, scoreGiven, autoScore}) => {
+      if (homeworkStatus === HOMEWORK_PROGRESS.fullyGraded) return scoreGiven;
+      return (autoScore) ? autoScore : manualScore;
+    };
+
     setComment(reviewedStudent.comment || '');
     setScoreGiven(calcShownScore(reviewedStudent));
-  }, [props.manualScore, reviewedStudent.scoreGiven, reviewedStudent.id, reviewedStudent.comment, reviewedStudent.homeworkStatus])
+    prevReviewedStudentId.current = reviewedStudent.id;
+  }, [manualScore, reviewedStudent])
 
-
-  function calcShownScore({homeworkStatus, scoreGiven, autoScore}) {
-    if (homeworkStatus === HOMEWORK_PROGRESS.fullyGraded) return scoreGiven;
-    return (autoScore) ? autoScore : props.manualScore;
-  }
 
   const navToPrev = () => {
     let curStudentIndex = displayOrder.indexOf(reviewedStudent.id);
@@ -92,7 +95,7 @@ function GradingBar(props) {
             <Col className='col-9 pt-1 pb-2 xbg-light'>
               <div className='ml-0 mr-4 d-inline-block align-top'>
                 <label htmlFor='autoScore' className='xtext-darkest'>Selected Score</label>
-                <div className={'selected-score'} id={`yourScore`}>{`${props.manualScore} of 100`}</div>
+                <div className={'selected-score'} id={`yourScore`}>{`${manualScore} of 100`}</div>
                 {/*<div id={`yourScore`}>{`${reviewedStudent.autoScore} of ${calcMaxScoreForAssignment(assignment)}`}</div>*/}
               </div>
               <div className='mr-4 d-inline-block align-top'>

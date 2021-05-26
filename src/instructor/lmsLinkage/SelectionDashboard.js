@@ -45,7 +45,7 @@ function SelectionDashboard() {
 		}
 
 		fetchAssignmentList();
-	}, [hasFetchedAllData]);
+	}, [courseId, userId]);
 
 
 

@@ -25,10 +25,11 @@ function CommentsPanel(props) {
 
 
   useEffect(() => {
+    if (!activeCommentId) return;
     setTimeout(() => {
       if (commentTextArea.current && activeCommentId) commentTextArea.current.focus();
     }, 100)
-  }, [comments.length])
+  }, [comments.length, activeCommentId])
 
 
   function onNavBtn(isFwd) {
@@ -57,7 +58,8 @@ function CommentsPanel(props) {
     if (!isReadOnly) updateComment({...activeComment, content:commentText})
   }
 
-  const showPlus = !!props.showPlusButton && !activeCommentId;
+  const showPlus = !!props.showPlusButton && !activeCommentId && !isReadOnly;
+  const placeholderText = (isReadOnly) ? `Select highlight to see comment notes.` : `Select a range of text to create a comment.`;
 
   return (
     <Container className='comments-panel m-0 p-0'>
@@ -92,7 +94,7 @@ function CommentsPanel(props) {
             className={`mt-2 form-control h-50${isReadOnly ? ' read-only-mode' : ''}`}
             onBlur={onBlur}
             onChange={onChange}
-            placeholder={(showPlus|| activeCommentId) ? '' : `Make a text selection to create a comment.`}
+            placeholder={(showPlus || activeCommentId) ? '' : placeholderText}
             disabled={!activeCommentId || isReadOnly}
             value={commentText}/>
 

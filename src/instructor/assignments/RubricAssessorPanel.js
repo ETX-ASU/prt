@@ -6,7 +6,7 @@ import {library} from "@fortawesome/fontawesome-svg-core";
 import {faPlus, faEyeSlash, faCheck} from "@fortawesome/free-solid-svg-icons";
 library.add(faPlus, faEyeSlash, faCheck);
 
-const MIN_NUM_ACTIVE_CRITERIA = 1;
+// const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricAssessorPanel(props) {
   const {rubricCriteria, rubricRanks, ratings, isReadOnly} = props;
@@ -31,10 +31,10 @@ function RubricAssessorPanel(props) {
   }
 
 
-  function isVisibilityToggleDisabled(crit) {
-    const totalVisible = shownCriteria.filter(c => c.isVisible).length;
-    return (crit.isVisible && totalVisible <= MIN_NUM_ACTIVE_CRITERIA);
-  }
+  // function isVisibilityToggleDisabled(crit) {
+  //   const totalVisible = shownCriteria.filter(c => c.isVisible).length;
+  //   return (crit.isVisible && totalVisible <= MIN_NUM_ACTIVE_CRITERIA);
+  // }
 
   function getWeightPercentage(crit) {
     if (!crit.isVisible) return 0;

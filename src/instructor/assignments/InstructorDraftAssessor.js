@@ -4,7 +4,7 @@ import {EMPTY_REVIEW, HOMEWORK_PROGRESS} from "../../app/constants";
 import {Row, Col} from 'react-bootstrap';
 import "../../student/homeworks/homeworks.scss";
 import GradingBar from "./gradingBar/GradingBar";
-import PeerHomeworkAssessor from "../../student/homeworks/PeerHomeworkAssessor";
+import HomeworkAssessor from "../../student/homeworks/HomeworkAssessor";
 import {API} from "aws-amplify";
 import {reportError} from "../../developer/DevUtils";
 import {reviewsByHmwkAndAssessorId} from "../../graphql/queries";
@@ -192,7 +192,7 @@ function InstructorDraftAssessor(props) {
         {hasStudentDoneWork() && reviewOfStudent &&
         <Row className={'m-0 p-0 h-100'}>
           <Col className='rounded p-0'>
-            <PeerHomeworkAssessor
+            <HomeworkAssessor
               triggerSubmit={triggerSubmit}
               clearTrigger={clearTrigger}
 

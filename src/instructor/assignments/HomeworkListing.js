@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useCallback, useEffect, useState} from 'react';
 import {Button, Col, DropdownButton, Row, Dropdown} from "react-bootstrap";
 import LoadingIndicator from "../../app/components/LoadingIndicator";
 import HomeworkListItem from "./HomeworkListItem";
@@ -19,7 +19,8 @@ import {setDisplayOrder} from "../../app/store/appReducer";
 
 
 function HomeworkListing(props) {
-  const dispatch = useDispatch();
+  const {students} = props;
+  const dispatch = useCallback(useDispatch, []);
   const [curPageNum, setCurPageNum] = useState(0);
   const [sortBy, setSortBy] = useState({type:SORT_BY.name, isAscending:true});
   const [pageBtns, setPageBtns] = useState([]);
@@ -30,8 +31,9 @@ function HomeworkListing(props) {
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   useEffect(function reCalcPageCount(){
-    setPageCount(Math.ceil(props.students.length/studentsPerPage));
-  }, [props.students, studentsPerPage])
+    setPageCount(Math.ceil(students.length/studentsPerPage));
+  }, [students, studentsPerPage])
+
 
   useEffect(function rePaginateList() {
     if (pageCount <= 5) {
@@ -43,75 +45,75 @@ function HomeworkListing(props) {
       setPageBtns(btnNums);
     }
 
+    function getSortedStudents(items, type, direction) {
+      let order;
+
+      switch (type) {
+        case SORT_BY.name:
+          items.sort((a, b) => (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name));
+          break;
+        case SORT_BY.autoScore:
+          items.sort((a, b) => a.autoScore - b.autoScore);
+          break;
+        case SORT_BY.score:
+          items.sort((a, b) => {
+            const aVal = isNaN(a.scoreGiven) ? -1 : a.scoreGiven;
+            const bVal = isNaN(b.scoreGiven) ? -1 : b.scoreGiven;
+            return aVal - bVal;
+          });
+          break;
+        case SORT_BY.hasComment:
+          items.sort((a, b) => {
+            if (!!a.comment && !b.comment) return -1;
+            if (!a.comment && !!b.comment) return 1;
+            return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
+          });
+          break;
+        case HOMEWORK_PROGRESS.inProgress:
+          order = [HOMEWORK_PROGRESS.fullyGraded, HOMEWORK_PROGRESS.submitted, HOMEWORK_PROGRESS.inProgress, HOMEWORK_PROGRESS.notBegun];
+          items.sort((a, b) => {
+            if (a.percentCompleted !== b.percentCompleted) return a.percentCompleted - b.percentCompleted;
+            const aVal = order.indexOf(a.homeworkStatus);
+            const bVal = order.indexOf(b.homeworkStatus);
+            if (aVal !== bVal) return aVal - bVal;
+            return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
+          });
+          break;
+        case HOMEWORK_PROGRESS.submitted:
+          order = [HOMEWORK_PROGRESS.submitted, HOMEWORK_PROGRESS.inProgress, HOMEWORK_PROGRESS.notBegun, HOMEWORK_PROGRESS.fullyGraded];
+          items.sort((a, b) => {
+            const aVal = order.indexOf(a.homeworkStatus);
+            const bVal = order.indexOf(b.homeworkStatus);
+            if (aVal !== bVal) return aVal - bVal;
+            if (a.percentCompleted !== b.percentCompleted) return a.percentCompleted - b.percentCompleted;
+            return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
+          });
+          break;
+        case HOMEWORK_PROGRESS.fullyGraded:
+          order = [HOMEWORK_PROGRESS.fullyGraded, HOMEWORK_PROGRESS.submitted, HOMEWORK_PROGRESS.inProgress, HOMEWORK_PROGRESS.notBegun];
+          items.sort((a, b) => {
+            const aVal = order.indexOf(a.homeworkStatus);
+            const bVal = order.indexOf(b.homeworkStatus);
+            if (aVal !== bVal) return aVal - bVal;
+            if (a.percentCompleted !== b.percentCompleted) return a.percentCompleted - b.percentCompleted;
+            return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
+          });
+          break;
+        default:
+          items.sort((a, b) => (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name));
+          break;
+      }
+      return (direction) ? items : items.reverse();
+    }
+
     const topStudentIndex = curPageNum * studentsPerPage;
-    const sortedStudents = getSortedStudents(props.students.slice(), sortBy.type, sortBy.isAscending);
+    const sortedStudents = getSortedStudents(students.slice(), sortBy.type, sortBy.isAscending);
     dispatch(setDisplayOrder(sortedStudents.map(s => s.id)));
 
     const shown = sortedStudents.filter((s, i) => i >= (topStudentIndex) && i < topStudentIndex + studentsPerPage)
     setShownStudents(shown);
-  }, [props.students, pageCount, sortBy, curPageNum, isHideStudentIdentity, activeUiScreenMode])
+  }, [dispatch, students, pageCount, sortBy, curPageNum, isHideStudentIdentity, activeUiScreenMode, studentsPerPage])
 
-
-  function getSortedStudents(items, type, direction) {
-    let order;
-
-    switch (type) {
-      case SORT_BY.name:
-        items.sort((a, b) => (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name));
-        break;
-      case SORT_BY.autoScore:
-        items.sort((a, b) => a.autoScore - b.autoScore);
-        break;
-      case SORT_BY.score:
-        items.sort((a, b) => {
-          const aVal = isNaN(a.scoreGiven) ? -1 : a.scoreGiven;
-          const bVal = isNaN(b.scoreGiven) ? -1 : b.scoreGiven;
-          return aVal - bVal;
-        });
-        break;
-      case SORT_BY.hasComment:
-        items.sort((a, b) => {
-          if (!!a.comment && !b.comment) return -1;
-          if (!a.comment && !!b.comment) return 1;
-          return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
-        });
-        break;
-      case HOMEWORK_PROGRESS.inProgress:
-        order = [HOMEWORK_PROGRESS.fullyGraded, HOMEWORK_PROGRESS.submitted, HOMEWORK_PROGRESS.inProgress, HOMEWORK_PROGRESS.notBegun];
-        items.sort((a, b) => {
-          if (a.percentCompleted !== b.percentCompleted) return a.percentCompleted - b.percentCompleted;
-          const aVal = order.indexOf(a.homeworkStatus);
-          const bVal = order.indexOf(b.homeworkStatus);
-          if (aVal !== bVal) return aVal - bVal;
-          return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
-        });
-        break;
-      case HOMEWORK_PROGRESS.submitted:
-        order = [HOMEWORK_PROGRESS.submitted, HOMEWORK_PROGRESS.inProgress, HOMEWORK_PROGRESS.notBegun, HOMEWORK_PROGRESS.fullyGraded];
-        items.sort((a, b) => {
-          const aVal = order.indexOf(a.homeworkStatus);
-          const bVal = order.indexOf(b.homeworkStatus);
-          if (aVal !== bVal) return aVal - bVal;
-          if (a.percentCompleted !== b.percentCompleted) return a.percentCompleted - b.percentCompleted;
-          return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
-        });
-        break;
-      case HOMEWORK_PROGRESS.fullyGraded:
-        order = [HOMEWORK_PROGRESS.fullyGraded, HOMEWORK_PROGRESS.submitted, HOMEWORK_PROGRESS.inProgress, HOMEWORK_PROGRESS.notBegun];
-        items.sort((a, b) => {
-          const aVal = order.indexOf(a.homeworkStatus);
-          const bVal = order.indexOf(b.homeworkStatus);
-          if (aVal !== bVal) return aVal - bVal;
-          if (a.percentCompleted !== b.percentCompleted) return a.percentCompleted - b.percentCompleted;
-          return (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name);
-        });
-        break;
-      default:
-        items.sort((a, b) => (isHideStudentIdentity) ? a.randomOrderNum - b.randomOrderNum : a.name.localeCompare(b.name));
-        break;
-    }
-    return (direction) ? items : items.reverse();
-  }
 
   function toggleSortOn(type) {
     const sortDir = (type === sortBy.type) ? (!sortBy.isAscending) : true;
@@ -182,7 +184,7 @@ function HomeworkListing(props) {
           <LoadingIndicator className='p-4 text-center h-100 align-middle' isDarkSpinner={true} loadingMsg={'FETCHING STUDENT HOMEWORK'} size={3} />
           }
 
-          {(!props.isFetchingHomeworks && props.students.length > 0) &&
+          {(!props.isFetchingHomeworks && students.length > 0) &&
           (<table className="listing table table-hover">
             <thead>
               <tr>
@@ -260,7 +262,7 @@ function HomeworkListing(props) {
               </tbody>
             </table>
           )}
-          {!props.isFetchingHomeworks && (props.students.length < 1) &&
+          {!props.isFetchingHomeworks && (students.length < 1) &&
           <p className='mt-4'>No students have begun their homework for this assignment yet.</p>
           }
         </Col>

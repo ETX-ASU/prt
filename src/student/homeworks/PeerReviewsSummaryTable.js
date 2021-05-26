@@ -8,15 +8,16 @@ import LoadingIndicator from "../../app/components/LoadingIndicator";
 function PeerReviewsSummaryTable(props) {
 	const {reviewsByUser, draftsToBeReviewedByUser, roundNum, allocationMsg, onReviewPeerDraft} = props;
 
-	if (!draftsToBeReviewedByUser) return (<LoadingIndicator loadingMsg={'LOADING PEER REVIEW DRAFT ASSIGNMENTS'} size={3} />);
 	if (allocationMsg) return (<div className={'m-3'}>{allocationMsg}</div>);
+	if (!draftsToBeReviewedByUser) return (<LoadingIndicator loadingMsg={'LOADING PEER REVIEW DRAFT ASSIGNMENTS'} size={3} />);
 
 	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][roundNum] + ' Draft';
 
 	let enhancedDraftsToBeReviewed = draftsToBeReviewedByUser.map((d,i) => {
 		const review = reviewsByUser.find(r => r.homeworkId === d.id);
 		let btnLabel = (review.submittedOnDate) ? PEER_REVIEW_BTN_LABELS.Submitted :
-			(review.beganOnDate) ? PEER_REVIEW_BTN_LABELS.InProgress : PEER_REVIEW_BTN_LABELS.NotBegun;
+			(review.beganOnDate && review.comments.length && review.criterionRatings.length)
+				? PEER_REVIEW_BTN_LABELS.InProgress : PEER_REVIEW_BTN_LABELS.NotBegun;
 
 		return ({
 			key: d.id,
@@ -27,7 +28,7 @@ function PeerReviewsSummaryTable(props) {
 		})
 	});
 
-	enhancedDraftsToBeReviewed.sort((a,b) => a.review.submittedOnDate - b.review.submittedOnDate);
+	enhancedDraftsToBeReviewed.sort((a,b) => b.review.submittedOnDate - a.review.submittedOnDate);
 
 
 	return (

@@ -1,7 +1,7 @@
 import React, {Fragment,  useEffect, useRef, useState} from 'react';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
-import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
+import {MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
 import {Button, Row} from 'react-bootstrap';
 import {API} from "aws-amplify";
 import {setActiveUiScreenMode, setCurrentlyReviewedStudentId, updateSingleReview} from "../../app/store/appReducer";
@@ -10,16 +10,16 @@ import {reportError} from "../../developer/DevUtils";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faCheck, faChevronLeft, faGripLines, faTimes} from '@fortawesome/free-solid-svg-icons'
 import ConfirmationModal from "../../app/components/ConfirmationModal";
-import {sendAutoGradeToLMS} from "../../lmsConnection/RingLeader";
-import {calcAutoScore, calcMaxScoreForAssignment, getAvailableContentDims} from "../../tool/ToolUtils";
+import {getAvailableContentDims} from "../../tool/ToolUtils";
 
 import RubricAssessorPanel from "../../instructor/assignments/RubricAssessorPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import CommentsPanel from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
-import ReactQuill, {Quill} from "react-quill";
+import ReactQuill from "react-quill";
 import { v4 as uuid } from "uuid";
 import {updateReview} from "../../graphql/mutations";
+// import {sendAutoGradeToLMS} from "../../lmsConnection/RingLeader";
 
 library.add(faCheck, faTimes, faGripLines);
 
@@ -28,11 +28,11 @@ const MIN_TOP_ZONE_PIXELS = 70;
 
 
 
-function PeerHomeworkAssessor(props) {
+function HomeworkAssessor(props) {
   const {homework, assignment, isInstructorAssessment, triggerSubmit, clearTrigger, onRatingChanges, review} = props;
   const {toolHomeworkData} = homework;
 
-  const dragBarRef = useRef(null);
+  // const dragBarRef = useRef(null);
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
@@ -64,6 +64,7 @@ function PeerHomeworkAssessor(props) {
     editorElem.addEventListener('scroll', onEditorScrolled);
 
     setOrigContent(reactQuillRef.current.editor.getContents(0));
+    console.log('-----------> review', review);
     setUserComments(getInitializedUserComments(review.comments));
 
     onWindowResized();
@@ -274,7 +275,11 @@ function PeerHomeworkAssessor(props) {
 
     try {
       await API.graphql({query: updateReview, variables: {input: inputData}});
-      dispatch(updateSingleReview(data))
+      dispatch(updateSingleReview(data));
+      if (isSubmit) {
+        setActiveModal(null);
+        dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
+      }
     } catch (error) {
       reportError(error, `We're sorry. An error occurred while trying to save your assessment changes. Please wait a moment and try again.`);
     }
@@ -316,7 +321,7 @@ function PeerHomeworkAssessor(props) {
             // {name:'Submit', onClick:submitAssessment},
             {name:'Submit', onClick:() => saveUpdatesToServer(review, true)},
           ]}>
-            <p>Once submitted, you cannot go back to make additional edits to your assignment.</p>
+            <p>Once submitted, you can NOT go back to make any edits or additions to your assessment of this peer's work.</p>
           </ConfirmationModal>
         )
       case MODAL_TYPES.confirmHomeworkSubmitted:
@@ -387,7 +392,7 @@ function PeerHomeworkAssessor(props) {
           />
         </div>
 
-        <div ref={dragBarRef} className='drag-bar' onMouseDown={onDragResizeBegun} style={{top: `calc(${topZonePercent}% - 22px)`}}>
+        <div className='drag-bar' onMouseDown={onDragResizeBegun} style={{top: `calc(${topZonePercent}% - 22px)`}}>
           <div className='drag-knob'><FontAwesomeIcon className={'fa-xs'} icon={faGripLines} /></div>
         </div>
 
@@ -420,7 +425,6 @@ function PeerHomeworkAssessor(props) {
           </div>
           <CommentsPanel
             isReadOnly={!!review.submittedOnDate}
-            className='h-auto'
             showPlusButton={showPlusButton}
             assessorId={activeUser.id}
             criteria={assignment.toolAssignmentData.rubricCriteria}
@@ -445,4 +449,4 @@ function PeerHomeworkAssessor(props) {
 	)
 }
 
-export default PeerHomeworkAssessor;
+export default HomeworkAssessor;
