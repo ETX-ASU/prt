@@ -20,7 +20,7 @@ import {setDisplayOrder} from "../../app/store/appReducer";
 
 function HomeworkListing(props) {
   const {students} = props;
-  const dispatch = useCallback(useDispatch, []);
+  const dispatch = useDispatch();
   const [curPageNum, setCurPageNum] = useState(0);
   const [sortBy, setSortBy] = useState({type:SORT_BY.name, isAscending:true});
   const [pageBtns, setPageBtns] = useState([]);
