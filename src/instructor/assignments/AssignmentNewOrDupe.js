@@ -118,6 +118,7 @@ function AssignmentNewOrDupe() {
   }
 
   async function handleAddAssignmentPhase(e) {
+    // TODO: Look at handleSubmitBtn line 60 from AssignmentCreator.js -- we must hook it up to LMS upon creation
     const rootDetails = getRootAssignmentDetails();
 
     try {
@@ -140,10 +141,11 @@ function AssignmentNewOrDupe() {
 
       // Temporarily disabled for development and testing
       const result = await API.graphql({query: createAssignment, variables: {input: inputData}})
-      setActiveModal({
-        type:MODAL_TYPES.confirmNewAssignmentPhaseCreated,
-        data: [selectedRootAssignment.title, result.data.createAssignment]
-      });
+      closeModalAndEditPhase(result.data.createAssignment);
+      // setActiveModal({
+      //   type:MODAL_TYPES.confirmNewAssignmentPhaseCreated,
+      //   data: [selectedRootAssignment.title, result.data.createAssignment]
+      // });
     } catch (error) {
       reportError(error, `We're sorry. There was a problem creating your ${selectedRootAssignment.title} assignment round.`);
     }
@@ -432,7 +434,6 @@ function AssignmentNewOrDupe() {
                     without an original assignment 1st draft to base them on.</h4>
                   </Col>
                   }
-
                 </Row>
               </Container>
             </Col>

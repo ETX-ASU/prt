@@ -1,7 +1,10 @@
 import React, {Fragment, useState} from 'react';
 import {API} from 'aws-amplify';
 import {useDispatch, useSelector} from "react-redux";
-import {updateAssignment as updateAssignmentMutation} from '../../graphql/mutations';
+import {
+  createAssignment as createAssignmentMutation,
+  updateAssignment as updateAssignmentMutation
+} from '../../graphql/mutations';
 import {setActiveUiScreenMode, setAssignmentData} from "../../app/store/appReducer";
 import {UI_SCREEN_MODES, MODAL_TYPES} from "../../app/constants";
 import {Button, Col, Container, Row} from "react-bootstrap";
@@ -15,6 +18,8 @@ import {reportError} from "../../developer/DevUtils";
 import BasicAssignmentSettings from "./BasicAssignmentSettings";
 import ReviewPhaseSettings from "../../tool/ReviewPhaseSettings";
 import {deepCopy} from "../../app/utils/deepCopy";
+import {v4 as uuid} from "uuid";
+import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
 
 
 function AssignmentEditor() {
@@ -23,6 +28,7 @@ function AssignmentEditor() {
   const [formData, setFormData] = useState(useSelector(state => state.app.assignment));
   const isLimitedEditing = useSelector(state => Boolean(state.app.homeworks?.length));
   const [activeModal, setActiveModal] = useState(null);
+  const isNewPhase = (!formData.lineItemId);
 
 
   async function handleCancelBtn(e) {
@@ -55,9 +61,18 @@ function AssignmentEditor() {
     }
 
     try {
-      await API.graphql({query: updateAssignmentMutation, variables: {input: inputData}});
+      if (window.isDevMode) inputData.lineItemId = (`FAKE-${uuid()}`);
+      const result = API.graphql({query: updateAssignmentMutation, variables: {input: inputData}});
+      if (isNewPhase) {
+        if (window.isDevMode && result) {
+          setActiveModal({type:MODAL_TYPES.confirmAssignmentSaved, id:urlAssignmentId});
+        } else {
+          await handleConnectToLMS(inputData);
+          // If live, this will send user back to LMS and close this app.
+        }
+      }
     } catch (error) {
-      reportError(error, `We're sorry. An error occurred while trying to update the edits to your assignment. Please wait a moment and try again.`);
+      reportError(error, `We're sorry. An error occurred while trying to ${isNewPhase ? 'complete the creation of your new assignment phase.': 'update the edits to your assignment.'} Please wait a moment and try again.`);
     }
 
     const isOrigin = (!formData.toolAssignmentData.sequenceIds.length);
@@ -84,6 +99,11 @@ function AssignmentEditor() {
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
   }
 
+  function handleReturnToLms() {
+    setActiveModal(null);
+    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.returnToLmsScreen))
+  }
+
   function renderModal() {
     switch (activeModal.type) {
       case MODAL_TYPES.cancelDupedAssignmentEditsWarning:
@@ -106,6 +126,14 @@ function AssignmentEditor() {
             <p>Canceling will loose any changes you may have made to your {activeModal.data[0]} assignment.</p>
           </ConfirmationModal>
         )
+      case MODAL_TYPES.confirmAssignmentSaved:
+        return (
+          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'} buttons={[
+            {name: 'Continue', onClick: handleReturnToLms},
+          ]}>
+            <p>Assignment has been saved! In order to access it, use this assignmentId: {activeModal.id}</p>
+          </ConfirmationModal>
+        );
       default:
         return;
     }
@@ -116,8 +144,8 @@ function AssignmentEditor() {
       {activeModal && renderModal()}
 
       <HeaderBar title={`Edit: ${formData.title}`} >
-        <Button onClick={handleCancelBtn} className='mr-2'>Cancel</Button>
-        <Button onClick={handleUpdateBtn}>Update</Button>
+        {!isNewPhase && <Button onClick={handleCancelBtn} className='mr-2'>Cancel</Button>}
+        <Button onClick={handleUpdateBtn}>{isNewPhase ? 'Complete Creation' : 'Update'}</Button>
       </HeaderBar>
 
       {isLimitedEditing &&
