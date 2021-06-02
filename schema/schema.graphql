@@ -28,7 +28,8 @@ type Homework @model
 }
 
 type Review @model
-@key(name:"reviewsByHmwkAndAssessorId", fields:["homeworkId", "assessorId"], queryField:"reviewsByHmwkAndAssessorId") {
+@key(name:"reviewsByHmwkAndAssessorId", fields:["homeworkId", "assessorId"], queryField:"reviewsByHmwkAndAssessorId")
+@key(name:"reviewsByAsmntId", fields:["assignmentId"], queryField:"reviewsByAsmntId") {
   id: ID!
   assignmentId: ID! # id of the assignment. Yes, this is accessible via homework data but we need access speed and efficiency
   assessorId: ID! # id of student who must provide a review/assessment for
@@ -57,7 +58,6 @@ type Criterion {
 }
 
 # ===================================================== ASSIGNMENT
-
 type ToolAssignmentData {
   rubricRanks: [Rank]
   rubricCriteria: [Criterion]
@@ -66,14 +66,10 @@ type ToolAssignmentData {
   minPeersBeforeAllocating: Int # number of peers that must have turned in work before allocation can begin
 }
 
-
 # ===================================================== HOMEWORK
-# Homework A is owned by student A. However, comments on homework A might be owned by students B, C, & D. Therefore, we
-# must NOT delete homework A, even if student A leaves the class, because B, C & D depend on Homework A for their grades.
 type ToolHomeworkData {
   draftContent: String # this is the actual essay content. (Might eventually be a url). It is NULL "" if it is a REVIEW round.
 }
-
 
 
 # ===================================================== REVIEW
