@@ -14,6 +14,7 @@ export const MODAL_TYPES = {
   confirmAssignmentSaved: "confirmAssignmentSaved",
   confirmHomeworkSubmitted: "confirmHomeworkSubmitted",
   warningBeforeHomeworkSubmission: "warningBeforeHomeworkSubmission",
+  warningInvalidSubmission: "warningInvalidSubmission",
   showBatchSubmitOptions: "showBatchSubmitOptions",
   showWaitingForGrades: "showWaitingForGrades",
   chooseLinkOrDelete: "chooseLinkOrDelete"

@@ -2,26 +2,30 @@
 
 http://localhost:3000/assignment?userId=11&courseId=course-002&role=learner&assignmentId=5a8cd647-00dc-40f5-b307-3a0436c16a6e
 
-
-1. When giving a review, I should not be able to "SUBMIT" until I've provided at least 1 comment and
-   selected a rank for every criterion
-2. When student sees ReviewSessionDash, selects "BeginReview", makes rank selection and returns the button doesn't get updated 
-   to say "continue review" when student returns to ReviewSessionDash
-3. When student reviews assessments received from peers, they should see indication it is from instructor
-4. Instead of button to show next review received, perhaps show text link buttons: INSTRUCTOR | PEER A | PEER B | PEER C
-5. Perhaps change placement of those buttons
-6. Add "assessment saved" msg to bottom left of screen
-7. Add automatic saving interval
 8. Add in ability to provide 1-5 star feedback
+8. On the ReviewSessionDash, check for review session "homework" completion and a "submit" button for entire homework.
+   Right now, student can submit assessments of peer work. Student must also rate the comments they received. Once that 
+   is done, they can hit the "submit" button. Before that, they can see a message indicating what is left to do before
+   this review session is considered complete.
+8. Add feature: when student is writing draft 2 or greater, give them ability to see reviews from peers
+8. Add feature: mechanism to scroll/shrink criterion tabs when screen is too narrow
+9. Create UI for instructor to grade a peer review session!
 
-   
-1. When instructor EDITs assignment and clicks UPDATE to save... it shows error and tells you to close the window to
-   complete creation of the assignment. HOWEVER... it DOES save the changes properly. Instead, this should just take the
-   instructor back to the previous screen showing the list of homeworks.
-   
-2. When using an image... it seems the placement value of the dots gets thrown off
-3. Sometimes, when submitting an assignment during the modal window popup... it gets
-   cancelled becuz of autosave (I think)
+
+
+
+Root 1st draft assignment - sequenceIds = []
+1st draft review - sequenceIds = [1stDraftId]
+2nd draft        - sequenceIds = [1stDraftId, 1stDraftReviewId]
+2nd draft review - sequenceIds = [1stDraftId, 1stDraftReviewId, 2ndDraftId]
+
+I'm puzzled about how my own darn code works, which is not great. The line item id does not seem to exist on anything
+except the original assignment. AHHHHHHHHHHH: this is only true of locally created, DEV mode assignments! This might be fixed now
+on DEV assignments.
+
+The assignmentId gets the reviewAssignment and uses it's sequenceIds to find previous assignment. If there is none, then
+it is the ROOT. If there is a previous and the count of preceding assignments is odd, then the previous was a draft and this
+assignment is a review.
 
 
 
@@ -49,41 +53,6 @@ When do I pull assessments data?
 4. As a student looking at my own paper:
    1. When I load my dashboard I pull DB for all SUBMITTED comments related to my homework
    
-
-# EXTRAS
-
-1. Prevent page flashing from 'window resized' event by getting header bar height and saving to redux
-   and potentially saving 'homework height' values in redux as well?
-
-
-
-   
-
-   1. When load student homework for reviewing I look for the assessment in redux store.
-   1. I pull all assessments for a sll assignments at start and save to redux.
-   2. I 
-
-1. After saving or submitting I must:
-   1) use query to refetch the specific assessed user's homework and update that in redux
-   2) use query to refetch the specific assignment and update that in redux
-
-
-
-
-
-
-
-
-
-
-
-
-
-1. In Assessor, after a comment is updated or a rank selected, save it to DB but do NOT re-fetch.
-   NOTE if there were ANY changes.
-   2. When navigating to another student or back or the assessor loses focus... THEN you can request
-   a refetch of this student's data.
-
 
 
 
