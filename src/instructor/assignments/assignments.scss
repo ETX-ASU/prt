@@ -38,6 +38,26 @@
   line-height: 1;
 }
 
+.rating-prompt {
+  float: left;
+
+  .star {
+    float: right;
+    display: inline-block;
+    cursor: pointer;
+    color: var(--x-lightest-gray);
+
+    &.active {
+      color: var(--x-gray)
+    }
+  }
+
+  .star:hover,
+  .star:hover ~ .star {
+    color: var(--x-darkest-gray);
+  }
+}
+
 .add-remove-opts-bar {
   display: inline-block;
 

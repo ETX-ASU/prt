@@ -2,7 +2,7 @@ import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import {UI_SCREEN_MODES} from "../../app/constants";
 import {Button, Row, Col} from 'react-bootstrap';
-import {setActiveUiScreenMode, setCurrentlyReviewedStudentId} from "../../app/store/appReducer";
+import {setActiveUiScreenMode, setCurrentlyReviewedStudentId, updateSingleReview} from "../../app/store/appReducer";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faCheck, faChevronLeft, faChevronRight, faGripLines, faTimes} from '@fortawesome/free-solid-svg-icons'
@@ -14,6 +14,10 @@ import CommentsPanel from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
 import {useThrottle} from "../../tool/ToolUtils";
 import ReactQuill from "react-quill";
+import moment from "moment";
+import {API} from "aws-amplify";
+import {updateReview} from "../../graphql/mutations";
+import {reportError} from "../../developer/DevUtils";
 
 library.add(faCheck, faTimes, faGripLines, faChevronLeft, faChevronRight);
 
@@ -34,6 +38,8 @@ function AssessedHomeworkViewer(props) {
   } = props;
   const {toolHomeworkData} = homework;
 
+  const dispatch = useDispatch();
+
   const review = reviewsForUser.find(r => r.id === engagedPeerReviewId);
   const baseNameChar = (reviewsForUser[0].assessorId === assignment.ownerId) ? 64 : 65;
   const reviewLinks = reviewsForUser.map((r, i) => {
@@ -44,8 +50,6 @@ function AssessedHomeworkViewer(props) {
   const headerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
   const throttleCallbackRef = useRef();
-
-  const dispatch = useDispatch();
 
   const [userComments, setUserComments] = useState([]);
   const [availableHeight, setAvailableHeight] = useState(2000);
@@ -186,6 +190,38 @@ function AssessedHomeworkViewer(props) {
   }
 
 
+  function onCommentRated(comment) {
+    const i = review.comments.findIndex(c => c.id === comment.id);
+    const altComments = [...review.comments];
+    altComments[i] = comment;
+    const altReview = {...review, comments: altComments};
+    console.log(`onCommentRated: `, comment);
+    // dispatch(updateSingleReview(altReview));
+    saveUpdatesToServer(altReview);
+  }
+
+  async function saveUpdatesToServer(data) {
+    const inputData = {...data};
+    delete inputData.createdAt;
+    delete inputData.updatedAt;
+
+    inputData.comments = inputData.comments.map(c => ({
+      id: c.id,
+      tagNum: c.tagNum,
+      content: c.content,
+      index: c.index,
+      length: c.length,
+      commentRating: c.commentRating
+    }));
+
+    try {
+      await API.graphql({query: updateReview, variables: {input: inputData}});
+      dispatch(updateSingleReview(data));
+    } catch (error) {
+      reportError(error, `We're sorry. An error occurred while trying to save the rating you gave to the assessment comments. Please wait a moment and try again.`);
+    }
+  }
+
   return (
     <Fragment>
       {!isInstructorAssessment &&
@@ -243,8 +279,7 @@ function AssessedHomeworkViewer(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
-              onChange={() => {
-              }}
+              onChange={() => {}}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}
@@ -260,6 +295,8 @@ function AssessedHomeworkViewer(props) {
             activeCommentId={activeCommentId}
             comments={review.comments}
             setActiveCommentId={setActiveCommentId}
+            isAbleToRateComments={true}
+            onCommentRated={onCommentRated}
           />
         </div>
       </div>

@@ -3,12 +3,13 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
-import {faChevronLeft, faChevronRight, faPlus, faTrash} from "@fortawesome/free-solid-svg-icons";
-library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
+import {faChevronLeft, faChevronRight, faPlus, faTrash, faStar} from "@fortawesome/free-solid-svg-icons";
+library.add(faPlus, faTrash, faChevronLeft, faChevronRight, faStar);
 
 
 function CommentsPanel(props) {
-  const {setActiveCommentId, onAddComment, onDeleteComment, onCommentsEdited, activeCommentId, updateComment, comments, isReadOnly} = props;
+  const {setActiveCommentId, onAddComment, onDeleteComment, onCommentsEdited, onCommentRated, activeCommentId, updateComment, comments,
+    isReadOnly, isAbleToRateComments} = props;
   // const visCriteria = criteria.filter(c => c.isVisible);
 
   const commentTextArea = useRef(null);
@@ -61,6 +62,12 @@ function CommentsPanel(props) {
     if (!isReadOnly) updateComment({...activeComment, content:commentText})
   }
 
+  function onStarSelected(starNum) {
+    const altComment = {...activeComment, commentRating:starNum};
+    setActiveComment(altComment);
+    onCommentRated(altComment);
+  }
+
   const showPlus = !!props.showPlusButton && !activeCommentId && !isReadOnly;
   const placeholderText = (isReadOnly) ? `Select highlight to see comment notes.` : `Select a range of text to create a comment.`;
 
@@ -102,7 +109,16 @@ function CommentsPanel(props) {
             value={commentText}/>
 
           {/*<Button className='position-absolute w-100 h-50 mt-2 bg-warning' onClick={testAdd} />*/}
-
+          {isAbleToRateComments && activeComment &&
+          <div>
+            <p className='rating-prompt text-right pt-2 float-right'><span className='mr-2'>How helpful was this feedback?</span>
+              {[5,4,3,2,1].map(starNum =>
+                <a key={starNum} className={`d-inline star${(activeComment.commentRating >= starNum) ? ' active' : ''}`} onClick={() => onStarSelected(starNum)}>
+                  <FontAwesomeIcon className='btn-icon' size="1x" icon={faStar}/>
+                </a>
+              )}
+            </p>
+          </div>}
 
           {/*{shownRanks.map((rank, rNum) =>*/}
           {/*  <p key={rNum}><strong>{rank.name}: </strong>{shownCriteria[critIndex].rankSummaries[rNum]}</p>*/}

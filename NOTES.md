@@ -3,6 +3,8 @@
 http://localhost:3000/assignment?userId=11&courseId=course-002&role=learner&assignmentId=5a8cd647-00dc-40f5-b307-3a0436c16a6e
 
 8. Add in ability to provide 1-5 star feedback
+   
+8. Show x of y feedback rating for assessments given   
 8. On the ReviewSessionDash, check for review session "homework" completion and a "submit" button for entire homework.
    Right now, student can submit assessments of peer work. Student must also rate the comments they received. Once that 
    is done, they can hit the "submit" button. Before that, they can see a message indicating what is left to do before
