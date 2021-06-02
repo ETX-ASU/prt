@@ -8,7 +8,7 @@ library.add(faPlus, faTrash, faChevronLeft, faChevronRight);
 
 
 function CommentsPanel(props) {
-  const {setActiveCommentId, onAddComment, onDeleteComment, activeCommentId, updateComment, comments, isReadOnly} = props;
+  const {setActiveCommentId, onAddComment, onDeleteComment, onCommentsEdited, activeCommentId, updateComment, comments, isReadOnly} = props;
   // const visCriteria = criteria.filter(c => c.isVisible);
 
   const commentTextArea = useRef(null);
@@ -51,7 +51,10 @@ function CommentsPanel(props) {
   }
 
   function onChange(e) {
-    if (!isReadOnly) setCommentText(e.target.value);
+    if (!isReadOnly) {
+      onCommentsEdited();
+      setCommentText(e.target.value);
+    }
   }
 
   function onBlur(e) {

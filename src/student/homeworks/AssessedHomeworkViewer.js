@@ -23,8 +23,23 @@ const MIN_RESIZE_INTERVAL = 200;
 
 
 function AssessedHomeworkViewer(props) {
-  const {homework, assignment, isInstructorAssessment, review, excessHeight, onShowNextReview} = props;
+  const {
+    homework,
+    assignment,
+    isInstructorAssessment,
+    reviewsForUser,
+    engagedPeerReviewId,
+    excessHeight,
+    onShowReview
+  } = props;
   const {toolHomeworkData} = homework;
+
+  const review = reviewsForUser.find(r => r.id === engagedPeerReviewId);
+  const baseNameChar = (reviewsForUser[0].assessorId === assignment.ownerId) ? 64 : 65;
+  const reviewLinks = reviewsForUser.map((r, i) => {
+    const linkName = (r.assessorId === assignment.ownerId) ? "Instructor" : "Peer " + String.fromCharCode(baseNameChar + i);
+    return {isActive: r.id === engagedPeerReviewId, linkName, reviewId: r.id};
+  })
 
   const headerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
@@ -81,17 +96,16 @@ function AssessedHomeworkViewer(props) {
   }, [activeCommentId])
 
 
-
   function getInitializedUserComments(comments) {
     const editor = reactQuillRef.current.editor;
     const origSelection = editor.getSelection();
 
     // console.log("--- getInitializedUserComments() polling origContents");
-    const altUserComments = comments.map((c,i) => {
+    const altUserComments = comments.map((c, i) => {
       const bounds = editor.getBounds(c.index, c.length);
       const theComment = {
         ...c,
-        tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1),
+        tagName: (i + 1 < 10) ? "0" + (i + 1) : "" + (i + 1),
         x: bounds.left + bounds.width,
         y: bounds.top + editor.scrollingContainer.scrollTop,
         origContent: editor.getContents(c.index, c.length),
@@ -101,9 +115,8 @@ function AssessedHomeworkViewer(props) {
     })
 
     if (origSelection) editor.setSelection(origSelection);
-    return(altUserComments)
+    return (altUserComments)
   }
-
 
 
   function onWindowResized() {
@@ -140,7 +153,6 @@ function AssessedHomeworkViewer(props) {
   }
 
 
-
   function onCancelButton() {
     dispatch(setCurrentlyReviewedStudentId(''));
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
@@ -155,42 +167,48 @@ function AssessedHomeworkViewer(props) {
     function onMouseMove(e) {
       let curY = e.clientY;
       let pixelDeltaY = curY - dragStartY;
-      let percentDeltaY = pixelDeltaY/availableHeight * 100;
+      let percentDeltaY = pixelDeltaY / availableHeight * 100;
       // let btnHeightPerc = 22/availableHeight * 100;
-      let btnHeightPerc = 48/availableHeight * 100;
+      let btnHeightPerc = 48 / availableHeight * 100;
 
       let newPerc = origTopZonePerc + percentDeltaY;
-      let nextTopPerc = Math.min(newPerc, MAX_TOP_ZONE_PERCENT-btnHeightPerc);
+      let nextTopPerc = Math.min(newPerc, MAX_TOP_ZONE_PERCENT - btnHeightPerc);
 
-      let minTopPercent = MIN_TOP_ZONE_PIXELS/availableHeight * 100
-      nextTopPerc = Math.max(nextTopPerc, minTopPercent+btnHeightPerc);
+      let minTopPercent = MIN_TOP_ZONE_PIXELS / availableHeight * 100
+      nextTopPerc = Math.max(nextTopPerc, minTopPercent + btnHeightPerc);
       setTopZonePercent(nextTopPerc);
     }
 
-    function onMouseUp(){
+    function onMouseUp() {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     }
   }
 
 
-	return (
-		<Fragment>
+  return (
+    <Fragment>
       {!isInstructorAssessment &&
       <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
         <Col className='p-0'>
-          <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon icon={faChevronLeft}/></Button>
+          <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon
+            icon={faChevronLeft}/></Button>
           <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
         </Col>
         <Col className='text-right p-0 col-4'>
-          <h3 className='d-inline mr-2 btn-sm' >Reviewer {props.anonymousName}</h3>
-          <Button className='d-inline mr-2 btn-sm' onClick={onShowNextReview}><FontAwesomeIcon icon={faChevronRight}/></Button>
+          <h3 className='d-inline btn-sm'>REVIEWS:</h3>
+          <div className="btn-group d-inline reviewer-links">
+            {reviewLinks.map(link =>
+              <a key={link.reviewId} className={`btn btn-sm btn-primary${link.isActive ? ' active' : ''}`}
+                onClick={() => onShowReview(link.reviewId)}>{link.linkName}</a>
+            )}
+          </div>
         </Col>
       </Row>
       }
 
-			<div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
-        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent/100)}px)`}}>
+      <div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
+        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent / 100)}px)`}}>
           <RubricAssessorPanel
             isReadOnly={!!review.submittedOnDate}
             isShowCriteriaPercents={isInstructorAssessment}
@@ -201,19 +219,20 @@ function AssessedHomeworkViewer(props) {
         </div>
 
         <div className='drag-bar' onMouseDown={onDragResizeBegun} style={{top: `calc(${topZonePercent}% - 22px)`}}>
-          <div className='drag-knob'><FontAwesomeIcon className={'fa-xs'} icon={faGripLines} /></div>
+          <div className='drag-knob'><FontAwesomeIcon className={'fa-xs'} icon={faGripLines}/></div>
         </div>
 
-        <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight - (availableHeight * topZonePercent/100)}px)`}}>
+        <div className='bottom-zone d-flex flex-row m-0 p-0'
+          style={{height: `calc(${availableHeight - (availableHeight * topZonePercent / 100)}px)`}}>
           <div className={`d-flex flex-column text-editor no-bar`}>
-            <EditorToolbar />
+            <EditorToolbar/>
             <div id='comments-layer-wrapper'>
               <div className='comment-buttons-layer'>
                 {userComments.map(c =>
                   <div key={c.id}
                     onClick={() => setActiveCommentId(c.id)}
                     className={`comment-btn${(c.id === activeCommentId) ? ' selected' : ''}`}
-                    style={{top: (c.y - 14)+'px', left: (c.x - 8)+'px'}}>
+                    style={{top: (c.y - 14) + 'px', left: (c.x - 8) + 'px'}}>
                     {c.tagName}
                   </div>
                 )}
@@ -224,7 +243,8 @@ function AssessedHomeworkViewer(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
-              onChange={() => {}}
+              onChange={() => {
+              }}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}
@@ -242,9 +262,9 @@ function AssessedHomeworkViewer(props) {
             setActiveCommentId={setActiveCommentId}
           />
         </div>
-			</div>
-		</Fragment>
-	)
+      </div>
+    </Fragment>
+  )
 }
 
 export default AssessedHomeworkViewer;

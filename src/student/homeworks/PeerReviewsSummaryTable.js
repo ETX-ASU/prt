@@ -16,8 +16,7 @@ function PeerReviewsSummaryTable(props) {
 	let enhancedDraftsToBeReviewed = draftsToBeReviewedByUser.map((d,i) => {
 		const review = reviewsByUser.find(r => r.homeworkId === d.id);
 		let btnLabel = (review.submittedOnDate) ? PEER_REVIEW_BTN_LABELS.Submitted :
-			(review.beganOnDate && review.comments.length && review.criterionRatings.length)
-				? PEER_REVIEW_BTN_LABELS.InProgress : PEER_REVIEW_BTN_LABELS.NotBegun;
+			(review.beganOnDate) ? PEER_REVIEW_BTN_LABELS.InProgress : PEER_REVIEW_BTN_LABELS.NotBegun;
 
 		return ({
 			key: d.id,

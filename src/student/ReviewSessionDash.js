@@ -74,7 +74,7 @@ function ReviewSessionDash() {
 		console.warn("createAndSaveNewReviewToDB for this student.")
 		const freshReview = Object.assign({}, EMPTY_REVIEW, {
 			id: uuid(),
-			beganOnDate: moment().valueOf(),
+			beganOnDate: 0, //moment().valueOf(),
 			homeworkId,
 			assessorId: activeUserId,
 			assignmentId: draftAssignmentId
@@ -180,7 +180,7 @@ function ReviewSessionDash() {
 				console.warn("NO homework exists for this student. Attempting to create.")
 				const freshHomework = Object.assign({}, EMPTY_HOMEWORK, {
 					id: uuid(),
-					beganOnDate: moment().valueOf(),
+					beganOnDate: 0, //moment().valueOf(),
 					studentOwnerId: activeUser.id,
 					assignmentId: assignment.id
 				});
@@ -253,8 +253,7 @@ function ReviewSessionDash() {
 			// 1. Fetch ids of all completed homework from the previous draft-writing assignment and all reviews created for them
 			fetchAndSetHomeworkStubs();
 			fetchAndSetAllReviews();
-		}
-		else if ((hasLoadedReviews.current && hasLoadedStubs.current) || (isDoingRefresh.current)) {
+		} else if ((hasLoadedReviews.current && hasLoadedStubs.current) || (isDoingRefresh.current)) {
 			// 2. Once all homeworkStubs and allReviews are in redux store, we look for active review this student is working on
 			isDoingRefresh.current = false;
 			let theUserReviews = allReviews.filter(a => a.assessorId === activeUser.id);
@@ -292,7 +291,7 @@ function ReviewSessionDash() {
 			console.log("Step 1-4: theUserReviews", theUserReviews);
 			setReviewsByUser(theUserReviews);
 			const tempReviewsForUser = allReviews.filter(r => r.homeworkId === userDraft.id && r.submittedOnDate);
-			tempReviewsForUser.sort((a,b) => (b.assessorId === assignment.ownerId) ? 1 : (a.submittedOnDate - b.submittedOnDate));
+			tempReviewsForUser.sort((a, b) => (b.assessorId === assignment.ownerId) ? 1 : (a.submittedOnDate - b.submittedOnDate));
 			setReviewsForUser(tempReviewsForUser);
 		}
 	}, [activeUser.id, allHomeworkStubs, allReviews, assignment, createAndSaveNewReviewToDB, fetchAndSetAllReviews, fetchAndSetHomeworkStubs, nextDraftIdToReview]);
@@ -305,7 +304,6 @@ function ReviewSessionDash() {
 
 		fetchAndSetDraftsToBeReviewedByUser();
 	}, [reviewsByUser, allocationMsg, fetchAndSetDraftsToBeReviewedByUser])
-
 
 
 	/*
@@ -322,13 +320,11 @@ function ReviewSessionDash() {
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssessedHomework));
 	}
 
-	function onShowNextReview() {
-		console.log("onSeeReviewsByPeers() called");
-		let index = reviewsForUser.findIndex(r => r.id === engagedPeerReviewId);
-		index = (index+1 === reviewsForUser.length) ? 0 : index+1;
-		setEngagedPeerReviewId(reviewsForUser[index].id);
+	function onShowReview(reviewId) {
+		setEngagedPeerReviewId(reviewId);
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssessedHomework));
 	}
+
 	//
 	// function handleReviewButton() {
 	// 	console.log("handleReviewButton() called")
@@ -388,7 +384,8 @@ function ReviewSessionDash() {
 								<td className='border-top-0'>Reviews of Your Work</td>
 								<td className='border-top-0'>{reviewsForUser.length}</td>
 								<td className='border-top-0'>
-									<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={onSeeReviewsByPeers}>See Reviews Received</Button>
+									<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={onSeeReviewsByPeers}>See
+										Reviews Received</Button>
 								</td>
 							</tr>
 							</tbody>
@@ -432,15 +429,15 @@ function ReviewSessionDash() {
 			</Row>
 
 				// old
-			// <Row className={'m-0 p-0 h-100'}>
-			// 	<Col className='rounded p-0'>
-			// 		<PeerHomeworkAssessor
-			// 			isEditMode={false}
-			// 			refreshHandler={fetchAndSetActiveUserCurrentHomework}
-			// 			assignment={assignment}
-			// 			homework={activelyReviewedPeerDraft}/>
-			// 	</Col>
-			// </Row>
+				// <Row className={'m-0 p-0 h-100'}>
+				// 	<Col className='rounded p-0'>
+				// 		<PeerHomeworkAssessor
+				// 			isEditMode={false}
+				// 			refreshHandler={fetchAndSetActiveUserCurrentHomework}
+				// 			assignment={assignment}
+				// 			homework={activelyReviewedPeerDraft}/>
+				// 	</Col>
+				// </Row>
 			}
 
 			{(activeUiScreenMode === UI_SCREEN_MODES.viewAssessedHomework) &&
@@ -451,10 +448,10 @@ function ReviewSessionDash() {
 						key={engagedPeerReviewId}
 						assignment={assignment}
 						excessHeight={0}
+						reviewsForUser={reviewsForUser}
 						homework={usersDraft}
-						review={reviewsForUser.find(r => r.id === engagedPeerReviewId)}
-						anonymousName={String.fromCharCode(65 + reviewsForUser.findIndex(r => r.id === engagedPeerReviewId))}
-						onShowNextReview={onShowNextReview}
+						engagedPeerReviewId={engagedPeerReviewId}
+						onShowReview={onShowReview}
 					/>
 					{/*<HomeworkReviewer*/}
 					{/*	isEditMode={false}*/}
@@ -466,7 +463,8 @@ function ReviewSessionDash() {
 			}
 
 			{(activeUiScreenMode === UI_SCREEN_MODES.editHomework) &&
-			<HomeworkEngager refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment} homework={homework}/>
+			<HomeworkEngager refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment}
+				homework={homework}/>
 			}
 		</Container>
 	);

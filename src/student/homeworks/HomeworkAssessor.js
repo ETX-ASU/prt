@@ -25,7 +25,7 @@ library.add(faCheck, faTimes, faGripLines);
 
 const MAX_TOP_ZONE_PERCENT = 80;
 const MIN_TOP_ZONE_PIXELS = 70;
-
+const MIN_REQUIRED_COMMENTS = 1;
 
 
 function HomeworkAssessor(props) {
@@ -38,7 +38,7 @@ function HomeworkAssessor(props) {
   const reactQuillRef = useRef(null);
 
   const dispatch = useDispatch();
-	const activeUser = useSelector(state => state.app.activeUser);
+  const activeUser = useSelector(state => state.app.activeUser);
 
   const [userComments, setUserComments] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
@@ -48,6 +48,8 @@ function HomeworkAssessor(props) {
   const [showPlusButton, setShowPlusButton] = useState(false);
   const [activeCommentId, _setActiveCommentId] = useState('');
   const [origContent, setOrigContent] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChangedSinceLastSave, setHasChangedSinceLastSave] = useState(false);
 
   const setActiveCommentId = (id) => {
     setPrevCommentId(activeCommentId || '');
@@ -105,11 +107,11 @@ function HomeworkAssessor(props) {
     const origSelection = editor.getSelection();
 
     console.log("--- getInitializedUserComments() polling origContents");
-    const altUserComments = comments.map((c,i) => {
+    const altUserComments = comments.map((c, i) => {
       const bounds = editor.getBounds(c.index, c.length);
       const theComment = {
         ...c,
-        tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1),
+        tagName: (i + 1 < 10) ? "0" + (i + 1) : "" + (i + 1),
         x: bounds.left + bounds.width,
         y: bounds.top + editor.scrollingContainer.scrollTop,
         origContent: editor.getContents(c.index, c.length),
@@ -119,7 +121,7 @@ function HomeworkAssessor(props) {
     })
 
     if (origSelection) editor.setSelection(origSelection);
-    return(altUserComments)
+    return (altUserComments)
   }
 
   function onWindowResized() {
@@ -190,19 +192,24 @@ function HomeworkAssessor(props) {
       origContent: editor.getContents(sel.index, sel.length),
       commentRating: -1
     }
+    if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
     console.log("--- onAddComment():", newComment.origContent);
 
     editor.formatText(sel.index, sel.length, 'comment-tag', {id: newComment.id}, 'api');
-    let altComments = [...userComments, newComment].sort((a,b) => a.index - b.index).map((c, i) => ({...c, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
+    let altComments = [...userComments, newComment].sort((a, b) => a.index - b.index).map((c, i) => ({
+      ...c,
+      tagName: (i + 1 < 10) ? "0" + (i + 1) : "" + (i + 1)
+    }));
     setUserComments(altComments);
 
-    saveUpdatesToServer({...review, comments:altComments})
+    saveUpdatesToServer({...review, comments: altComments})
     // TODO: This is why the id isn't getting set. Not sure why.
     setActiveCommentId(newComment.id);
   }
 
   function onDeleteComment(commentId, isOnlyStyleDelete) {
     if (!commentId) return;
+    if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
 
     const editor = reactQuillRef.current.editor;
 
@@ -214,14 +221,18 @@ function HomeworkAssessor(props) {
     }
 
     altComments.splice(cIndex, 1);
-    altComments = altComments.map((c, i) => ({...c, tagNum:i+1, tagName: (i+1 < 10) ? "0" + (i+1) : "" + (i+1)}));
+    altComments = altComments.map((c, i) => ({
+      ...c,
+      tagNum: i + 1,
+      tagName: (i + 1 < 10) ? "0" + (i + 1) : "" + (i + 1)
+    }));
     setUserComments(altComments);
 
     setActiveCommentId('');
     editor.setContents(origContent);
     setUserComments(getInitializedUserComments(altComments));
 
-    saveUpdatesToServer({...review, comments:altComments})
+    saveUpdatesToServer({...review, comments: altComments});
   }
 
   function onUpdateComment(comment) {
@@ -231,11 +242,12 @@ function HomeworkAssessor(props) {
     if (!userComments[index] || userComments[index].content !== comment.content) {
       altComments[index] = comment;
       setUserComments(altComments);
-      saveUpdatesToServer({...review, comments:altComments})
+      saveUpdatesToServer({...review, comments: altComments});
     }
   }
 
   function onRankSelected(selectedCriterion, rNum) {
+    if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
     const ratings = [...review.criterionRatings];
     let ratingIndex = ratings.findIndex(r => r.criterionId === selectedCriterion.id);
     if (ratingIndex >= 0) {
@@ -252,11 +264,12 @@ function HomeworkAssessor(props) {
 
     if (onRatingChanges) onRatingChanges(ratings);
     const altReview = {...review, criterionRatings: ratings};
-    saveUpdatesToServer(altReview)
+    saveUpdatesToServer(altReview);
   }
 
 
   async function saveUpdatesToServer(data, isSubmit = false) {
+    setIsSaving(true);
     if (!data.beganOnDate) data.beganOnDate = moment().valueOf();
     if (isSubmit) data.submittedOnDate = moment().valueOf();
 
@@ -275,6 +288,7 @@ function HomeworkAssessor(props) {
 
     try {
       await API.graphql({query: updateReview, variables: {input: inputData}});
+      setHasChangedSinceLastSave(false);
       dispatch(updateSingleReview(data));
       if (isSubmit) {
         setActiveModal(null);
@@ -282,6 +296,8 @@ function HomeworkAssessor(props) {
       }
     } catch (error) {
       reportError(error, `We're sorry. An error occurred while trying to save your assessment changes. Please wait a moment and try again.`);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -311,23 +327,47 @@ function HomeworkAssessor(props) {
   //   }
   // }
 
+  function getValidationResults() {
+    if (review.comments.length < MIN_REQUIRED_COMMENTS) {
+      return {
+        isValid: false,
+        reason: `You must provide a minimum of at least ${MIN_REQUIRED_COMMENTS} comments to submit your review. You have provided ${review.comments.length}.`
+      }
+    }
+    if (review.criterionRatings.length < assignment.toolAssignmentData.rubricCriteria.length) {
+      return {
+        isValid: false,
+        reason: `You must select a rating for each of the ${assignment.toolAssignmentData.rubricCriteria.length} criterion listed above. You have selected ratings for ${review.criterionRatings.length} of them.`
+      }
+    }
+    return {isValid: true, reason: 'Ready to submit!'};
+  }
 
   function renderModal() {
     switch (activeModal.type) {
+      case MODAL_TYPES.warningInvalidSubmission:
+        const explanation = getValidationResults().reason;
+        return (
+          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Unable to Submit'} buttons={[
+            {name: 'Cancel', onClick: () => setActiveModal(null)},
+          ]}>
+            <p>{explanation}</p>
+          </ConfirmationModal>
+        )
       case MODAL_TYPES.warningBeforeHomeworkSubmission:
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
-            {name:'Cancel', onClick: () => setActiveModal(null)},
-            // {name:'Submit', onClick:submitAssessment},
-            {name:'Submit', onClick:() => saveUpdatesToServer(review, true)},
+            {name: 'Cancel', onClick: () => setActiveModal(null)},
+            {name: 'Submit', onClick: () => saveUpdatesToServer(review, true)},
           ]}>
-            <p>Once submitted, you can NOT go back to make any edits or additions to your assessment of this peer's work.</p>
+            <p>Once submitted, you can NOT go back to make any edits or additions to your assessment of this peer's
+              work.</p>
           </ConfirmationModal>
         )
       case MODAL_TYPES.confirmHomeworkSubmitted:
         return (
           <ConfirmationModal onHide={() => setActiveModal(null)} title={'Submitted!'} buttons={[
-            {name:'Review', onClick:closeModalAndReview},
+            {name: 'Review', onClick: closeModalAndReview},
           ]}>
             <p>You can now review your submitted assignment.</p>
           </ConfirmationModal>
@@ -349,27 +389,30 @@ function HomeworkAssessor(props) {
     function onMouseMove(e) {
       let curY = e.clientY;
       let pixelDeltaY = curY - dragStartY;
-      let percentDeltaY = pixelDeltaY/availableHeight * 100;
+      let percentDeltaY = pixelDeltaY / availableHeight * 100;
       // let btnHeightPerc = 22/availableHeight * 100;
-      let btnHeightPerc = 48/availableHeight * 100;
+      let btnHeightPerc = 48 / availableHeight * 100;
 
       let newPerc = origTopZonePerc + percentDeltaY;
-      let nextTopPerc = Math.min(newPerc, MAX_TOP_ZONE_PERCENT-btnHeightPerc);
+      let nextTopPerc = Math.min(newPerc, MAX_TOP_ZONE_PERCENT - btnHeightPerc);
 
-      let minTopPercent = MIN_TOP_ZONE_PIXELS/availableHeight * 100
-      nextTopPerc = Math.max(nextTopPerc, minTopPercent+btnHeightPerc);
+      let minTopPercent = MIN_TOP_ZONE_PIXELS / availableHeight * 100
+      nextTopPerc = Math.max(nextTopPerc, minTopPercent + btnHeightPerc);
       setTopZonePercent(nextTopPerc);
     }
 
-    function onMouseUp(){
+    function onMouseUp() {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     }
   }
 
+  function onCommentsEdited(e) {
+    if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
+  }
 
-	return (
-		<Fragment>
+  return (
+    <Fragment>
       {activeModal && renderModal()}
       {!isInstructorAssessment &&
       <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
@@ -379,9 +422,9 @@ function HomeworkAssessor(props) {
       </Row>
       }
 
-			<div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
+      <div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
         {/*<div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>*/}
-        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent/100)}px)`}}>
+        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent / 100)}px)`}}>
           <RubricAssessorPanel
             isReadOnly={!!review.submittedOnDate}
             isShowCriteriaPercents={isInstructorAssessment}
@@ -393,19 +436,20 @@ function HomeworkAssessor(props) {
         </div>
 
         <div className='drag-bar' onMouseDown={onDragResizeBegun} style={{top: `calc(${topZonePercent}% - 22px)`}}>
-          <div className='drag-knob'><FontAwesomeIcon className={'fa-xs'} icon={faGripLines} /></div>
+          <div className='drag-knob'><FontAwesomeIcon className={'fa-xs'} icon={faGripLines}/></div>
         </div>
 
-        <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight - (availableHeight * topZonePercent/100)}px)`}}>
+        <div className='bottom-zone d-flex flex-row m-0 p-0'
+          style={{height: `calc(${availableHeight - (availableHeight * topZonePercent / 100)}px)`}}>
           <div className={`d-flex flex-column text-editor no-bar`}>
-            <EditorToolbar />
+            <EditorToolbar/>
             <div id='comments-layer-wrapper'>
               <div className='comment-buttons-layer'>
                 {userComments.map(c =>
                   <div key={c.id}
                     onClick={() => setActiveCommentId(c.id)}
                     className={`comment-btn${(c.id === activeCommentId) ? ' selected' : ''}`}
-                    style={{top: (c.y - 14)+'px', left: (c.x - 8)+'px'}}>
+                    style={{top: (c.y - 14) + 'px', left: (c.x - 8) + 'px'}}>
                     {c.tagName}
                   </div>
                 )}
@@ -416,7 +460,8 @@ function HomeworkAssessor(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
-              onChange={() => {}}
+              onChange={() => {
+              }}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}
@@ -434,19 +479,31 @@ function HomeworkAssessor(props) {
             updateComment={onUpdateComment}
             onAddComment={onAddComment}
             onDeleteComment={onDeleteComment}
+            onCommentsEdited={onCommentsEdited}
           />
         </div>
-			</div>
+      </div>
 
       {!isInstructorAssessment &&
-      <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
-        <Button className='d-inline mr-2 ql-align-right btn-sm' onClick={() => saveUpdatesToServer(review)}>Save Changes</Button>
-        <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assessment</Button>
-      </div>
+      <Fragment>
+        <div className={'left-side-buttons saved-status-ms m-0'}>
+          {(isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date"}
+        </div>
+        <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
+          <Button className='d-inline mr-2 ql-align-right btn-sm' disabled={isSaving}
+            onClick={() => saveUpdatesToServer(review)}>{isSaving ? 'Saving...' : 'Save Changes'}</Button>
+          <Button className='d-inline ql-align-right btn-sm'
+            onClick={() => setActiveModal(getValidationResults().isValid
+              ? {type: MODAL_TYPES.warningBeforeHomeworkSubmission}
+              : {type: MODAL_TYPES.warningInvalidSubmission})}>
+            Submit Assessment
+          </Button>
+        </div>
+      </Fragment>
       }
 
-		</Fragment>
-	)
+    </Fragment>
+  )
 }
 
 export default HomeworkAssessor;
