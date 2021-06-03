@@ -2,13 +2,19 @@
 
 http://localhost:3000/assignment?userId=11&courseId=course-002&role=learner&assignmentId=5a8cd647-00dc-40f5-b307-3a0436c16a6e
 
-8. Add in ability to provide 1-5 star feedback
-   
-8. Show x of y feedback rating for assessments given   
+7. Add in ability to provide 1-5 star feedback
+7. Show x of y feedback rating for assessments given
+7. Remove/hide/disable save buttons for homework assessor once it has been submitted
+
+8. "See Reviews Received" button should be disabled if NO reviews were received yet
+8. "Reviews Received" panel should show loading wheel until "Reviews to Give" have finished loading 
 8. On the ReviewSessionDash, check for review session "homework" completion and a "submit" button for entire homework.
    Right now, student can submit assessments of peer work. Student must also rate the comments they received. Once that 
    is done, they can hit the "submit" button. Before that, they can see a message indicating what is left to do before
    this review session is considered complete.
+8. After submitting review of peer, buttons go away and then I think the dot placements can get out of sync sometimes 
+   (test with an image)
+   
 8. Add feature: when student is writing draft 2 or greater, give them ability to see reviews from peers
 8. Add feature: mechanism to scroll/shrink criterion tabs when screen is too narrow
 9. Create UI for instructor to grade a peer review session!

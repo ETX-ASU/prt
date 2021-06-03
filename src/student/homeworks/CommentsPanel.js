@@ -4,12 +4,13 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faChevronLeft, faChevronRight, faPlus, faTrash, faStar} from "@fortawesome/free-solid-svg-icons";
+import {useSelector} from "react-redux";
 library.add(faPlus, faTrash, faChevronLeft, faChevronRight, faStar);
 
 
 function CommentsPanel(props) {
   const {setActiveCommentId, onAddComment, onDeleteComment, onCommentsEdited, onCommentRated, activeCommentId, updateComment, comments,
-    isReadOnly, isAbleToRateComments} = props;
+    isReadOnly, isAbleToRateComments, isAbleToSeeRatings} = props;
   // const visCriteria = criteria.filter(c => c.isVisible);
 
   const commentTextArea = useRef(null);
@@ -109,13 +110,18 @@ function CommentsPanel(props) {
             value={commentText}/>
 
           {/*<Button className='position-absolute w-100 h-50 mt-2 bg-warning' onClick={testAdd} />*/}
-          {isAbleToRateComments && activeComment &&
+          {Boolean(isAbleToRateComments || isAbleToSeeRatings) && Boolean(activeComment) &&
           <div>
             <p className='rating-prompt text-right pt-2 float-right'><span className='mr-2'>How helpful was this feedback?</span>
-              {[5,4,3,2,1].map(starNum =>
+              {isAbleToRateComments && [4,3,2,1,0].map(starNum =>
                 <a key={starNum} className={`d-inline star${(activeComment.commentRating >= starNum) ? ' active' : ''}`} onClick={() => onStarSelected(starNum)}>
                   <FontAwesomeIcon className='btn-icon' size="1x" icon={faStar}/>
                 </a>
+              )}
+              {!isAbleToRateComments && isAbleToSeeRatings && [4,3,2,1,0].map(starNum =>
+                <span key={starNum} className={`d-inline locked star${(activeComment.commentRating >= starNum) ? ' active' : ''}`}>
+                  <FontAwesomeIcon className='btn-icon' size="1x" icon={faStar}/>
+                </span>
               )}
             </p>
           </div>}
