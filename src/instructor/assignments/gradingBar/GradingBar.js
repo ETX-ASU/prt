@@ -95,7 +95,7 @@ function GradingBar(props) {
             <Col className='col-9 pt-1 pb-2 xbg-light'>
               <div className='ml-0 mr-4 d-inline-block align-top'>
                 <label htmlFor='autoScore' className='xtext-darkest'>Selected Score</label>
-                <div className={'selected-score'} id={`yourScore`}>{`${manualScore} of 100`}</div>
+                <div className={'selected-score'} id={`yourScore`}>{`${manualScore}%`}</div>
                 {/*<div id={`yourScore`}>{`${reviewedStudent.autoScore} of ${calcMaxScoreForAssignment(assignment)}`}</div>*/}
               </div>
               <div className='mr-4 d-inline-block align-top'>

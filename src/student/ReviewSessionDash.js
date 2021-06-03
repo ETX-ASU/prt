@@ -340,12 +340,8 @@ function ReviewSessionDash() {
 	// }
 
 	function onReviewPeerDraft(peerDraftId) {
-		console.log("--> onReviewPeerDraft() called", peerDraftId);
 		const theActiveReview = reviewsByUser.find(r => r.homeworkId === peerDraftId);
-		console.log("--> theActiveReview", theActiveReview);
 		setActivelyReviewedPeerDraft(draftsToBeReviewedByUser.find(d => d.id === theActiveReview.homeworkId));
-		console.log("--> draftsToBeReviewedByUser", draftsToBeReviewedByUser);
-		console.log("--> theActiveReview.id", theActiveReview.id);
 		setEngagedPeerReviewId(theActiveReview.id);
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.assessPeerHomework));
 	}

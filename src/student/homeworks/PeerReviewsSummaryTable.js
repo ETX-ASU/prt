@@ -18,10 +18,25 @@ function PeerReviewsSummaryTable(props) {
 		let btnLabel = (review.submittedOnDate) ? PEER_REVIEW_BTN_LABELS.Submitted :
 			(review.beganOnDate) ? PEER_REVIEW_BTN_LABELS.InProgress : PEER_REVIEW_BTN_LABELS.NotBegun;
 
+		const total = review.comments.reduce((acc, c) => {
+			acc += (c?.commentRating !== -1) ? c.commentRating + 1 : 0;
+			return acc;
+		}, 0);
+
+		const numRatedComments = review.comments.reduce((acc, c) => {
+			acc += (c?.commentRating !== -1) ? 1 : 0;
+			return acc;
+		}, 0);
+
+		let ratingMsg = (!review.submittedOnDate)
+			? `assessment not submitted`
+			: `${numRatedComments} of ${review.comments.length} comments rated.`;
+		let average = total/(.05 * numRatedComments);
+		if (numRatedComments) ratingMsg += ` (${(Math.round(average)/20).toFixed(2)} Avg.)`;
 		return ({
 			key: d.id,
 			versionName: draftName,
-			feedbackRating: 'not available',
+			feedbackRating: ratingMsg,
 			btnLabel,
 			review
 		})
@@ -37,7 +52,7 @@ function PeerReviewsSummaryTable(props) {
 				<th scope="col" className='border-top-0'/>
 				<th scope="col" className='border-top-0'>Version</th>
 				<th scope="col" className='border-top-0 text-left'>Title</th>
-				<th scope="col" className='border-top-0'>Feedback</th>
+				<th scope="col" className='border-top-0'>Feedback on Comments</th>
 				<th scope="col" className='border-top-0'/>
 			</tr>
 			</thead>

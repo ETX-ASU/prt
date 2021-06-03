@@ -44,17 +44,21 @@
   .star {
     float: right;
     display: inline-block;
-    cursor: pointer;
     color: var(--x-lightest-gray);
 
     &.active {
       color: var(--x-gray)
     }
+
   }
 
-  .star:hover,
-  .star:hover ~ .star {
-    color: var(--x-darkest-gray);
+  .star:not(.locked) {
+    cursor: pointer;
+
+    &:hover,
+    &:hover ~ .star {
+      color: var(--x-darkest-gray);
+    }
   }
 }
 

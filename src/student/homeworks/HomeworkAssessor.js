@@ -480,11 +480,13 @@ function HomeworkAssessor(props) {
             onAddComment={onAddComment}
             onDeleteComment={onDeleteComment}
             onCommentsEdited={onCommentsEdited}
+            isAbleToRateComments={false}
+            isAbleToSeeRatings={(activeUser.id === assignment.ownerId || (activeUser.id === review.assessorId && review.submittedOnDate))}
           />
         </div>
       </div>
 
-      {!isInstructorAssessment &&
+      {!isInstructorAssessment && !review.submittedOnDate &&
       <Fragment>
         <div className={'left-side-buttons saved-status-ms m-0'}>
           {(isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date"}

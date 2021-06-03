@@ -47,6 +47,7 @@ function AssessedHomeworkViewer(props) {
     return {isActive: r.id === engagedPeerReviewId, linkName, reviewId: r.id};
   })
 
+  const activeUser = useSelector(state => state.app.activeUser);
   const headerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
   const throttleCallbackRef = useRef();
@@ -222,6 +223,7 @@ function AssessedHomeworkViewer(props) {
     }
   }
 
+
   return (
     <Fragment>
       {!isInstructorAssessment &&
@@ -295,7 +297,8 @@ function AssessedHomeworkViewer(props) {
             activeCommentId={activeCommentId}
             comments={review.comments}
             setActiveCommentId={setActiveCommentId}
-            isAbleToRateComments={true}
+            isAbleToRateComments={(activeUser.id !== review.assessorId && !isInstructorAssessment)}
+            isAbleToSeeRatings={(activeUser.id === assignment.ownerId || (activeUser.id === review.assessorId && review.submittedOnDate))}
             onCommentRated={onCommentRated}
           />
         </div>
