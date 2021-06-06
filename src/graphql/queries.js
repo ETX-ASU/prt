@@ -10,8 +10,7 @@ export const getAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
-      lineItemId
+      appVersion
       lockOnDate
       isLockedOnSubmission
       isUseAutoScore
@@ -54,8 +53,7 @@ export const listAssignments = /* GraphQL */ `
         title
         summary
         image
-        isLinkedToLms
-        lineItemId
+        appVersion
         lockOnDate
         isLockedOnSubmission
         isUseAutoScore
@@ -206,7 +204,6 @@ export const minHomeworkIdsBySubmittedDate = /* GraphQL */ `
     }
   }
 `;
-
 export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
   query FullHomeworkByAsmntAndStudentId(
     $assignmentId: ID

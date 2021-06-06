@@ -5,7 +5,7 @@ import {API, graphqlOperation} from "aws-amplify";
 import {useDispatch, useSelector} from "react-redux";
 
 import { setActiveUiScreenMode, setSessionData, setAssignmentData } from "./store/appReducer";
-import {ROLE_TYPES, UI_SCREEN_MODES} from "./constants";
+import {APP_VERSION, ROLE_TYPES, UI_SCREEN_MODES} from "./constants";
 import {Container, Row} from "react-bootstrap";
 import InstructorDashboard from "../instructor/InstructorDashboard";
 import StudentDashboard from "../student/StudentDashboard";
@@ -118,6 +118,10 @@ function App() {
 
       // If the item we fetched doesn't have a lineItemId, we take the one we have and add it to assignment in the DB
       // This way, it can't be used again
+			if (!window.isDevMode && assignment.id && !assignment.lineItemId && !lineItemId) {
+				reportError('', `Assignment ${assignment.id} has no lineItemId. We should have received one to add to the assignment DB record, but none was provided by Canvas/LMS!`);
+			}
+
 			if (assignment.id && !assignment.lineItemId && lineItemId) {
         const inputData = Object.assign({}, assignment, {lineItemId});
         delete inputData.createdAt;
@@ -133,7 +137,7 @@ function App() {
 
 	return (
 		<Container id='app-container' className="app pt-4 mb-0 p-0 vh-100">
-			<div id='version-number'>v4.2</div>
+			<div id='version-number'>v{APP_VERSION}</div>
 			<Row className='main-content-row'>
 				{!activeUser?.id && <LoadingIndicator msgClasses='xtext-white' loadingMsg='LOADING'/>}
 				{activeUser.activeRole === ROLE_TYPES.dev && <DevUtilityDashboard />}

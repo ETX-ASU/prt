@@ -10,8 +10,7 @@ export const onCreateAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
-      lineItemId
+      appVersion
       lockOnDate
       isLockedOnSubmission
       isUseAutoScore
@@ -49,8 +48,7 @@ export const onUpdateAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
-      lineItemId
+      appVersion
       lockOnDate
       isLockedOnSubmission
       isUseAutoScore
@@ -88,8 +86,7 @@ export const onDeleteAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
-      lineItemId
+      appVersion
       lockOnDate
       isLockedOnSubmission
       isUseAutoScore

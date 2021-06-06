@@ -6,7 +6,7 @@ type Assignment @model {
   title: String!
   summary: String
   image: String
-  isLinkedToLms: Boolean
+  appVersion: String
   lineItemId: String
   lockOnDate: AWSTimestamp
   isLockedOnSubmission: Boolean

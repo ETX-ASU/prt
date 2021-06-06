@@ -7,7 +7,7 @@ import {
   createAssignment,
   updateAssignment
 } from '../../graphql/mutations';
-import {UI_SCREEN_MODES, MODAL_TYPES} from "../../app/constants";
+import {UI_SCREEN_MODES, MODAL_TYPES, APP_VERSION} from "../../app/constants";
 import {editAssignmentPhase, editDupedAssignment, setActiveUiScreenMode} from "../../app/store/appReducer";
 import "./assignments.scss";
 
@@ -125,7 +125,7 @@ function AssignmentNewOrDupe() {
       const inputData = Object.assign({}, selectedRootAssignment, {
         title: `${selectedRootAssignment.title} - ${rootDetails.roundName}`,
         lineItemId: '',
-        isLinkedToLms: false,
+        appVersion: APP_VERSION,
         id: uuid(),
         ownerId: activeUser.id,
         courseId,
@@ -156,7 +156,6 @@ function AssignmentNewOrDupe() {
       const inputData = Object.assign({}, selectedDupeAssignment, {
         title: (!selectedDupeAssignment.lineItemId) ? selectedDupeAssignment.title : `Copy of ${selectedDupeAssignment.title}`,
         lineItemId: '',
-        isLinkedToLms: false,
         id: (!selectedDupeAssignment.lineItemId) ? selectedDupeAssignment.id : uuid(),
         ownerId: activeUser.id,
         courseId,
