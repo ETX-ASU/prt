@@ -10,7 +10,7 @@ export const onCreateAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
+      appVersion
       lineItemId
       lockOnDate
       isLockedOnSubmission
@@ -49,7 +49,7 @@ export const onUpdateAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
+      appVersion
       lineItemId
       lockOnDate
       isLockedOnSubmission
@@ -88,7 +88,7 @@ export const onDeleteAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
+      appVersion
       lineItemId
       lockOnDate
       isLockedOnSubmission

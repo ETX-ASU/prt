@@ -5,7 +5,7 @@ import {useDispatch, useSelector} from "react-redux";
 import { v4 as uuid } from "uuid";
 
 import {createAssignment as createAssignmentMutation} from '../../graphql/mutations';
-import {MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
+import {APP_VERSION, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
 import {setActiveUiScreenMode} from "../../app/store/appReducer";
 import {Button, Container, Row} from "react-bootstrap";
 
@@ -32,7 +32,6 @@ const emptyAssignment = {
   title: '',
   summary: '',
   image: '',
-  isLinkedToLms: false,
   lineItemId: '',
   isLockedOnSubmission: true,
   lockOnDate: 0,
@@ -63,6 +62,7 @@ function AssignmentCreator() {
     const assignmentId = uuid();
     const inputData = Object.assign({}, formData, {
       id: assignmentId,
+      appVersion: APP_VERSION,
       courseId: courseId,
       ownerId: activeUser.id,
       lockOnDate: (formData.isLockedOnDate) ? moment(formData.lockOnDate).valueOf() : 0

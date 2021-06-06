@@ -10,7 +10,7 @@ export const getAssignment = /* GraphQL */ `
       title
       summary
       image
-      isLinkedToLms
+      appVersion
       lineItemId
       lockOnDate
       isLockedOnSubmission
@@ -54,7 +54,7 @@ export const listAssignments = /* GraphQL */ `
         title
         summary
         image
-        isLinkedToLms
+        appVersion
         lineItemId
         lockOnDate
         isLockedOnSubmission
@@ -206,7 +206,6 @@ export const minHomeworkIdsBySubmittedDate = /* GraphQL */ `
     }
   }
 `;
-
 export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
   query FullHomeworkByAsmntAndStudentId(
     $assignmentId: ID
