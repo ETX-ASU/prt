@@ -6,8 +6,7 @@ type Assignment @model {
   title: String!
   summary: String
   image: String
-  isLinkedToLms: Boolean
-  lineItemId: String
+  appVersion: String
   lockOnDate: AWSTimestamp
   isLockedOnSubmission: Boolean
   isUseAutoScore: Boolean
@@ -15,7 +14,9 @@ type Assignment @model {
   toolAssignmentData: ToolAssignmentData
 }
 
-type Homework @model {
+type Homework @model
+@key(name:"minHomeworkIdsBySubmittedDate", fields:["assignmentId", "submittedOnDate"], queryField:"minHomeworkIdsBySubmittedDate")
+@key(name:"fullHomeworkByAsmntAndStudentId", fields:["assignmentId", "studentOwnerId"], queryField:"fullHomeworkByAsmntAndStudentId") {
   id: ID!
   assignmentId: ID!
   studentOwnerId: ID!
@@ -25,78 +26,64 @@ type Homework @model {
   toolHomeworkData: ToolHomeworkData
 }
 
-
-# ===================================================== RUBRIC
-# Comparing PRT assignments to each other, the main difference is the rubric used. Thus, we treat the rubric as, in a way,
-# the assignment itself. To clone a rubric for use in another assignment... just clone the original assignment.
-
-type Rubric {
-  ranks: [Rank]
-  criteria: [Criterion]
+type Review @model
+@key(name:"reviewsByHmwkAndAssessorId", fields:["homeworkId", "assessorId"], queryField:"reviewsByHmwkAndAssessorId")
+@key(name:"reviewsByAsmntId", fields:["assignmentId"], queryField:"reviewsByAsmntId") {
+  id: ID!
+  assignmentId: ID! # id of the assignment. Yes, this is accessible via homework data but we need access speed and efficiency
+  assessorId: ID! # id of student who must provide a review/assessment for
+  homeworkId: ID! # id of homework this student must assess
+  beganOnDate: AWSTimestamp
+  submittedOnDate: AWSTimestamp
+  comments: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
+  criterionRatings: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
 }
 
+# ===================================================== RUBRIC
 type Rank {
-  id: ID!
   name: String
   points: Int
+  isVisible: Boolean
+  orderNum: Int
 }
 
 type Criterion {
   id: ID!
+  orderNum: Int
+  isVisible: Boolean
   name: String # Name for this criterion. Example: Compelling Argument, Logicallly Sound, Structure, Grammer & Spelling, etc.
   rankSummaries: [String] # description of what qualifies as Excellent, Good, Average, etc.
   weight: Int # number indicating what percentage of grade should come from this criterion
 }
 
-
 # ===================================================== ASSIGNMENT
 type ToolAssignmentData {
-  rubric: Rubric
-  originId: ID # null for original assignment
-  roundNum: Int # 0 for original assignment
-  allocations: [Allocation]
+  rubricRanks: [Rank]
+  rubricCriteria: [Criterion]
+  sequenceIds: [ID] # list of ids for previous rounds. Empty array means this is origin assignment. If this = [A, B] then A is origin, B is 1st draft review, and THIS is 2nd draft
+  minReviewsRequired: Int # number of reviews each student should give
+  minPeersBeforeAllocating: Int # number of peers that must have turned in work before allocation can begin
 }
-
-type Allocation {
-  assessorId: ID! # id of student who must provide a review/assessment for
-  homeworkId: ID! # id of homework this student must assess
-}
-
 
 # ===================================================== HOMEWORK
-# Homework A is owned by student A. However, comments on homework A might be owned by students B, C, & D. Therefore, we
-# must NOT delete homework A, even if student A leaves the class, because B, C & D depend on Homework A for their grades.
 type ToolHomeworkData {
   draftContent: String # this is the actual essay content. (Might eventually be a url). It is NULL "" if it is a REVIEW round.
-  commentsOnDraft: [Comment] # any comments about an essay/homework are stored on this essay/homework data structure itself
-  criterionRatingsOnDraft: [CriterionQualityScore] # students must, in the very least, assess/score the paper for each criterion
-  allocatedHomeworkIds: [ID] # homework IDs of peer drafts this student must review/assess. It is [] EMPTY for a DRAFT round.
 }
 
+
+# ===================================================== REVIEW
+# An assessment is single review of 1 homework by 1 other user (student or instructor)
 type CriterionQualityScore {
-  id: ID!
-  reviewerId: ID!
-  ratingGiven: Int
-  criterionNum: Int! # index of criterion (within rubric's rubric.criteria[] array that the comment is related to (-1 if a general comment)
+  criterionId: ID
+  ratingGiven: Int # Note that 0 is first rank, often the best (ex: "excellent")
 }
 
 # An individual review comment about a specific draft
 type Comment {
   id: ID!
-  reviewerId: ID!
   tagNum: Int # number shown to help track the comment
+  index: Int
+  length: Int
   content: String # the actual comment
-  location: DocLocation
   commentRating: Int # 1-5 stars indicating helpfulness of the comment. 0 = unscored.
-  criterionNum: Int! # index of criterion (within rubric's rubric.criteria[] array that the comment is related to (-1 if a general comment)
 }
-
-# Where in the document the comment is placed/refers to
-type DocLocation {
-  isWholeDocument: Boolean # TRUE if the comment isn't about a specific point in the document
-  startCharNum: Int
-  endCharNum: Int
-  x: Int
-  y: Int # value of 0 means it is a document-wide comment
-}
-
