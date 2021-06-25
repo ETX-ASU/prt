@@ -1,4 +1,5 @@
 import React, {Fragment, useEffect, useState} from 'react';
+import {useSelector} from "react-redux";
 import { Tab, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -9,19 +10,24 @@ library.add(faPlus, faEyeSlash, faCheck);
 // const MIN_NUM_ACTIVE_CRITERIA = 1;
 
 function RubricAssessorPanel(props) {
-  const {rubricCriteria, rubricRanks, ratings, isReadOnly} = props;
+  const {rubricCriteria, rubricRanks, isReadOnly, review, isInstructorAssessment} = props;
+  const ratings = (review.criterionRatings) ? review.criterionRatings : [];
+
+  let allInstructorReviews = useSelector(state => state.app.instructorReviews);
+  if (!allInstructorReviews) allInstructorReviews = [];
+  const instructorReview = allInstructorReviews.find(r => r.homeworkId === review.homeworkId);
 
   const shownCriteria = rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const shownRanks = rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const [curTabId, setCurTabId] = useState(shownCriteria[0].id);
 
   useEffect(() => {
-    console.log(` >>> RubricAssessorPanel: [ratings]`)
-  }, [ratings]);
+    console.log(` >>> RubricAssessorPanel: [instructorReview]`, allInstructorReviews, instructorReview)
+  }, [instructorReview, allInstructorReviews]);
 
 
-  function getRatingNum(curCrit) {
-    const qualityScore = ratings.find(qs => qs.criterionId === curCrit.id);
+  function getRatingNum(curCrit, altRatings) {
+    const qualityScore = (altRatings?.length) ? altRatings.find(qs => qs.criterionId === curCrit.id) : ratings.find(qs => qs.criterionId === curCrit.id);
     return (qualityScore) ? qualityScore.ratingGiven : -1;
   }
 
@@ -51,11 +57,11 @@ function RubricAssessorPanel(props) {
               <NavItem key={crit.id}>
                 {crit.isVisible &&
                   <NavLink key={crit.id} eventKey={crit.id} className='hidden-criterion'>
-                    {props.isShowCriteriaPercents &&
+                    {isInstructorAssessment &&
                       <Fragment><span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}</Fragment>
                     }
-                    {!props.isShowCriteriaPercents && <Fragment>{crit.name}</Fragment>}
-                    {(getRatingNum(crit) > -1) && <FontAwesomeIcon className='tab-icon ml-1 mr-0' icon={faCheck} />}
+                    {!isInstructorAssessment && <Fragment>{crit.name}</Fragment>}
+                    {(getRatingNum(crit) > -1) && (!isInstructorAssessment) && <FontAwesomeIcon className='tab-icon ml-1 mr-0' icon={faCheck} />}
                   </NavLink>
                 }
               </NavItem>)
@@ -73,7 +79,13 @@ function RubricAssessorPanel(props) {
                         <div className='selected-marker'>
                           <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
                         </div>
-                        {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}</div>}
+                        {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}
+                          {isInstructorAssessment && (!!allInstructorReviews.length) && (getRatingNum(criterion, instructorReview.criterionRatings) === rNum) &&
+                          <span className='instructors-choice'>
+                            <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
+                          </span>
+                          }
+                        </div>}
                         {!isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2 rank-btn' onClick={() => onRankSelected(rNum)}>{rank.name}</div>}
                         <textarea
                           rows={1}

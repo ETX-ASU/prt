@@ -1,7 +1,7 @@
 import {EMPTY_HOMEWORK, HOMEWORK_PROGRESS} from "../app/constants";
 import {EMPTY_CRITERION, EMPTY_RUBRIC} from "./constants";
 import {v4 as uuid} from "uuid";
-import React, {useEffect, useRef, useCallback} from "react";
+import {useEffect, useRef, useCallback} from "react";
 
 
 export function getAvailableContentDims(headerElem, footerElem, extra) {
@@ -42,7 +42,7 @@ export function getNewToolHomeworkDataForAssignment(assignment) {
   return Object.assign({}, EMPTY_HOMEWORK);
 }
 
-export function calcPercentCompleted(assignment, homework) {
+export function calcPercentCompleted(assignment, homework, numOfReviewsByStudent = 0) {
   // TOOL-DEV: Create a method to calculate and return a percentage of the work a student completed on their homework)
   // This should be returned as a number between 0 and 100
   if (!homework?.id || !homework?.beganOnDate) return 0;
@@ -53,7 +53,8 @@ export function calcPercentCompleted(assignment, homework) {
 
   // This is an even round, which means it is a review/assessment round. These are based on how many peers this student has reviewed vs how many they must review.
   // TODO: We need to write calculation to determine completion of this. For now, it's 50%.
-  return 50;
+
+  return (100 * numOfReviewsByStudent / assignment.toolAssignmentData.minReviewsRequired);
 }
 
 export function calcAutoScore(assignment, homework) {

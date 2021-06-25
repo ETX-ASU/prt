@@ -80,6 +80,8 @@ function WritingSessionDash() {
 		} catch (error) {
 			reportError(error, `We're sorry. There was an error while attempting to fetch your current assignment. Please wait a moment and try again.`);
 		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// NOTE: We need information about userAssessmentDrafts and userPreviousDrafts

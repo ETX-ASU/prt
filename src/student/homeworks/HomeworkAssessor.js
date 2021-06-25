@@ -1,4 +1,4 @@
-import React, {Fragment,  useEffect, useRef, useState} from 'react';
+import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
 import {MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
@@ -29,7 +29,7 @@ const MIN_REQUIRED_COMMENTS = 1;
 
 
 function HomeworkAssessor(props) {
-  const {homework, assignment, isInstructorAssessment, triggerSubmit, clearTrigger, onRatingChanges, review} = props;
+  const {homework, assignment, isInstructorAssessment, triggerSubmit, clearTrigger, onRatingChanges, onSubmit, review} = props;
   const {toolHomeworkData} = homework;
 
   // const dragBarRef = useRef(null);
@@ -57,6 +57,43 @@ function HomeworkAssessor(props) {
   }
 
 
+  const saveUpdatesToServer = useCallback(async(data, isSubmit = false) => {
+    setIsSaving(true);
+    if (!data.beganOnDate) data.beganOnDate = moment().valueOf();
+    if (isSubmit) data.submittedOnDate = moment().valueOf();
+
+    const inputData = {...data};
+    delete inputData.createdAt;
+    delete inputData.updatedAt;
+
+    inputData.comments = inputData.comments.map(c => ({
+      id: c.id,
+      tagNum: c.tagNum,
+      content: c.content,
+      index: c.index,
+      length: c.length,
+      commentRating: c.commentRating
+    }));
+
+    try {
+      await API.graphql({query: updateReview, variables: {input: inputData}});
+      setHasChangedSinceLastSave(false);
+      dispatch(updateSingleReview(data));
+      if (isSubmit) {
+        setActiveModal(null);
+        if (onSubmit) await onSubmit();
+        dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
+      }
+    } catch (error) {
+      reportError(error, `We're sorry. An error occurred while trying to save your assessment changes. Please wait a moment and try again.`);
+    } finally {
+      setIsSaving(false);
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onSubmit]);
+
+
   useEffect(() => {
     const tagsElem = document.getElementById('comments-layer-wrapper');
     reactQuillRef.current.editor.addContainer(tagsElem);
@@ -66,7 +103,6 @@ function HomeworkAssessor(props) {
     editorElem.addEventListener('scroll', onEditorScrolled);
 
     setOrigContent(reactQuillRef.current.editor.getContents(0));
-    console.log('-----------> review', review);
     setUserComments(getInitializedUserComments(review.comments));
 
     onWindowResized();
@@ -75,10 +111,14 @@ function HomeworkAssessor(props) {
       window.removeEventListener('resize', onWindowResized);
       editorElem.removeEventListener('scroll', onEditorScrolled);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     onWindowResized();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.excessHeight])
 
   useEffect(() => {
@@ -93,13 +133,15 @@ function HomeworkAssessor(props) {
       const activeElems = document.querySelectorAll(`span[data-id='${activeCommentId}']`);
       activeElems.forEach(elem => elem.style.backgroundColor = '#FFD23D');
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCommentId])
 
   useEffect(() => {
     if (!triggerSubmit) return;
     saveUpdatesToServer(review, true);
     clearTrigger();
-  }, [triggerSubmit])
+  }, [clearTrigger, review, saveUpdatesToServer, triggerSubmit])
 
 
   function getInitializedUserComments(comments) {
@@ -126,7 +168,7 @@ function HomeworkAssessor(props) {
 
   function onWindowResized() {
     // console.log(`props.excessHeight = ${props.excessHeight}`);
-    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
+    const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
     setAvailableHeight(height - 48);
   }
 
@@ -268,44 +310,11 @@ function HomeworkAssessor(props) {
   }
 
 
-  async function saveUpdatesToServer(data, isSubmit = false) {
-    setIsSaving(true);
-    if (!data.beganOnDate) data.beganOnDate = moment().valueOf();
-    if (isSubmit) data.submittedOnDate = moment().valueOf();
-
-    const inputData = {...data};
-    delete inputData.createdAt;
-    delete inputData.updatedAt;
-
-    inputData.comments = inputData.comments.map(c => ({
-      id: c.id,
-      tagNum: c.tagNum,
-      content: c.content,
-      index: c.index,
-      length: c.length,
-      commentRating: c.commentRating
-    }));
-
-    try {
-      await API.graphql({query: updateReview, variables: {input: inputData}});
-      setHasChangedSinceLastSave(false);
-      dispatch(updateSingleReview(data));
-      if (isSubmit) {
-        setActiveModal(null);
-        dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
-      }
-    } catch (error) {
-      reportError(error, `We're sorry. An error occurred while trying to save your assessment changes. Please wait a moment and try again.`);
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  async function closeModalAndReview() {
-    setActiveModal(null);
-    dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.reviewHomework));
-    await props.refreshHandler();
-  }
+  // async function closeModalAndReview() {
+  //   setActiveModal(null);
+  //   dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.reviewHomework));
+  //   await props.refreshHandler();
+  // }
 
   // PRTv2 does not use autoscoring
   // async function calcAndSendScore(homework) {
@@ -364,14 +373,16 @@ function HomeworkAssessor(props) {
               work.</p>
           </ConfirmationModal>
         )
-      case MODAL_TYPES.confirmHomeworkSubmitted:
-        return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Submitted!'} buttons={[
-            {name: 'Review', onClick: closeModalAndReview},
-          ]}>
-            <p>You can now review your submitted assignment.</p>
-          </ConfirmationModal>
-        )
+      default:
+        return;
+      // case MODAL_TYPES.confirmHomeworkSubmitted:
+      //   return (
+      //     <ConfirmationModal onHide={() => setActiveModal(null)} title={'Submitted!'} buttons={[
+      //       {name: 'Review', onClick: closeModalAndReview},
+      //     ]}>
+      //       <p>You can now review your submitted assignment.</p>
+      //     </ConfirmationModal>
+      //   )
     }
   }
 
@@ -427,10 +438,10 @@ function HomeworkAssessor(props) {
         <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent / 100)}px)`}}>
           <RubricAssessorPanel
             isReadOnly={!!review.submittedOnDate}
-            isShowCriteriaPercents={isInstructorAssessment}
+            isInstructorAssessment={isInstructorAssessment}
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
-            ratings={review.criterionRatings}
+            review={review}
             onRankSelected={onRankSelected}
           />
         </div>

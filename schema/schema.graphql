@@ -29,7 +29,8 @@ type Homework @model
 
 type Review @model
 @key(name:"reviewsByHmwkAndAssessorId", fields:["homeworkId", "assessorId"], queryField:"reviewsByHmwkAndAssessorId")
-@key(name:"reviewsByAsmntId", fields:["assignmentId"], queryField:"reviewsByAsmntId") {
+@key(name:"reviewsByAsmntId", fields:["assignmentId"], queryField:"reviewsByAsmntId")
+@key(name:"reviewsByAsmntAndAssessorId", fields:["assignmentId", "assessorId"], queryField:"reviewsByAsmntAndAssessorId") {
   id: ID!
   assignmentId: ID! # id of the assignment. Yes, this is accessible via homework data but we need access speed and efficiency
   assessorId: ID! # id of student who must provide a review/assessment for

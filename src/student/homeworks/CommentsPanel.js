@@ -4,12 +4,11 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faChevronLeft, faChevronRight, faPlus, faTrash, faStar} from "@fortawesome/free-solid-svg-icons";
-import {useSelector} from "react-redux";
 library.add(faPlus, faTrash, faChevronLeft, faChevronRight, faStar);
 
 
 function CommentsPanel(props) {
-  const {setActiveCommentId, onAddComment, onDeleteComment, onCommentsEdited, onCommentRated, activeCommentId, updateComment, comments,
+  const {isAssessmentOfReview, setActiveCommentId, onAddComment, onDeleteComment, onCommentsEdited, onCommentRated, activeCommentId, updateComment, comments,
     isReadOnly, isAbleToRateComments, isAbleToSeeRatings} = props;
   // const visCriteria = criteria.filter(c => c.isVisible);
 
@@ -69,8 +68,34 @@ function CommentsPanel(props) {
     onCommentRated(altComment);
   }
 
+  function getWordCount(text) {
+    let regexpBMPWord = /([\u0000-\u0019\u0021-\uFFFF])+/gu;
+    return (!text) ? 0 : text.match(regexpBMPWord).length
+  }
+
+  function getAverageRating(comments) {
+    const total = comments.reduce((acc, c) => {
+      acc += (c?.commentRating !== -1) ? c.commentRating + 1 : 0;
+      return acc;
+    }, 0);
+
+    const numRatedComments = comments.reduce((acc, c) => {
+      acc += (c?.commentRating !== -1) ? 1 : 0;
+      return acc;
+    }, 0);
+
+    let average = (numRatedComments) ? (Math.round(total/(.05 * numRatedComments))/20).toFixed(2) : 'N/A';
+    return({numRatedComments, average});
+  }
+
   const showPlus = !!props.showPlusButton && !activeCommentId && !isReadOnly;
   const placeholderText = (isReadOnly) ? `Select highlight to see comment notes.` : `Select a range of text to create a comment.`;
+  const ratingStats = getAverageRating(comments);
+  const wordCount = comments.reduce((acc, c) => {
+    acc += getWordCount(c.content);
+    return acc;
+  }, 0);
+  const avgWordsPerComment = (wordCount/comments.length).toFixed(1);
 
   return (
     <Container className='comments-panel m-0 p-0'>
@@ -98,6 +123,15 @@ function CommentsPanel(props) {
               <FontAwesomeIcon className='btn-icon' size="10x" icon={faPlus}/>
             </Button>
           }
+          {isAssessmentOfReview &&
+            <div>
+              <h3>Review Assessment Stats:</h3>
+              <p>Comments: {comments.length} given. ({ratingStats.numRatedComments} rated.)</p>
+              <p>Total comments word count: {wordCount}</p>
+              <p>Average words per comment: {avgWordsPerComment}</p>
+              <p>Average Comment Rating: {ratingStats.average}</p>
+            </div>
+          }
           {/*<Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-warning' style={{display: !activeCommentId ? 'block' : 'none'}} onClick={onAddComment} />*/}
           <textarea
             ref={commentTextArea}
@@ -114,9 +148,9 @@ function CommentsPanel(props) {
           <div>
             <p className='rating-prompt text-right pt-2 float-right'><span className='mr-2'>How helpful was this feedback?</span>
               {isAbleToRateComments && [4,3,2,1,0].map(starNum =>
-                <a key={starNum} className={`d-inline star${(activeComment.commentRating >= starNum) ? ' active' : ''}`} onClick={() => onStarSelected(starNum)}>
+                <span key={starNum} className={`d-inline star${(activeComment.commentRating >= starNum) ? ' active' : ''}`} onClick={() => onStarSelected(starNum)}>
                   <FontAwesomeIcon className='btn-icon' size="1x" icon={faStar}/>
-                </a>
+                </span>
               )}
               {!isAbleToRateComments && isAbleToSeeRatings && [4,3,2,1,0].map(starNum =>
                 <span key={starNum} className={`d-inline locked star${(activeComment.commentRating >= starNum) ? ' active' : ''}`}>

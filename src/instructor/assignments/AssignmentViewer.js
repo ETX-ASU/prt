@@ -7,11 +7,11 @@ import {
   setGradesData,
   addHomeworksData,
   setCurrentlyReviewedStudentId,
-  toggleHideStudentIdentity, replaceHomeworksData
+  toggleHideStudentIdentity, replaceHomeworksData, setReviews, setInstructorReviews
 } from "../../app/store/appReducer";
 import {Button, Container, Row, Col} from 'react-bootstrap';
 import {API, graphqlOperation} from "aws-amplify";
-import {listHomeworks} from "../../graphql/queries";
+import {listHomeworks, reviewsByAsmntId, reviewsByAsmntAndAssessorId} from "../../graphql/queries";
 import InstructorDraftAssessor from "./InstructorDraftAssessor";
 import HomeworkListing from "./HomeworkListing";
 import {fetchAllGrades, sendInstructorGradeToLMS} from "../../lmsConnection/RingLeader";
@@ -30,6 +30,9 @@ import {
 } from "../../tool/ToolUtils";
 import {reportError} from "../../developer/DevUtils";
 import {deepCopy} from "../../app/utils/deepCopy";
+// import AssessedHomeworkViewer from "../../student/homeworks/AssessedHomeworkViewer";
+// import ReviewSessionDash from "../../student/ReviewSessionDash";
+import InstructorPeerReviewAssessor from "./InstructorPeerReviewAssessor";
 library.add(faEdit, faPen, faChevronLeft);
 
 
@@ -40,12 +43,14 @@ const SUBMISSION_MODAL_OPTS = {
 
 function AssignmentViewer(props) {
   const dispatch = useDispatch();
+  const activeUser = useSelector(state => state.app.activeUser);
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
   const reviewedStudentId = useSelector(state => state.app.currentlyReviewedStudentId);
   const assignment = useSelector(state => state.app.assignment);
   const homeworks = useSelector(state => state.app.homeworks);
   const members = useSelector(state => state.app.members);
   const grades = useSelector(state => state.app.grades);
+  const allReviews = useSelector(state => state.app.reviews);
 
   const [isLoadingHomeworks, setIsLoadingHomeworks] = useState(true);
   const [nextTokenVal, setNextTokenVal] = useState(null);
@@ -58,10 +63,8 @@ function AssignmentViewer(props) {
   const [availableHeight, setAvailableHeight] = useState(300);
   const [cachedStudent, setCachedStudent] = useState(null);
 
-
-  // TODO: Allocation Change 8
-  // const [allocations, setAllocations] = useState([]);
-  // const [cachedAllocations, setCachedAllocations] = useState(null);
+  // const rounds = assignment.toolAssignmentData.sequenceIds.length;
+  // const draftAssignmentId = assignment.toolAssignmentData.sequenceIds[roundNum];
 
   useEffect(() => {
     window.addEventListener('resize', onWindowResized);
@@ -88,21 +91,27 @@ function AssignmentViewer(props) {
       setStudents(altStudents);
       setCachedStudent(null);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewedStudentId])
 
   useEffect(() => {
     if (!assignment?.id) return;
     fetchScores();
     fetchBatchOfHomeworks('INIT');
-    // TODO: Why is assignment a trigger instead of just assignment.id?
-  }, [assignment.id, assignment]);
+    fetchAndSetAllReviews();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignment.id]);
 
   useEffect(() => {
     if (nextTokenVal) fetchBatchOfHomeworks(nextTokenVal);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nextTokenVal]);
 
   useEffect(() => {
-    if (!assignment?.id || !members.length) return;
+    if (!assignment?.id || !members.length || !allReviews) return;
 
     let studentsOnly = members.filter(m => m.roles.indexOf(ROLE_TYPES.learner) > -1);
     let positions = shuffle(studentsOnly.map((h, i) => i + 1));
@@ -119,7 +128,7 @@ function AssignmentViewer(props) {
       let homeworkForStudent = homeworks.find(h => (h.studentOwnerId === s.id && h.assignmentId === assignment.id));
       if (!homeworkForStudent) homeworkForStudent = getNewToolHomeworkDataForAssignment(assignment);
 
-      let percentCompleted = calcPercentCompleted(assignment, homeworkForStudent);
+      let percentCompleted = calcPercentCompleted(assignment, homeworkForStudent, allReviews.filter(r => r.assessorId === s.id).length);
       let autoScore = calcAutoScore(assignment, homeworkForStudent);
       let homeworkStatus = getHomeworkStatus(gradeDataForStudent, homeworkForStudent);
       return Object.assign({}, s, {
@@ -136,17 +145,62 @@ function AssignmentViewer(props) {
 
     setStudents(enhancedDataStudents);
 
-    // TODO: Allocation Change 9
-    // setAllocations(assignment.toolAssignmentData.allocations);
-  }, [assignment, members, homeworks, grades, isHideStudentIdentity]);
-
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignment, members, homeworks, grades, isHideStudentIdentity, allReviews]);
 
 
   function onWindowResized() {
-    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef);
+    const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef);
 
     setAvailableHeight(height);
+  }
+
+  async function fetchAndSetAllReviews() {
+    let nextTokenVal = null;
+    let theReviews = [];
+
+    try {
+      do {
+        const result = await API.graphql({
+          query: reviewsByAsmntId,
+          variables: {
+            assignmentId: assignment.id
+          },
+          nextToken: nextTokenVal
+        });
+
+        nextTokenVal = result.data.reviewsByAsmntId.nextToken;
+        theReviews.push(...result.data.reviewsByAsmntId.items);
+      } while (nextTokenVal);
+
+      await dispatch(setReviews([...theReviews]));
+    } catch (error) {
+      reportError(error, `We're sorry. There was an error while attempting to fetch all peer review records.`);
+    }
+
+    let theInstructorReviews = [];
+    const roundNum = assignment.toolAssignmentData.sequenceIds.length;
+    if (!(roundNum%2)) return;
+    const draftAssignmentId = assignment.toolAssignmentData.sequenceIds[roundNum-1];
+    try {
+      do {
+        const result = await API.graphql({
+          query: reviewsByAsmntAndAssessorId,
+          variables: {
+            assessorId:  {eq: activeUser.id},
+            assignmentId: draftAssignmentId
+          },
+          nextToken: nextTokenVal
+        });
+
+        nextTokenVal = result.data.reviewsByAsmntAndAssessorId.nextToken;
+        theInstructorReviews.push(...result.data.reviewsByAsmntAndAssessorId.items);
+      } while (nextTokenVal);
+
+      await dispatch(setInstructorReviews([...theInstructorReviews]));
+    } catch (error) {
+      reportError(error, `We're sorry. There was an error while attempting to fetch all instructor review records.`);
+    }
   }
 
   /**
@@ -275,6 +329,9 @@ function AssignmentViewer(props) {
             <p className='mt-3'>This make take a few moments.</p>
           </ConfirmationModal>
         );
+
+      default:
+        return;
     }
   }
 
@@ -308,7 +365,7 @@ function AssignmentViewer(props) {
       }
 
       <Container className="assignment-viewer p-0 m-0">
-        {props.loading &&
+        {(props.loading || !allReviews) &&
         <div className="nav-pane">
           <LoadingIndicator loadingMsg={'LOADING ASSIGNMENT DATA'} size={3}/>
         </div>
@@ -349,11 +406,23 @@ function AssignmentViewer(props) {
         </Fragment>
         }
 
-        {/*TODO: Allocation Change 10*/}
-        {reviewedStudentId && (students?.length > 0) &&
+        {!!(reviewedStudentId && (students?.length > 0) && (!assignment.toolAssignmentData.sequenceIds.length%2)) &&
         <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
           students={students} reviewedStudentId={reviewedStudentId} />
         }
+
+        {!!(reviewedStudentId && (students?.length > 0) && (assignment.toolAssignmentData.sequenceIds.length%2)) &&
+          // <p>Instructor's review of student's review of a peer</p>
+          <InstructorPeerReviewAssessor
+            roundNum={assignment.toolAssignmentData.sequenceIds.length-1}
+            availableHeight={availableHeight}
+            refreshGrades={fetchScores}
+            assignment={assignment}
+            students={students}
+            gradedStudentId={reviewedStudentId}
+          />
+        }
+
       </Container>
     </Fragment>
   )

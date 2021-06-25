@@ -1,10 +1,7 @@
 import React, {Fragment, useState} from 'react';
 import {API} from 'aws-amplify';
 import {useDispatch, useSelector} from "react-redux";
-import {
-  createAssignment as createAssignmentMutation,
-  updateAssignment as updateAssignmentMutation
-} from '../../graphql/mutations';
+import {updateAssignment} from '../../graphql/mutations';
 import {setActiveUiScreenMode, setAssignmentData} from "../../app/store/appReducer";
 import {UI_SCREEN_MODES, MODAL_TYPES} from "../../app/constants";
 import {Button, Col, Container, Row} from "react-bootstrap";
@@ -62,7 +59,7 @@ function AssignmentEditor() {
 
     try {
       if (window.isDevMode) inputData.lineItemId = (`FAKE-${uuid()}`);
-      const result = API.graphql({query: updateAssignmentMutation, variables: {input: inputData}});
+      const result = API.graphql({query: updateAssignment, variables: {input: inputData}});
       if (isNewPhase) {
         if (window.isDevMode && result) {
           setActiveModal({type:MODAL_TYPES.confirmAssignmentSaved, id:urlAssignmentId});

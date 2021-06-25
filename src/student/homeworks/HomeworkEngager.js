@@ -54,7 +54,7 @@ function HomeworkEngager(props) {
   useInterval(autoSave, AUTO_SAVE_INTERVAL);
 
   function onWindowResized() {
-    const {width, height} = getAvailableContentDims(headerZoneRef, footerZoneRef)
+    const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef)
     const barHeight = document.querySelector('#toolbar').getBoundingClientRect().height;
 
     setToolbarHeight(barHeight);
@@ -155,6 +155,8 @@ function HomeworkEngager(props) {
             <p>You can now review your submitted assignment.</p>
           </ConfirmationModal>
         )
+      default:
+        return;
     }
   }
 
