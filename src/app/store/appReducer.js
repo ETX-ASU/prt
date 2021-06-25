@@ -184,7 +184,7 @@ const defaultState = {
   currentlyReviewedStudentId: '',
   activeUiScreenMode: '',
   displayOrder: [],
-  isHideStudentIdentity: true,
+  isHideStudentIdentity: false,
   activeUsersReviewedDraftStub: null,
   reviewsByUser: null,
   submittedReviewsForUser: null,
