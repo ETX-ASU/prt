@@ -314,6 +314,20 @@
               background-color: black;
             }
           }
+
+          .instructors-choice {
+            border-left: 1px solid black;
+            background-color: #769d76;
+            padding: 5px;
+            float: right;
+            margin: -8px;
+
+            .selected-indicator {
+              color: white;
+              width: 15px;
+              height: 15px;
+            }
+          }
         }
 
         textarea.rank-text {

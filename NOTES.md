@@ -1,5 +1,29 @@
 # OVERVIEW OF NEXT STEPS
 
+
+1. When instructor is grading a draft, selected score vs. given score don't seem right... particularly when navigating from
+   one student to another
+2. Make it so student can see peer feedback on previous drafts when writing following drafts   
+2. Make rubric criterion selection tabs horizontally scrollable
+3. Create mechanisms for automatic scoring
+4. Improve data loading efficiency. When Instructor loads student homework for listing... 
+   1. First only load the homework stubs.
+   2. When a homework is clicked on to grade it... then load THAT homework and it's previous and next homeworks.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 http://localhost:3000/assignment?userId=11&courseId=course-002&role=learner&assignmentId=5a8cd647-00dc-40f5-b307-3a0436c16a6e
 
 7. Add in ability to provide 1-5 star feedback
@@ -362,3 +386,7 @@ Admin UI login is personal email for amplify!
 1st assignment:
 http://localhost:3000/assignment?userId=01&courseId=course-002&role=instructor&assignmentId=5e7772b5-25ce-4310-8e33-b4ba81a48aac
 
+PROD:
+GraphQL endpoint: https://27oprdifxjcobb5x5dfgqbzkmq.appsync-api.us-west
+-2.amazonaws.com/graphql
+GraphQL API KEY: da2-f5xrw2ehlneuxgb4qcj7mvlxky

@@ -324,3 +324,46 @@ export const reviewsByAsmntId = /* GraphQL */ `
     }
   }
 `;
+export const reviewsByAsmntAndAssessorId = /* GraphQL */ `
+  query ReviewsByAsmntAndAssessorId(
+    $assignmentId: ID
+    $assessorId: ModelIDKeyConditionInput
+    $sortDirection: ModelSortDirection
+    $filter: ModelReviewFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    reviewsByAsmntAndAssessorId(
+      assignmentId: $assignmentId
+      assessorId: $assessorId
+      sortDirection: $sortDirection
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        assignmentId
+        assessorId
+        homeworkId
+        beganOnDate
+        submittedOnDate
+        comments {
+          id
+          tagNum
+          index
+          length
+          content
+          commentRating
+        }
+        criterionRatings {
+          criterionId
+          ratingGiven
+        }
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;

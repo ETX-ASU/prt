@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef, Fragment, useCallback} from 'react';
+import React, {useEffect, useState, Fragment, useCallback} from 'react';
 import {API} from 'aws-amplify';
 import {useDispatch, useSelector} from "react-redux";
 import { v4 as uuid } from "uuid";
@@ -21,11 +21,11 @@ import {
 	reviewsByAsmntId,
 } from "../graphql/queries";
 
-import {createHomework, createReview} from "../graphql/mutations";
+import {createHomework, createReview, updateHomework} from "../graphql/mutations";
 import {
-	setActiveUiScreenMode, setHomeworkStubs, setReviews,
+	setActiveUiScreenMode, setActiveUsersReviewedDraft, setDraftsToBeReviewedByUser, setHomeworkStubs, setReviews,
 } from "../app/store/appReducer";
-import HomeworkEngager from "./homeworks/HomeworkEngager";
+
 import {fetchGradeForStudent} from "../lmsConnection/RingLeader";
 import {getHomeworkStatus} from "../tool/ToolUtils";
 import moment from "moment";
@@ -41,132 +41,29 @@ function ReviewSessionDash() {
 	// const dispatch = useCallback(useDispatch, []);
 	const dispatch = useDispatch();
 	const activeUiScreenMode = useSelector(state => state.app.activeUiScreenMode);
-
-	// const draftsToBeReviewedByUser = useSelector((state => state.app.draftsToBeReviewedByUser));
-	// const reviewedStudentId = useSelector(state => state.app.currentlyReviewedStudentId);
-
 	const activeUser = useSelector(state => state.app.activeUser);
 	const assignment = useSelector(state => state.app.assignment);
 	const allReviews = useSelector(state => state.app.reviews);
 	const allHomeworkStubs = useSelector(state => state.app.homeworkStubs);
+	const reviewsByUser = useSelector(state => state.app.reviewsByUser)
+	const submittedReviewsForUser = useSelector(state => state.app.submittedReviewsForUser)
+	const activeUsersReviewedDraftStub = useSelector(state => state.app.activeUsersReviewedDraftStub)
+	const activeUsersReviewedDraft = useSelector(state => state.app.activeUsersReviewedDraft)
+	const draftsToBeReviewedByUser = useSelector(state => state.app.draftsToBeReviewedByUser)
 
 	const [allocationMsg, setAllocationMsg] = useState('');
-
-	const [usersDraft, setUsersDraft] = useState(null);
-	const [draftsToBeReviewedByUser, setDraftsToBeReviewedByUser] = useState();
-	const [reviewsByUser, setReviewsByUser] = useState([]);
-	const [reviewsForUser, setReviewsForUser] = useState([]);
-
-	const [homework, setHomework] = useState(null);
-
-	const hasLoadedReviews = useRef(false);
-	const hasLoadedStubs = useRef(false);
-	const hasLoadedDrafts = useRef(false);
-	const isDoingRefresh = useRef(false);
-
+	const [reviewSessionHomework, setReviewSessionHomework] = useState(null);
 	const [activelyReviewedPeerDraft, setActivelyReviewedPeerDraft] = useState(null);
 	const [engagedPeerReviewId, setEngagedPeerReviewId] = useState(null);
+
+	// const hasLoadedReviews = useRef(false);
+	// const hasLoadedStubs = useRef(false);
+
 	const roundNum = assignment.toolAssignmentData.sequenceIds.length - 1;
 	const draftAssignmentId = assignment.toolAssignmentData.sequenceIds[roundNum];
 
 
-	const createAndSaveNewReviewToDB = useCallback(async (homeworkId, activeUserId, allReviews) => {
-		console.warn("createAndSaveNewReviewToDB for this student.")
-		const freshReview = Object.assign({}, EMPTY_REVIEW, {
-			id: uuid(),
-			beganOnDate: 0, //moment().valueOf(),
-			homeworkId,
-			assessorId: activeUserId,
-			assignmentId: draftAssignmentId
-		});
-
-		await API.graphql({query: createReview, variables: {input: freshReview}});
-		await dispatch(setReviews([...allReviews, freshReview]));
-		return freshReview;
-	}, [dispatch, draftAssignmentId]);
-
-	const fetchAndSetHomeworkStubs = useCallback(async () => {
-		let nextTokenVal = null;
-		let stubs = [];
-
-		try {
-			do {
-				const stubResults = await API.graphql({
-					query: minHomeworkIdsBySubmittedDate,
-					variables: {
-						submittedOnDate: {gt: 0},
-						assignmentId: draftAssignmentId,
-						nextToken: nextTokenVal
-					},
-				});
-
-				nextTokenVal = stubResults.data.minHomeworkIdsBySubmittedDate.nextToken;
-				stubs.push(...stubResults.data.minHomeworkIdsBySubmittedDate.items);
-			} while (nextTokenVal);
-
-			dispatch(setHomeworkStubs(stubs));
-			hasLoadedStubs.current = true;
-		} catch (error) {
-			reportError(error, `We're sorry. There was an error while attempting to fetch homework stubs.`);
-		}
-	}, [dispatch, draftAssignmentId]);
-
-	const fetchAndSetAllReviews = useCallback(async () => {
-		let nextTokenVal = null;
-		let theReviews = [];
-
-		try {
-			do {
-				const result = await API.graphql({
-					query: reviewsByAsmntId,
-					variables: {
-						assignmentId: draftAssignmentId
-					},
-					nextToken: nextTokenVal
-				});
-
-				nextTokenVal = result.data.reviewsByAsmntId.nextToken;
-				theReviews.push(...result.data.reviewsByAsmntId.items);
-			} while (nextTokenVal);
-
-			dispatch(setReviews([...theReviews]));
-			hasLoadedReviews.current = true;
-		} catch (error) {
-			reportError(error, `We're sorry. There was an error while attempting to fetch all peer review records.`);
-		}
-	}, [dispatch, draftAssignmentId]);
-
-	const fetchAndSetDraftsToBeReviewedByUser = useCallback(async () => {
-		// Get all of the allocated homeworks and sort them according to indexed order of the allocations list
-		const relatedHomeworkIds = [...reviewsByUser.map(r => r.homeworkId), allHomeworkStubs.find(hs => hs.studentOwnerId === activeUser.id).id];
-		const filterIdsArr = relatedHomeworkIds.map(a => ({id: {eq: a}}));
-
-		try {
-			let nextTokenVal = null;
-			let allRelatedHomeworks = [];
-
-			do {
-				const homeworkQueryResults = await API.graphql({
-					query: listHomeworks,
-					variables: {
-						filter: {or: filterIdsArr},
-						nextToken: nextTokenVal
-					},
-				});
-
-				nextTokenVal = homeworkQueryResults.data.listHomeworks.nextToken;
-				allRelatedHomeworks.push(...homeworkQueryResults.data.listHomeworks.items);
-			} while (nextTokenVal);
-
-			setUsersDraft(allRelatedHomeworks.find(h => h.studentOwnerId === activeUser.id));
-			setDraftsToBeReviewedByUser(allRelatedHomeworks.filter(h => h.studentOwnerId !== activeUser.id));
-			hasLoadedDrafts.current = true;
-		} catch (error) {
-			reportError(error, `We're sorry. There was an error while attempting to fetchAndSetDraftsToBeReviewedByUser.`);
-		}
-	}, [activeUser.id, allHomeworkStubs, reviewsByUser])
-
-	const fetchAndSetActiveUserCurrentHomework = useCallback(async () => {
+	const fetchAndSetActiveUserReviewSessionHomework = useCallback(async () => {
 		try {
 			const fetchHomeworkResult = await API.graphql({
 				query: fullHomeworkByAsmntAndStudentId,
@@ -177,7 +74,6 @@ function ReviewSessionDash() {
 			});
 
 			if (!fetchHomeworkResult.data.fullHomeworkByAsmntAndStudentId.items?.length) {
-				console.warn("NO homework exists for this student. Attempting to create.")
 				const freshHomework = Object.assign({}, EMPTY_HOMEWORK, {
 					id: uuid(),
 					beganOnDate: 0, //moment().valueOf(),
@@ -185,35 +81,30 @@ function ReviewSessionDash() {
 					assignmentId: assignment.id
 				});
 				const resultHomework = await API.graphql({query: createHomework, variables: {input: freshHomework}});
-				console.warn("Successful in creating homework for this student");
 
-				await setHomework({
+				await setReviewSessionHomework({
 					...resultHomework.data.createHomework,
 					scoreGiven: 0,
 					homeworkStatus: HOMEWORK_PROGRESS.notBegun,
 					comment: ''
 				})
-				dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
 			} else {
 				const theHomework = fetchHomeworkResult.data.fullHomeworkByAsmntAndStudentId.items[0];
 				let scoreData = await fetchGradeForStudent(assignment.id, activeUser.id);
 				if (!scoreData) scoreData = {scoreGiven: 0, gradingProgress: HOMEWORK_PROGRESS.notBegun, comment: ''};
 
 				theHomework.homeworkStatus = getHomeworkStatus(scoreData, theHomework);
-				await setHomework(theHomework);
-
-				dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
+				await setReviewSessionHomework(theHomework);
 			}
 		} catch (error) {
 			reportError(error, `We're sorry. There was an error while attempting to fetch your current assignment. Please wait a moment and try again.`);
 		}
-	}, [dispatch, activeUser.id, assignment.id]);
+	}, [activeUser.id, assignment.id]);
 
-	const nextDraftIdToReview = useCallback((activeUserId, allHomeworkStubs, allReviews, reviewsByUser) => {
+	const getNextDraftIdToReview = useCallback((activeUserId, allHomeworkStubs, allReviews) => {
 		// Map out how many times each of these HAVE been allocated
 		// TODO: We may need to track if reviews have been completed to allow those with non-submitted reviews to get submissions?
-
-		const reviewsByUserAsHomeworkIds = new Set(reviewsByUser.map(r => r.homeworkId));
+		const reviewsByUserAsHomeworkIds = new Set(allReviews.filter(r => r.assessorId === activeUserId).map(r => r.homeworkId));
 		let lowestTierCount = 10000; // 10,000 is arbitrary high number greater than size of any likely cohort
 		let highestTierCount = 0;
 
@@ -247,34 +138,106 @@ function ReviewSessionDash() {
 		return null;
 	}, []);
 
+	useEffect(() => {
+		console.log("STEP 1. fetchAndSetActiveUserReviewSessionHomework()");
+		fetchAndSetActiveUserReviewSessionHomework();
+	}, [fetchAndSetActiveUserReviewSessionHomework])
 
 	useEffect(() => {
-		if (!hasLoadedReviews.current && !hasLoadedStubs.current) {
+		const fetchAndSetHomeworkStubs = async () => {
+			let nextTokenVal = null;
+			let stubs = [];
+
+			try {
+				do {
+					const stubResults = await API.graphql({
+						query: minHomeworkIdsBySubmittedDate,
+						variables: {
+							submittedOnDate: {gt: 0},
+							assignmentId: draftAssignmentId,
+							nextToken: nextTokenVal
+						},
+					});
+
+					nextTokenVal = stubResults.data.minHomeworkIdsBySubmittedDate.nextToken;
+					stubs.push(...stubResults.data.minHomeworkIdsBySubmittedDate.items);
+				} while (nextTokenVal);
+
+				dispatch(setHomeworkStubs(stubs));
+				// hasLoadedStubs.current = true
+			} catch (error) {
+				reportError(error, `We're sorry. There was an error while attempting to fetch homework stubs.`);
+			}
+		};
+
+		const fetchAndSetAllReviews = async () => {
+			let nextTokenVal = null;
+			let theReviews = [];
+
+			try {
+				do {
+					const result = await API.graphql({
+						query: reviewsByAsmntId,
+						variables: {
+							assignmentId: assignment.id
+						},
+						nextToken: nextTokenVal
+					});
+
+					nextTokenVal = result.data.reviewsByAsmntId.nextToken;
+					theReviews.push(...result.data.reviewsByAsmntId.items);
+				} while (nextTokenVal);
+
+				await dispatch(setReviews([...theReviews]));
+			} catch (error) {
+				reportError(error, `We're sorry. There was an error while attempting to fetch all peer review records.`);
+			}
+		}
+
+		const createAndSaveNewReviewToDB = async (homeworkId, activeUserId, allReviews) => {
+			console.log(" -------------- createAndSaveNewReviewToDB for this student.")
+			const freshReview = Object.assign({}, EMPTY_REVIEW, {
+				id: uuid(),
+				beganOnDate: 0,
+				homeworkId,
+				assessorId: activeUserId,
+				assignmentId: assignment.id
+			});
+
+			await API.graphql({query: createReview, variables: {input: freshReview}});
+			await dispatch(setReviews([...allReviews, freshReview]));
+			return freshReview;
+		}
+
+
+		if (!allReviews && !allHomeworkStubs) {
+			console.log("STEP 2. fetchAndSetHomeworkStubs() & fetchAndSetAllReviews()");
+
 			// 1. Fetch ids of all completed homework from the previous draft-writing assignment and all reviews created for them
 			fetchAndSetHomeworkStubs();
 			fetchAndSetAllReviews();
-		} else if ((hasLoadedReviews.current && hasLoadedStubs.current) || (isDoingRefresh.current)) {
+		} else if (allReviews && allHomeworkStubs) {
+
 			// 2. Once all homeworkStubs and allReviews are in redux store, we look for active review this student is working on
-			isDoingRefresh.current = false;
-			let theUserReviews = allReviews.filter(a => a.assessorId === activeUser.id);
-			let theActiveReview = theUserReviews.find(a => !a.submittedOnDate);
+			let theActiveReview = reviewsByUser?.find(a => !a.submittedOnDate);
+			if (theActiveReview) return;
+			console.log("STEP 3. BOTH stubs & all reviews have been loaded")
 
 			// 2A. If user didn't complete previous homework, they are not allowed to review
-			const userDraft = allHomeworkStubs.find(hs => hs.studentOwnerId === activeUser.id);
-			if (!userDraft || !userDraft.submittedOnDate) {
+			if (!activeUsersReviewedDraftStub?.submittedOnDate) {
 				setAllocationMsg(ALLOCATION_MESSAGES.userDidNotSubmit);
 				return;
 			}
 
 			// 2B. If not enough submissions are available, notify user and exit
-			if (allHomeworkStubs.length < assignment.toolAssignmentData.minPeersBeforeAllocating) {
+			if (!allHomeworkStubs?.length || allHomeworkStubs.length < assignment.toolAssignmentData.minPeersBeforeAllocating) {
 				setAllocationMsg(ALLOCATION_MESSAGES.notEnoughSubmissions);
 				return;
 			}
 
-			if (!theActiveReview && theUserReviews.length < assignment.toolAssignmentData.minReviewsRequired) {
+			if (!theActiveReview && (!reviewsByUser || reviewsByUser?.length < assignment.toolAssignmentData.minReviewsRequired)) {
 				// 3. The user has no active review and needs to be assigned one
-				let targetDraftId = nextDraftIdToReview(activeUser.id, allHomeworkStubs, allReviews, theUserReviews);
+				let targetDraftId = getNextDraftIdToReview(activeUser.id, allHomeworkStubs, allReviews);
 
 				if (!targetDraftId) {
 					setAllocationMsg(ALLOCATION_MESSAGES.noneAvailableForThisUser);
@@ -282,41 +245,98 @@ function ReviewSessionDash() {
 				}
 
 				// 4. Create the new review. Save it to DB. Add it to redux store (no need to re-fetch)
-				let freshReview = createAndSaveNewReviewToDB(targetDraftId, activeUser.id, allReviews);
-				theUserReviews = [...theUserReviews, freshReview];
+				console.log("STEP 4. createAndSaveNewReviewToDB");
+				createAndSaveNewReviewToDB(targetDraftId, activeUser.id, allReviews);
 			}
-
-			// TODO: ************************************************
-			// The problem is `theUserReviews` is a PROMISE
-			console.log("Step 1-4: theUserReviews", theUserReviews);
-			setReviewsByUser(theUserReviews);
-			const tempReviewsForUser = allReviews.filter(r => r.homeworkId === userDraft.id && r.submittedOnDate);
-			tempReviewsForUser.sort((a, b) => (b.assessorId === assignment.ownerId) ? 1 : (a.submittedOnDate - b.submittedOnDate));
-			setReviewsForUser(tempReviewsForUser);
 		}
-	}, [activeUser.id, allHomeworkStubs, allReviews, assignment, createAndSaveNewReviewToDB, fetchAndSetAllReviews, fetchAndSetHomeworkStubs, nextDraftIdToReview]);
-
+		// TODO: re-examine these dependencies
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [allReviews, allHomeworkStubs])
 
 	useEffect(() => {
-		// 5. Once we have a list of reviewsByUser, we now must load in the associated homeworks that this
-		// student user has reviewed or has yet to review
-		if (hasLoadedDrafts.current || allocationMsg || !reviewsByUser?.length) return;
+		// 5. Once loadedDrafts are ready, we now must load in the associated homeworks that this student user has reviewed or has yet to review
+		const fetchAndSetDraftsToBeReviewedByUser = async () => {
+			console.log("STEP 5. fetchAndSetDraftsToBeReviewedByUser", submittedReviewsForUser);
+			// Get all of the allocated homeworks and sort them according to indexed order of the allocations list
+			const relatedHomeworkIds = (activeUsersReviewedDraftStub) ? [...reviewsByUser.map(r => r.homeworkId), activeUsersReviewedDraftStub.id] : [...reviewsByUser.map(r => r.homeworkId)];
+			const filterIdsArr = relatedHomeworkIds.map(a => ({id: {eq: a}}));
 
-		fetchAndSetDraftsToBeReviewedByUser();
-	}, [reviewsByUser, allocationMsg, fetchAndSetDraftsToBeReviewedByUser])
+			if (!relatedHomeworkIds?.length) {
+				setAllocationMsg(ALLOCATION_MESSAGES.userDidNotSubmit);
+				return;
+			}
+
+			try {
+				let nextTokenVal = null;
+				let allRelatedHomeworks = [];
+
+				do {
+					const homeworkQueryResults = await API.graphql({
+						query: listHomeworks,
+						variables: {
+							filter: {or: filterIdsArr},
+							nextToken: nextTokenVal
+						},
+					});
+
+					nextTokenVal = homeworkQueryResults.data.listHomeworks.nextToken;
+					allRelatedHomeworks.push(...homeworkQueryResults.data.listHomeworks.items);
+				} while (nextTokenVal);
+
+				await dispatch(setDraftsToBeReviewedByUser(allRelatedHomeworks.filter(h => h.studentOwnerId !== activeUser.id)));
+				await dispatch(setActiveUsersReviewedDraft(allRelatedHomeworks.find(h => h.studentOwnerId === activeUser.id)));
+			} catch (error) {
+				reportError(error, `We're sorry. There was an error while attempting to fetchAndSetDraftsToBeReviewedByUser.`);
+			}
+		}
+
+		if (reviewsByUser && (!draftsToBeReviewedByUser || reviewsByUser?.length > draftsToBeReviewedByUser.length)) fetchAndSetDraftsToBeReviewedByUser();
+
+		// TODO: re-examine these dependencies
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [reviewsByUser, allHomeworkStubs])
 
 
-	/*
-	* Check hasLoadedReviews && hasLoadedStubs. If they are BOTH FALSE (aren't loaded), load them now.
-	* Once both are loaded successfully, set this them to TRUE. These should never need to be loaded again.
-	*
-	*
-	*
-	* */
+	async function updateReviewSessionHomeworkProgress() {
+		console.log("&&&&&&&&& updateReviewSessionHomeworkProgress()");
+		try {
+			const freshHomework = Object.assign({}, reviewSessionHomework);
+			delete freshHomework.createdAt;
+			delete freshHomework.updatedAt;
+			delete freshHomework.scoreGiven;
+			delete freshHomework.homeworkStatus;
+			delete freshHomework.comment;
+
+			if (!reviewSessionHomework.beganOnDate) {
+				freshHomework.beganOnDate = moment().valueOf();
+			}
+			await API.graphql({query: updateHomework, variables: {input: freshHomework}});
+			await setReviewSessionHomework(Object.assign({}, freshHomework, {homeworkStatus: HOMEWORK_PROGRESS.inProgress, scoreGiven: reviewSessionHomework.scoreGiven, comment: reviewSessionHomework.comment}));
+		} catch (error) {
+			reportError(error, `We're sorry. There was an error while attempting to update review session homework status. Please wait a moment and try again.`);
+		}
+	}
+
+	async function submitReviewSessionHomework() {
+		console.log("User clicked button to submit review session assignment.")
+		try {
+			const freshHomework = Object.assign({}, reviewSessionHomework, {submittedOnDate: moment().valueOf()});
+			delete freshHomework.createdAt;
+			delete freshHomework.updatedAt;
+			delete freshHomework.homeworkStatus;
+			await API.graphql({query: updateHomework, variables: {input: freshHomework}});
+			freshHomework.homeworkStatus = HOMEWORK_PROGRESS.submitted;
+			await setReviewSessionHomework(freshHomework);
+		} catch (error) {
+			reportError(error, `We're sorry. There was an error while attempting to update review session homework status. Please wait a moment and try again.`);
+		}
+	}
 
 	function onSeeReviewsByPeers() {
-		console.log("onSeeReviewsByPeers() called");
-		setEngagedPeerReviewId(reviewsForUser[0].id);
+		console.log("onSeeReviewsByPeers() called", activeUsersReviewedDraftStub.id);
+		const revId = allReviews.filter(r => r.homeworkId === activeUsersReviewedDraftStub.id)[0].id;
+		console.log("onSeeReviewsByPeers() --> engaged review id", revId);
+		setEngagedPeerReviewId(revId);
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssessedHomework));
 	}
 
@@ -325,26 +345,13 @@ function ReviewSessionDash() {
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssessedHomework));
 	}
 
-	//
-	// function handleReviewButton() {
-	// 	console.log("handleReviewButton() called")
-	// 	// const uiMode = (homework.submittedOnDate) ? UI_SCREEN_MODES.reviewHomework : UI_SCREEN_MODES.editHomework;
-	// 	// dispatch(setActiveUiScreenMode(uiMode));
-	// }
-
-	// function onReviewUpdated(reviewData) {
-	// 	let altReviewsByUser = [...reviewsByUser];
-	// 	let i = altReviewsByUser.findIndex(r => r.id = engagedPeerReviewId);
-	// 	altReviewsByUser.splice(i, 1, reviewData);
-	// 	setReviewsByUser(altReviewsByUser);
-	// }
-
 	function onReviewPeerDraft(peerDraftId) {
-		const theActiveReview = reviewsByUser.find(r => r.homeworkId === peerDraftId);
+		const theActiveReview = allReviews.find(r => r.homeworkId === peerDraftId && r.assessorId === activeUser.id);
 		setActivelyReviewedPeerDraft(draftsToBeReviewedByUser.find(d => d.id === theActiveReview.homeworkId));
 		setEngagedPeerReviewId(theActiveReview.id);
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.assessPeerHomework));
 	}
+
 
 	return (
 		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100'>
@@ -378,7 +385,7 @@ function ReviewSessionDash() {
 								<td className='border-top-0'><img src={IconEssay} alt={''} className='inline-essay-icon'/></td>
 								<td className='border-top-0'>{['1st', '2nd', '3rd', '4th', '5th'][roundNum] + ' Draft'}</td>
 								<td className='border-top-0'>Reviews of Your Work</td>
-								<td className='border-top-0'>{reviewsForUser.length}</td>
+								<td className='border-top-0'>{(!submittedReviewsForUser) ? 0 : submittedReviewsForUser.length}</td>
 								<td className='border-top-0'>
 									<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={onSeeReviewsByPeers}>See
 										Reviews Received</Button>
@@ -406,6 +413,38 @@ function ReviewSessionDash() {
 						/>
 					</Col>
 				</Row>
+
+
+				<Row className='m-0 mb-3 p-0'>
+					<Col className='m-0 p-0 col-9'>
+						{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.notBegun &&
+						<p>Begin reviewing your peer's work. When you have completed and submitted the {assignment.toolAssignmentData.minReviewsRequired} required
+							peer reviews you will be able to submit your assessment assignment for grading.</p>
+						}
+						{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress &&
+						(allReviews.filter(a => a.assessorId === activeUser.id).length < assignment.toolAssignmentData.minReviewsRequired) &&
+						<p>You have completed {allReviews.filter(a => a.assessorId === activeUser.id).length - 1} of the {assignment.toolAssignmentData.minReviewsRequired} required peer reviews.
+							You must complete and submit all {assignment.toolAssignmentData.minReviewsRequired} reviews before you will be able to submit your assessment assignment for grading.</p>
+						}
+						{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress &&
+						(allReviews.filter(a => a.assessorId === activeUser.id).length >= assignment.toolAssignmentData.minReviewsRequired) &&
+						<p>You have completed and submitted all of the required reviews! If you have no more changes to make, click the submit button
+							to submit your assessment assignment for grading.</p>
+						}
+						{(reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.submitted || reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded)&&
+						(allReviews.filter(a => a.assessorId === activeUser.id).length >= assignment.toolAssignmentData.minReviewsRequired) &&
+						<p>You have completed all of the required reviews and submitted your assessment assignment for grading.</p>
+						}
+					</Col>
+					<Col className='m-0 p-0 col-3 text-right'>
+						{(!reviewSessionHomework || reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress) &&
+						<Button className="btn badge-pill essay-btn btn-outline-secondary"
+							disabled={!reviewsByUser || (reviewsByUser?.length < assignment.toolAssignmentData.minReviewsRequired)}
+							onClick={submitReviewSessionHomework}>Submit Assignment</Button>
+						}
+					</Col>
+				</Row>
+
 			</Fragment>
 			}
 
@@ -413,27 +452,17 @@ function ReviewSessionDash() {
 			<Row className={'m-0 p-0 h-100'}>
 				<Col className='rounded p-0'>
 					<HomeworkAssessor
+						onSubmit={() => updateReviewSessionHomeworkProgress()}
 						isInstructorAssessment={false}
 						key={activelyReviewedPeerDraft.id}
 						assignment={assignment}
 						excessHeight={0}
 						homework={activelyReviewedPeerDraft}
-						review={reviewsByUser.find(r => r.id === engagedPeerReviewId)}
+						review={allReviews.find(r => r.id === engagedPeerReviewId)}
 						// onReviewUpdated={onReviewUpdated}
 					/>
 				</Col>
 			</Row>
-
-				// old
-				// <Row className={'m-0 p-0 h-100'}>
-				// 	<Col className='rounded p-0'>
-				// 		<PeerHomeworkAssessor
-				// 			isEditMode={false}
-				// 			refreshHandler={fetchAndSetActiveUserCurrentHomework}
-				// 			assignment={assignment}
-				// 			homework={activelyReviewedPeerDraft}/>
-				// 	</Col>
-				// </Row>
 			}
 
 			{(activeUiScreenMode === UI_SCREEN_MODES.viewAssessedHomework) &&
@@ -444,24 +473,15 @@ function ReviewSessionDash() {
 						key={engagedPeerReviewId}
 						assignment={assignment}
 						excessHeight={0}
-						reviewsForUser={reviewsForUser}
-						homework={usersDraft}
+						reviewsForUser={submittedReviewsForUser}
+						homework={activeUsersReviewedDraft}
 						engagedPeerReviewId={engagedPeerReviewId}
 						onShowReview={onShowReview}
 					/>
-					{/*<HomeworkReviewer*/}
-					{/*	isEditMode={false}*/}
-					{/*	refreshHandler={fetchAndSetActiveUserCurrentHomework}*/}
-					{/*	assignment={assignment}*/}
-					{/*	homework={activelyReviewedPeerDraft}/>*/}
 				</Col>
 			</Row>
 			}
 
-			{(activeUiScreenMode === UI_SCREEN_MODES.editHomework) &&
-			<HomeworkEngager refreshHandler={fetchAndSetActiveUserCurrentHomework} assignment={assignment}
-				homework={homework}/>
-			}
 		</Container>
 	);
 }

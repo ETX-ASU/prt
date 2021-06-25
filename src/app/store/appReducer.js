@@ -3,6 +3,7 @@ import {APP_NAMESPACE, SORT_BY, UI_SCREEN_MODES} from "../constants";
 export const SET_SESSION_DATA = APP_NAMESPACE+'.SET_SESSION_DATA';
 export const SET_ASSIGNMENT_DATA = APP_NAMESPACE+'.SET_ASSIGNMENT_DATA';
 export const SET_DRAFTS_TO_BE_REVIEWED_BY_USER = APP_NAMESPACE+'.SET_DRAFTS_TO_BE_REVIEWED_BY_USER';
+export const SET_ACTIVE_USERS_REVIEWED_DRAFT = APP_NAMESPACE+'.SET_ACTIVE_USERS_REVIEWED_DRAFT';
 export const SET_DISPLAY_ORDER = APP_NAMESPACE+'.SET_DISPLAY_ORDER';
 export const SET_CURRENTLY_REVIEWED_STUDENT_ID = APP_NAMESPACE+'.SET_CURRENTLY_REVIEWED_STUDENT_ID';
 export const SET_GRADES_DATA = APP_NAMESPACE+'.SET_GRADES_DATA';
@@ -10,12 +11,14 @@ export const SET_ACTIVE_UI_SCREEN_MODE = APP_NAMESPACE+'.SET_ACTIVE_UI_SCREEN_MO
 export const EDIT_DUPED_ASSIGNMENT = APP_NAMESPACE+'.EDIT_DUPED_ASSIGNMENT';
 export const EDIT_ASSIGNMENT_PHASE = APP_NAMESPACE+'.EDIT_ASSIGNMENT_PHASE';
 export const ADD_HOMEWORKS_DATA = APP_NAMESPACE+'.ADD_HOMEWORKS_DATA';
+export const ADD_DRAFT_HOMEWORKS = APP_NAMESPACE+'.ADD_DRAFT_HOMEWORKS';
 export const REPLACE_HOMEWORKS_DATA = APP_NAMESPACE+'.REPLACE_HOMEWORKS_DATA';
 export const REPLACE_ALLOCATIONS_DATA = APP_NAMESPACE+'.REPLACE_ALLOCATIONS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
 export const SET_HOMEWORK_STUBS = 'SET_HOMEWORK_STUBS';
 export const SET_REVIEWS = 'SET_REVIEWS';
+export const SET_INSTRUCTOR_REVIEWS = 'SET_INSTRUCTOR_REVIEWS';
 export const UPDATE_REVIEW = 'UPDATE_REVIEW';
 
 
@@ -24,6 +27,19 @@ export function setReviews(reviews) {
   return {
     type: SET_REVIEWS,
     reviews
+  }
+}
+export function setInstructorReviews(reviews) {
+  return {
+    type: SET_INSTRUCTOR_REVIEWS,
+    reviews
+  }
+}
+
+export function addDraftHomeworks(draftHomeworks) {
+  return {
+    type: ADD_DRAFT_HOMEWORKS,
+    draftHomeworks
   }
 }
 
@@ -77,6 +93,13 @@ export function setDraftsToBeReviewedByUser(draftsToBeReviewedByUser) {
   return {
     type: SET_DRAFTS_TO_BE_REVIEWED_BY_USER,
     draftsToBeReviewedByUser
+  }
+}
+
+export function setActiveUsersReviewedDraft(activeUsersReviewedDraft) {
+  return {
+    type: SET_ACTIVE_USERS_REVIEWED_DRAFT,
+    activeUsersReviewedDraft
   }
 }
 
@@ -151,34 +174,52 @@ const defaultState = {
     activeRole: '',
     roles: []
   },
-  reviews: [],
+  reviews: null,
   assignment: {},
   members: [],
   homeworks: [],
-  homeworkStubs: [],
-  draftsToBeReviewedByUser: [],
+  homeworkStubs: null,
+  draftsToBeReviewedByUser: null,
   grades: [],
   currentlyReviewedStudentId: '',
   activeUiScreenMode: '',
   displayOrder: [],
-  isHideStudentIdentity: true
+  isHideStudentIdentity: true,
+  activeUsersReviewedDraftStub: null,
+  reviewsByUser: null,
+  submittedReviewsForUser: null,
+  draftHomeworks: []
 }
 
 
 function appReducer(currentState = defaultState, action) {
+  let reviewsByUser, activeUsersReviewedDraftStub, submittedReviewsForUser;
+
   switch (action.type) {
     case SET_REVIEWS:
-      return Object.assign({}, currentState, {reviews: action.reviews});
+      reviewsByUser = action.reviews.filter(r => r.assessorId === currentState.activeUser.id);
+      activeUsersReviewedDraftStub = (!currentState.homeworkStubs) ? null : currentState.homeworkStubs.find(hs => hs.studentOwnerId === currentState.activeUser.id);
+      submittedReviewsForUser = (!activeUsersReviewedDraftStub) ? [] : action.reviews.filter(r => r.homeworkId === activeUsersReviewedDraftStub.id && r.submittedOnDate);
+      return Object.assign({}, currentState, {reviews: action.reviews, reviewsByUser, submittedReviewsForUser, activeUsersReviewedDraftStub});
 
     case SET_HOMEWORK_STUBS:
-      return Object.assign({}, currentState, {homeworkStubs: action.homeworkStubs});
+      activeUsersReviewedDraftStub = action.homeworkStubs.find(hs => hs.studentOwnerId === currentState.activeUser.id);
+      submittedReviewsForUser = (!currentState.reviews) ? currentState.submittedReviewsForUser : currentState.reviews.filter(r => r.homeworkId === activeUsersReviewedDraftStub.id && r.submittedOnDate);
+      return Object.assign({}, currentState, {homeworkStubs: action.homeworkStubs, activeUsersReviewedDraftStub, submittedReviewsForUser});
 
     case UPDATE_REVIEW:
       const rIndex = currentState.reviews.findIndex(r => r.id === action.review.id);
       const altReviews = [...currentState.reviews];
       if (rIndex >= 0) { altReviews.splice(rIndex, 1, action.review); }
       else { altReviews.push(action.review); }
-      return Object.assign({}, currentState, {reviews: altReviews});
+      reviewsByUser = altReviews.filter(r => r.assessorId === currentState.activeUser.id);
+
+      activeUsersReviewedDraftStub = (!currentState.homeworkStubs) ? null : currentState.homeworkStubs.find(hs => hs.studentOwnerId === currentState.activeUser.id);
+      submittedReviewsForUser = (!activeUsersReviewedDraftStub) ? [] : altReviews.filter(r => r.homeworkId === activeUsersReviewedDraftStub.id && r.submittedOnDate);
+      return Object.assign({}, currentState, {reviews: altReviews, reviewsByUser, submittedReviewsForUser});
+
+    case SET_INSTRUCTOR_REVIEWS:
+      return Object.assign({}, currentState, {instructorReviews: action.reviews});
 
     case SET_ACTIVE_UI_SCREEN_MODE:
       return Object.assign({}, currentState, {activeUiScreenMode: action.activeUiScreenMode});
@@ -189,11 +230,17 @@ function appReducer(currentState = defaultState, action) {
     case ADD_HOMEWORKS_DATA:
       return Object.assign({}, currentState, {homeworks:[...currentState.homeworks, ...action.homeworks]});
 
+    case ADD_DRAFT_HOMEWORKS:
+      return Object.assign({}, currentState, {draftHomeworks:[...currentState.draftHomeworks, ...action.draftHomeworks]});
+
     case REPLACE_HOMEWORKS_DATA:
       return Object.assign({}, currentState, {homeworks: action.homeworks});
 
     case SET_DRAFTS_TO_BE_REVIEWED_BY_USER:
       return Object.assign({}, currentState, {draftsToBeReviewedByUser: action.draftsToBeReviewedByUser});
+
+    case SET_ACTIVE_USERS_REVIEWED_DRAFT:
+      return Object.assign({}, currentState, {activeUsersReviewedDraft: action.activeUsersReviewedDraft});
 
     case SET_SESSION_DATA:
       return Object.assign({}, currentState, {

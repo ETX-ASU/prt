@@ -1,4 +1,4 @@
-import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
+import React, {Fragment, useEffect, useRef, useState} from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import {UI_SCREEN_MODES} from "../../app/constants";
 import {Button, Row, Col} from 'react-bootstrap';
@@ -6,15 +6,13 @@ import {setActiveUiScreenMode, setCurrentlyReviewedStudentId, updateSingleReview
 
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faCheck, faChevronLeft, faChevronRight, faGripLines, faTimes} from '@fortawesome/free-solid-svg-icons'
-import {getAvailableContentDims, useInterval} from "../../tool/ToolUtils";
+import {getAvailableContentDims} from "../../tool/ToolUtils";
 
 import RubricAssessorPanel from "../../instructor/assignments/RubricAssessorPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import CommentsPanel from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
-import {useThrottle} from "../../tool/ToolUtils";
 import ReactQuill from "react-quill";
-import moment from "moment";
 import {API} from "aws-amplify";
 import {updateReview} from "../../graphql/mutations";
 import {reportError} from "../../developer/DevUtils";
@@ -80,10 +78,14 @@ function AssessedHomeworkViewer(props) {
       window.removeEventListener('resize', onWindowResized);
       editorElem.removeEventListener('scroll', onEditorScrolled);
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     onWindowResized();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [excessHeight])
 
   useEffect(() => {
@@ -98,6 +100,8 @@ function AssessedHomeworkViewer(props) {
       const activeElems = document.querySelectorAll(`span[data-id='${activeCommentId}']`);
       activeElems.forEach(elem => elem.style.backgroundColor = '#FFD23D');
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCommentId])
 
 
@@ -127,7 +131,7 @@ function AssessedHomeworkViewer(props) {
   function onWindowResized() {
     if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);
     setUserComments([]);
-    const {width, height} = getAvailableContentDims(headerZoneRef, null, excessHeight);
+    const {height} = getAvailableContentDims(headerZoneRef, null, excessHeight);
     setAvailableHeight(height - 48);
 
     throttleCallbackRef.current = window.setTimeout(() => {
@@ -237,8 +241,8 @@ function AssessedHomeworkViewer(props) {
           <h3 className='d-inline btn-sm'>REVIEWS:</h3>
           <div className="btn-group d-inline reviewer-links">
             {reviewLinks.map(link =>
-              <a key={link.reviewId} className={`btn btn-sm btn-primary${link.isActive ? ' active' : ''}`}
-                onClick={() => onShowReview(link.reviewId)}>{link.linkName}</a>
+              <Button key={link.reviewId} variant={"link"} className={`btn-link ${link.isActive ? ' active' : ''}`}
+                onClick={() => onShowReview(link.reviewId)}>{link.linkName}</Button>
             )}
           </div>
         </Col>
@@ -249,10 +253,10 @@ function AssessedHomeworkViewer(props) {
         <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent / 100)}px)`}}>
           <RubricAssessorPanel
             isReadOnly={!!review.submittedOnDate}
-            isShowCriteriaPercents={isInstructorAssessment}
+            isInstructorAssessment={isInstructorAssessment}
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
-            ratings={review.criterionRatings}
+            review={review}
           />
         </div>
 
@@ -290,6 +294,7 @@ function AssessedHomeworkViewer(props) {
           </div>
           <CommentsPanel
             isReadOnly={true}
+            isAssessmentOfReview={props.isAssessmentOfReview}
             className='h-auto'
             showPlusButton={false}
             assessorId={review.assessorId}

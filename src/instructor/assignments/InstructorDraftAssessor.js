@@ -24,6 +24,7 @@ function InstructorDraftAssessor(props) {
   const [reviewedStudent, setReviewedStudent] = useState(students.find(s => s.id === reviewedStudentId));
   const [reviewOfStudent, setReviewOfStudent] = useState(null);
 
+
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   const gradingBarRef = useRef(null);
@@ -52,11 +53,11 @@ function InstructorDraftAssessor(props) {
       return;
     }
 
-    console.log(`#instructorReviews = ${reviewsByActiveUser.length}, reviewedStudent = ${reviewedStudentId}`)
+    console.log(`#instructorReviews = ${reviewsByActiveUser?.length}, reviewedStudent = ${reviewedStudentId}`)
 
 
     let theStudent = students.find(s => s.id === reviewedStudentId);
-    let theReview = reviewsByActiveUser.find(r => r.assessorId === activeUser.id && r.homeworkId === theStudent.homework.id);
+    let theReview = reviewsByActiveUser?.find(r => r.assessorId === activeUser.id && r.homeworkId === theStudent.homework.id);
     if (!theReview && theStudent.homework.id) {
       fetchReviewAndSetReviewedStudent(theStudent);
     } else {
@@ -64,7 +65,11 @@ function InstructorDraftAssessor(props) {
       setReviewedStudent(theStudent);
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewsByActiveUser, reviewedStudentId])
+
+
+
 
 
   async function fetchReviewAndSetReviewedStudent(theStudent) {
@@ -90,7 +95,7 @@ function InstructorDraftAssessor(props) {
         await dispatch(updateSingleReview(freshReview));
       } else {
         const theReview = fetchReviewsResult.data.reviewsByHmwkAndAssessorId.items[0];
-        const altReviewsByUser = [...reviewsByActiveUser];
+        const altReviewsByUser = (reviewsByActiveUser) ? [...reviewsByActiveUser] : [];
         const rIndex = altReviewsByUser.findIndex(r => r.id === theReview.id);
         delete theReview.createdAt;
         delete theReview.updatedAt;

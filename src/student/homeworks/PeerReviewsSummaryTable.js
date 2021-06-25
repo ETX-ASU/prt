@@ -9,9 +9,11 @@ function PeerReviewsSummaryTable(props) {
 	const {reviewsByUser, draftsToBeReviewedByUser, roundNum, allocationMsg, onReviewPeerDraft} = props;
 
 	if (allocationMsg) return (<div className={'m-3'}>{allocationMsg}</div>);
-	if (!draftsToBeReviewedByUser) return (<LoadingIndicator loadingMsg={'LOADING PEER REVIEW DRAFT ASSIGNMENTS'} size={3} />);
+	if (!draftsToBeReviewedByUser && !allocationMsg) return (<LoadingIndicator loadingMsg={'LOADING PEER REVIEW DRAFT ASSIGNMENTS'} size={3} />);
 
 	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][roundNum] + ' Draft';
+
+	console.log("DraftsToBeReviewed", draftsToBeReviewedByUser);
 
 	let enhancedDraftsToBeReviewed = draftsToBeReviewedByUser.map((d,i) => {
 		const review = reviewsByUser.find(r => r.homeworkId === d.id);
@@ -42,7 +44,11 @@ function PeerReviewsSummaryTable(props) {
 		})
 	});
 
-	enhancedDraftsToBeReviewed.sort((a,b) => b.review.submittedOnDate - a.review.submittedOnDate);
+	enhancedDraftsToBeReviewed.sort((a,b) => {
+		if (!a.review.submittedOnDate) return 1;
+		if (!b.review.submittedOnDate) return -1;
+		return a.review.submittedOnDate - b.review.submittedOnDate;
+	});
 
 
 	return (

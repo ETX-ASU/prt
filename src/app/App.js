@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import './App.scss';
 import {API, graphqlOperation} from "aws-amplify";
 
@@ -44,6 +44,8 @@ function App() {
     if (window.isDevMode) createMockCourseMembers(courseIdParam, 80);
 
     initializeSessionData(courseIdParam, assignmentIdParam, userIdParam, activeRoleParam, lineItemId);
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 
@@ -63,6 +65,8 @@ function App() {
     } else {
       dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssignment));
     }
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assignmentId, activeUser])
 
 

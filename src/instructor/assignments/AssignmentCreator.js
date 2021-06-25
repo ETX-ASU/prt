@@ -114,6 +114,8 @@ function AssignmentCreator() {
             <p>Assignment has been saved! In order to access it, use this assignmentId: {activeModal.id}</p>
           </ConfirmationModal>
         );
+      default:
+        return;
     }
   }
 
