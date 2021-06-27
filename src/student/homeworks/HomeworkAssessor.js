@@ -29,13 +29,23 @@ const MIN_REQUIRED_COMMENTS = 1;
 
 
 function HomeworkAssessor(props) {
-  const {homework, assignment, isInstructorAssessment, triggerSubmit, clearTrigger, onRatingChanges, onSubmit, review} = props;
+  const {
+    homework,
+    assignment,
+    isInstructorAssessment,
+    triggerSubmit,
+    clearTrigger,
+    onRatingChanges,
+    onSubmit,
+    review
+  } = props;
   const {toolHomeworkData} = homework;
 
   // const dragBarRef = useRef(null);
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
+
 
   const dispatch = useDispatch();
   const activeUser = useSelector(state => state.app.activeUser);
@@ -44,7 +54,8 @@ function HomeworkAssessor(props) {
   const [activeModal, setActiveModal] = useState(null);
   const [availableHeight, setAvailableHeight] = useState(2000);
   const [topZonePercent, setTopZonePercent] = useState(20);
-  const [prevCommentId, setPrevCommentId] = useState('');
+  const [curExcessHeight, setCurExcessHeight] = useState(props.excessHeight);
+  const prevCommentId = useRef('');
   const [showPlusButton, setShowPlusButton] = useState(false);
   const [activeCommentId, _setActiveCommentId] = useState('');
   const [origContent, setOrigContent] = useState(null);
@@ -52,12 +63,12 @@ function HomeworkAssessor(props) {
   const [hasChangedSinceLastSave, setHasChangedSinceLastSave] = useState(false);
 
   const setActiveCommentId = (id) => {
-    setPrevCommentId(activeCommentId || '');
+    prevCommentId.current = activeCommentId || '';
     _setActiveCommentId(id);
   }
 
 
-  const saveUpdatesToServer = useCallback(async(data, isSubmit = false) => {
+  const saveUpdatesToServer = useCallback(async (data, isSubmit = false) => {
     setIsSaving(true);
     if (!data.beganOnDate) data.beganOnDate = moment().valueOf();
     if (isSubmit) data.submittedOnDate = moment().valueOf();
@@ -95,6 +106,7 @@ function HomeworkAssessor(props) {
 
 
   useEffect(() => {
+    console.log("--- EFFECT. []");
     const tagsElem = document.getElementById('comments-layer-wrapper');
     reactQuillRef.current.editor.addContainer(tagsElem);
 
@@ -119,13 +131,15 @@ function HomeworkAssessor(props) {
     onWindowResized();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.excessHeight])
+  }, [curExcessHeight])
 
   useEffect(() => {
-    if (activeCommentId === prevCommentId) return;
+    console.log("--- EFFECT. activeCommentId", activeCommentId);
+    if (activeCommentId === prevCommentId.current) return;
+    console.log("--- HomeworkAssessor. activeCommentId");
 
-    if (prevCommentId) {
-      const prevElems = document.querySelectorAll(`span[data-id='${prevCommentId}']`);
+    if (prevCommentId.current) {
+      const prevElems = document.querySelectorAll(`span[data-id='${prevCommentId.current}']`);
       prevElems.forEach(elem => elem.style.backgroundColor = null);
     }
 
@@ -138,10 +152,11 @@ function HomeworkAssessor(props) {
   }, [activeCommentId])
 
   useEffect(() => {
+    console.log("--- EFFECT. triggerSubmit", triggerSubmit);
     if (!triggerSubmit) return;
     saveUpdatesToServer(review, true);
     clearTrigger();
-  }, [clearTrigger, review, saveUpdatesToServer, triggerSubmit])
+  }, [triggerSubmit])
 
 
   function getInitializedUserComments(comments) {
@@ -167,9 +182,8 @@ function HomeworkAssessor(props) {
   }
 
   function onWindowResized() {
-    // console.log(`props.excessHeight = ${props.excessHeight}`);
-    const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef, props.excessHeight);
-    setAvailableHeight(height - 48);
+    const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef, curExcessHeight);
+    setAvailableHeight(height - curExcessHeight);
   }
 
   function onEditorScrolled() {
@@ -180,22 +194,29 @@ function HomeworkAssessor(props) {
   }
 
   function onSelectionChanged(range, source) {
+    console.log("--- HomeworkAssessor. onSelectionChanged");
     const editor = reactQuillRef?.current?.editor;
     if (!editor || source !== 'user' || !range) return;
+    console.log("    --- look for comment");
 
     let sel = range.index;
     let comment = userComments.find(c => {
       let start = c.index, end = c.index + c.length;
       return ((sel > start) && (sel < end));
     });
+    console.log("    --- found comment", comment?.id);
     let commentId = (comment) ? comment.id : '';
     if (comment && range.length && range.index + range.length > comment.index + comment.length) {
       commentId = '';
       setShowPlusButton(false);
+      console.log("    |--- setShowPlusButton(false)");
     } else {
       setShowPlusButton(!commentId && range.length);
+      console.log("    |--- setShowPlusButton(val)");
     }
     setActiveCommentId(commentId);
+    console.log("    |--- setActiveCommentId(commentId)");
+    // setActiveCommentId("3d63a0cb-ae33-4be6-8fdd-66f022799f2b");
   }
 
 
@@ -304,6 +325,7 @@ function HomeworkAssessor(props) {
       ratings.push(rating);
     }
 
+    if (ratings.length) setCurExcessHeight(16);
     if (onRatingChanges) onRatingChanges(ratings);
     const altReview = {...review, criterionRatings: ratings};
     saveUpdatesToServer(altReview);
@@ -422,20 +444,29 @@ function HomeworkAssessor(props) {
     if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
   }
 
+
   return (
     <Fragment>
       {activeModal && renderModal()}
       {!isInstructorAssessment &&
-      <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
-        <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon
-          icon={faChevronLeft}/></Button>
-        <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
-      </Row>
+      <div className='p-0 m-0'>
+        <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
+          <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon
+            icon={faChevronLeft}/></Button>
+          <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
+        </Row>
+        {!isInstructorAssessment && (!review.criterionRatings.length) &&
+        <Row className='alert alert-warning w-100 m-0 p-2 mb-2' role={"alert"}>
+          Select a ranking for every criterion and write comments to complete your review.
+        </Row>
+        }
+      </div>
       }
 
       <div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
         {/*<div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>*/}
         <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent / 100)}px)`}}>
+
           <RubricAssessorPanel
             isReadOnly={!!review.submittedOnDate}
             isInstructorAssessment={isInstructorAssessment}
@@ -471,8 +502,7 @@ function HomeworkAssessor(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
-              onChange={() => {
-              }}
+              onChange={() => {}}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}

@@ -103,13 +103,13 @@ function RubricPanel(props) {
                     <input type='number' disabled={true} min={0} max={100} defaultValue={criterion.weight} />
                   </div>
                   <span className='vl'/>
-                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn' >
+                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn' data-toggle="tooltip" data-placement="top" title="hide criterion">
                     <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(criterion.isVisible) ? faEye : faEyeSlash}/>
                   </Button>
-                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn' >
+                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn' data-toggle="tooltip" data-placement="top" title='duplicate criterion'>
                     <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faCopy}/>
                   </Button>
-                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn'>
+                  <Button disabled={true} className='text-center xbg-dark p-0 criterion-settings-btn' data-toggle="tooltip" data-placement="top" title='delete criterion'>
                     <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faTrash}/>
                   </Button>
                 </Row>
@@ -138,18 +138,27 @@ function RubricPanel(props) {
                   <Button
                     disabled={isVisibilityToggleDisabled(criterion)}
                     className='text-center xbg-dark p-0 criterion-settings-btn'
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="hide criterion"
                     onClick={onToggleVisibility}>
                     <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={(criterion.isVisible) ? faEye : faEyeSlash}/>
                   </Button>
                   <Button
                     disabled={shownCriteria.length >= MAX_NUM_CRITERIA}
                     className='text-center xbg-dark p-0 criterion-settings-btn'
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="duplicate criterion"
                     onClick={onCopy}>
                     <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faCopy}/>
                   </Button>
                   <Button
                     disabled={shownCriteria.length <= 1}
                     className='text-center xbg-dark p-0 criterion-settings-btn'
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="delete criterion"
                     onClick={onDelete}>
                     <FontAwesomeIcon className='btn-icon ml-1 mr-1' icon={faTrash}/>
                   </Button>

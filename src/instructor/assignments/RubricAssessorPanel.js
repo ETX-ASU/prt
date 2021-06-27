@@ -21,9 +21,9 @@ function RubricAssessorPanel(props) {
   const shownRanks = rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const [curTabId, setCurTabId] = useState(shownCriteria[0].id);
 
-  useEffect(() => {
-    console.log(` >>> RubricAssessorPanel: [instructorReview]`, allInstructorReviews, instructorReview)
-  }, [instructorReview, allInstructorReviews]);
+  // useEffect(() => {
+  //   console.log(` >>> RubricAssessorPanel: [instructorReview]`, allInstructorReviews, instructorReview)
+  // }, [instructorReview, allInstructorReviews]);
 
 
   function getRatingNum(curCrit, altRatings) {
@@ -79,7 +79,7 @@ function RubricAssessorPanel(props) {
                         <div className='selected-marker'>
                           <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
                         </div>
-                        {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}
+                        {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}{isInstructorAssessment ? ` (${rank.points})` : ''}
                           {isInstructorAssessment && (!!allInstructorReviews.length) && (getRatingNum(criterion, instructorReview.criterionRatings) === rNum) &&
                           <span className='instructors-choice'>
                             <FontAwesomeIcon className='selected-indicator' icon={faCheck} />

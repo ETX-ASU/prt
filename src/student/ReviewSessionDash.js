@@ -55,6 +55,7 @@ function ReviewSessionDash() {
 	const [reviewSessionHomework, setReviewSessionHomework] = useState(null);
 	const [activelyReviewedPeerDraft, setActivelyReviewedPeerDraft] = useState(null);
 	const [engagedPeerReviewId, setEngagedPeerReviewId] = useState(null);
+	const [showInstructionsAlert, setShowInstructionsAlert] = useState(false);
 
 	// const hasLoadedReviews = useRef(false);
 	// const hasLoadedStubs = useRef(false);
@@ -349,9 +350,9 @@ function ReviewSessionDash() {
 		const theActiveReview = allReviews.find(r => r.homeworkId === peerDraftId && r.assessorId === activeUser.id);
 		setActivelyReviewedPeerDraft(draftsToBeReviewedByUser.find(d => d.id === theActiveReview.homeworkId));
 		setEngagedPeerReviewId(theActiveReview.id);
+		setShowInstructionsAlert(theActiveReview.criterionRatings.length === 0);
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.assessPeerHomework));
 	}
-
 
 	return (
 		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100'>
@@ -456,7 +457,7 @@ function ReviewSessionDash() {
 						isInstructorAssessment={false}
 						key={activelyReviewedPeerDraft.id}
 						assignment={assignment}
-						excessHeight={0}
+						excessHeight={showInstructionsAlert ? 48 : 16}
 						homework={activelyReviewedPeerDraft}
 						review={allReviews.find(r => r.id === engagedPeerReviewId)}
 						// onReviewUpdated={onReviewUpdated}
@@ -466,13 +467,13 @@ function ReviewSessionDash() {
 			}
 
 			{(activeUiScreenMode === UI_SCREEN_MODES.viewAssessedHomework) &&
-			<Row className={'m-0 m-0 pb-5'}>
+			<Row className={'m-0 m-0'}>
 				<Col className='rounded p-0'>
 					<AssessedHomeworkViewer
 						isInstructorAssessment={false}
 						key={engagedPeerReviewId}
 						assignment={assignment}
-						excessHeight={0}
+						excessHeight={32}
 						reviewsForUser={submittedReviewsForUser}
 						homework={activeUsersReviewedDraft}
 						engagedPeerReviewId={engagedPeerReviewId}

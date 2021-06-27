@@ -20,9 +20,16 @@ export const SET_HOMEWORK_STUBS = 'SET_HOMEWORK_STUBS';
 export const SET_REVIEWS = 'SET_REVIEWS';
 export const SET_INSTRUCTOR_REVIEWS = 'SET_INSTRUCTOR_REVIEWS';
 export const UPDATE_REVIEW = 'UPDATE_REVIEW';
+export const SET_ACTIVE_COMMENT_ID = 'SET_ACTIVE_COMMENT_ID';
 
 
 
+export function setActiveCommentId(id) {
+  return {
+    type: SET_ACTIVE_COMMENT_ID,
+    id
+  }
+}
 export function setReviews(reviews) {
   return {
     type: SET_REVIEWS,
@@ -184,11 +191,12 @@ const defaultState = {
   currentlyReviewedStudentId: '',
   activeUiScreenMode: '',
   displayOrder: [],
-  isHideStudentIdentity: true,
+  isHideStudentIdentity: false,
   activeUsersReviewedDraftStub: null,
   reviewsByUser: null,
   submittedReviewsForUser: null,
-  draftHomeworks: []
+  draftHomeworks: [],
+  activeCommentId: ''
 }
 
 
@@ -217,6 +225,9 @@ function appReducer(currentState = defaultState, action) {
       activeUsersReviewedDraftStub = (!currentState.homeworkStubs) ? null : currentState.homeworkStubs.find(hs => hs.studentOwnerId === currentState.activeUser.id);
       submittedReviewsForUser = (!activeUsersReviewedDraftStub) ? [] : altReviews.filter(r => r.homeworkId === activeUsersReviewedDraftStub.id && r.submittedOnDate);
       return Object.assign({}, currentState, {reviews: altReviews, reviewsByUser, submittedReviewsForUser});
+
+    case SET_ACTIVE_COMMENT_ID:
+      return Object.assign({}, currentState, {activeCommentId: action.id});
 
     case SET_INSTRUCTOR_REVIEWS:
       return Object.assign({}, currentState, {instructorReviews: action.reviews});

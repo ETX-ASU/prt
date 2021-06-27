@@ -55,6 +55,7 @@ function AssessedHomeworkViewer(props) {
   const [topZonePercent, setTopZonePercent] = useState(20);
   const [prevCommentId, setPrevCommentId] = useState('');
   const [activeCommentId, _setActiveCommentId] = useState('');
+  const [curExcessHeight, setCurExcessHeight] = useState(props.excessHeight);
 
   const setActiveCommentId = (id) => {
     setPrevCommentId(activeCommentId || '');
@@ -86,7 +87,7 @@ function AssessedHomeworkViewer(props) {
     onWindowResized();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [excessHeight])
+  }, [curExcessHeight])
 
   useEffect(() => {
     if (activeCommentId === prevCommentId) return;
@@ -131,8 +132,8 @@ function AssessedHomeworkViewer(props) {
   function onWindowResized() {
     if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);
     setUserComments([]);
-    const {height} = getAvailableContentDims(headerZoneRef, null, excessHeight);
-    setAvailableHeight(height - 48);
+    const {height} = getAvailableContentDims(headerZoneRef, null, curExcessHeight);
+    setAvailableHeight(height - curExcessHeight);
 
     throttleCallbackRef.current = window.setTimeout(() => {
       console.log("resetting comments");
