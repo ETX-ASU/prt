@@ -26,6 +26,7 @@ library.add(faCheck, faTimes, faGripLines);
 const MAX_TOP_ZONE_PERCENT = 80;
 const MIN_TOP_ZONE_PIXELS = 70;
 const MIN_REQUIRED_COMMENTS = 1;
+const MIN_RESIZE_INTERVAL = 200;
 
 
 function HomeworkAssessor(props) {
@@ -45,7 +46,11 @@ function HomeworkAssessor(props) {
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
+  const editorElemRef = useRef(null);
+  const throttleCallbackRef = useRef();
 
+  const prevCommentId = useRef('');
+  const prevEditorHeight = useRef(0);
 
   const dispatch = useDispatch();
   const activeUser = useSelector(state => state.app.activeUser);
@@ -55,7 +60,6 @@ function HomeworkAssessor(props) {
   const [availableHeight, setAvailableHeight] = useState(2000);
   const [topZonePercent, setTopZonePercent] = useState(20);
   const [curExcessHeight, setCurExcessHeight] = useState(props.excessHeight);
-  const prevCommentId = useRef('');
   const [showPlusButton, setShowPlusButton] = useState(false);
   const [activeCommentId, _setActiveCommentId] = useState('');
   const [origContent, setOrigContent] = useState(null);
@@ -105,14 +109,24 @@ function HomeworkAssessor(props) {
   }, [onSubmit]);
 
 
+  // When content loads, there is a tiny delay sometimes before images are loaded.
+  // This causes comment "number buttons" to be placed incorrectly, so we watch for height changes
+  // to know when the editor has loaded images, and thus correct the problem.
+  useEffect(() => {
+    if (!editorElemRef.current || !review?.comments?.length || prevEditorHeight.current === editorElemRef.current.getBoundingClientRect().height) return;
+    prevEditorHeight.current = editorElemRef.current.getBoundingClientRect().height;
+    // setUserComments(getInitializedUserComments(review.comments));
+    onWindowResized();
+  })
+
   useEffect(() => {
     console.log("--- EFFECT. []");
     const tagsElem = document.getElementById('comments-layer-wrapper');
     reactQuillRef.current.editor.addContainer(tagsElem);
 
-    const editorElem = document.querySelector('.ql-editor');
+    editorElemRef.current = document.querySelector('div.ql-editor');
     window.addEventListener('resize', onWindowResized);
-    editorElem.addEventListener('scroll', onEditorScrolled);
+    editorElemRef.current.addEventListener('scroll', onEditorScrolled);
 
     setOrigContent(reactQuillRef.current.editor.getContents(0));
     setUserComments(getInitializedUserComments(review.comments));
@@ -121,7 +135,7 @@ function HomeworkAssessor(props) {
 
     return () => {
       window.removeEventListener('resize', onWindowResized);
-      editorElem.removeEventListener('scroll', onEditorScrolled);
+      editorElemRef.current.removeEventListener('scroll', onEditorScrolled);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -182,9 +196,22 @@ function HomeworkAssessor(props) {
   }
 
   function onWindowResized() {
-    const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef, curExcessHeight);
+    if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);
+    setUserComments([]);
+    const {height} = getAvailableContentDims(headerZoneRef, null, curExcessHeight);
     setAvailableHeight(height - curExcessHeight);
+
+    throttleCallbackRef.current = window.setTimeout(() => {
+      console.log("resetting comments");
+      setUserComments(getInitializedUserComments(review.comments));
+    }, MIN_RESIZE_INTERVAL);
   }
+
+  // function onWindowResized() {
+  //   const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef, curExcessHeight);
+  //   setAvailableHeight(height - curExcessHeight);
+  //   setUserComments(getInitializedUserComments(review.comments));
+  // }
 
   function onEditorScrolled() {
     const tagsElem = document.getElementById('comments-layer-wrapper');
@@ -444,6 +471,9 @@ function HomeworkAssessor(props) {
     if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
   }
 
+  function handleChange(html, delta, source) {
+    console.log("change came from: ", source);
+  }
 
   return (
     <Fragment>
@@ -502,7 +532,7 @@ function HomeworkAssessor(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
-              onChange={() => {}}
+              onChange={handleChange}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}

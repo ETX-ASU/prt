@@ -333,9 +333,11 @@ function ReviewSessionDash() {
 		}
 	}
 
+
+	// Why aren't we using "submittedReviewsForUser"
 	function onSeeReviewsByPeers() {
-		console.log("onSeeReviewsByPeers() called", activeUsersReviewedDraftStub.id);
-		const revId = allReviews.filter(r => r.homeworkId === activeUsersReviewedDraftStub.id)[0].id;
+		// console.log("onSeeReviewsByPeers() called", activeUsersReviewedDraftStub.id);
+		const revId = submittedReviewsForUser[0].id;
 		console.log("onSeeReviewsByPeers() --> engaged review id", revId);
 		setEngagedPeerReviewId(revId);
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssessedHomework));

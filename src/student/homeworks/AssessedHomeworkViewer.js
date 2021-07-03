@@ -49,6 +49,8 @@ function AssessedHomeworkViewer(props) {
   const headerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
   const throttleCallbackRef = useRef();
+  const editorElemRef = useRef(null);
+  const prevEditorHeight = useRef(0);
 
   const [userComments, setUserComments] = useState([]);
   const [availableHeight, setAvailableHeight] = useState(2000);
@@ -61,6 +63,16 @@ function AssessedHomeworkViewer(props) {
     setPrevCommentId(activeCommentId || '');
     _setActiveCommentId(id);
   }
+
+  // When content loads, there is a tiny delay sometimes before images are loaded.
+  // This causes comment "number buttons" to be placed incorrectly, so we watch for height changes
+  // to know when the editor has loaded images, and thus correct the problem.
+  useEffect(() => {
+    if (!editorElemRef.current || !review?.comments?.length || prevEditorHeight.current === editorElemRef.current.getBoundingClientRect().height) return;
+    prevEditorHeight.current = editorElemRef.current.getBoundingClientRect().height;
+    // setUserComments(getInitializedUserComments(review.comments));
+    onWindowResized();
+  })
 
 
   useEffect(() => {
@@ -127,7 +139,6 @@ function AssessedHomeworkViewer(props) {
     if (origSelection) editor.setSelection(origSelection);
     return (altUserComments)
   }
-
 
   function onWindowResized() {
     if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);

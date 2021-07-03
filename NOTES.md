@@ -1,6 +1,15 @@
 # OVERVIEW OF NEXT STEPS
 
 
+
+## To fix comment dots...
+
+1. When looking at an essay assessed by a peer, or one that is being actively assessed (that is, one with comments), 
+   1. Listen for changes to the height of the div.ql-editor
+   2. If there is a significant increase in the height, recalculate the dots/comment positions
+
+
+
 1. When instructor is grading a draft, selected score vs. given score don't seem right... particularly when navigating from
    one student to another
 2. Make it so student can see peer feedback on previous drafts when writing following drafts   
