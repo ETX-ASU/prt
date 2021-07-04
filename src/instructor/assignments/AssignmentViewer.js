@@ -129,7 +129,7 @@ function AssignmentViewer(props) {
       if (!homeworkForStudent) homeworkForStudent = getNewToolHomeworkDataForAssignment(assignment);
 
       let percentCompleted = calcPercentCompleted(assignment, homeworkForStudent, allReviews.filter(r => r.assessorId === s.id).length);
-      let autoScore = calcAutoScore(assignment, homeworkForStudent);
+      let autoScore = calcAutoScore(assignment, homeworkForStudent, percentCompleted);
       let homeworkStatus = getHomeworkStatus(gradeDataForStudent, homeworkForStudent);
       return Object.assign({}, s, {
         randomOrderNum: positions.shift(),
@@ -407,8 +407,11 @@ function AssignmentViewer(props) {
         }
 
         {!!(reviewedStudentId && (students?.length > 0) && (!assignment.toolAssignmentData.sequenceIds.length%2)) &&
-        <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
-          students={students} reviewedStudentId={reviewedStudentId} />
+        <InstructorDraftAssessor
+          availableHeight={availableHeight}
+          refreshGrades={fetchScores}
+          assignment={assignment}
+          students={students} />
         }
 
         {!!(reviewedStudentId && (students?.length > 0) && (assignment.toolAssignmentData.sequenceIds.length%2)) &&
@@ -419,7 +422,6 @@ function AssignmentViewer(props) {
             refreshGrades={fetchScores}
             assignment={assignment}
             students={students}
-            gradedStudentId={reviewedStudentId}
           />
         }
 

@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {Fragment, useEffect, useState, useRef} from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import "./GradingBar.scss";
 import {Container, Col, Row, Button} from 'react-bootstrap';
@@ -23,19 +23,23 @@ function GradingBar(props) {
   const displayOrder = useSelector(state => state.app.displayOrder);
   const [scoreGiven, setScoreGiven] = useState(0);
   const [comment, setComment] = useState('');
+  const [expand, setExpand] = React.useState(0)
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   useEffect(() => {
-    if (prevReviewedStudentId.current === reviewedStudent.id) return;
-    const calcShownScore = ({homeworkStatus, scoreGiven, autoScore}) => {
-      if (homeworkStatus === HOMEWORK_PROGRESS.fullyGraded) return scoreGiven;
-      return (autoScore) ? autoScore : manualScore;
-    };
+    // if (prevReviewedStudentId.current === reviewedStudent.id) return;
 
+    console.log("manual | auto: ", manualScore, reviewedStudent.autoScore)
     setComment(reviewedStudent.comment || '');
-    setScoreGiven(calcShownScore(reviewedStudent));
+    setScoreGiven((reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded)
+      ? reviewedStudent.scoreGiven : manualScore
+      // : (reviewedStudent.autoScore === undefined)
+        // ? manualScore
+        // : reviewedStudent.autoScore
+    );
+
     prevReviewedStudentId.current = reviewedStudent.id;
-  }, [manualScore, reviewedStudent])
+  }, [manualScore, reviewedStudent, reviewedStudent.id])
 
 
   const navToPrev = () => {
@@ -51,6 +55,7 @@ function GradingBar(props) {
   }
 
   async function handleSubmitScore() {
+    console.log("handleSubmitScore()")
     const scoreDataObj = {
       assignmentId: assignment.id,
       studentId: reviewedStudent.id,
@@ -63,7 +68,9 @@ function GradingBar(props) {
 
     const lmsResult = await sendInstructorGradeToLMS(scoreDataObj);
     if (!lmsResult) reportError('', `We're sorry. We encountered an error while posting the grade for this student's work.`);
+    setExpand(1);
     props.refreshHandler();
+    // setTimeout(() => navToNext(), 1000);
   }
 
   // This is not used with the peer review tool because instructor comments are available directly as notes to student work
@@ -85,47 +92,72 @@ function GradingBar(props) {
 
         <Col className='p-0 m-0'>
           <Row className='p-0 m-0'>
-            <Col className='col-3' style={{'width':'calc(100% - 100px)'}}>
+            <Col className='col-4' style={{'width':'calc(100% - 100px)'}}>
               <h2>{(isHideStudentIdentity) ? `Student #${reviewedStudent.randomOrderNum}` : reviewedStudent.name}</h2>
               <span className='aside'><h3 className='subtext d-inline-block'>{reviewedStudent.percentCompleted}% Complete</h3>
                 <br/>
                 {STATUS_TEXT[reviewedStudent.homeworkStatus]}
               </span>
             </Col>
-            <Col className='col-9 pt-1 pb-2 xbg-light'>
+            <Col className='col-8 pt-1 pb-2 xbg-light'>
               <div className='ml-0 mr-4 d-inline-block align-top'>
-                <label htmlFor='autoScore' className='xtext-darkest'>Selected Score</label>
+                <label htmlFor='autoScore' className='xtext-darkest'>Auto Score</label>
                 <div className={'selected-score'} id={`yourScore`}>{`${manualScore}%`}</div>
-                {/*<div id={`yourScore`}>{`${reviewedStudent.autoScore} of ${calcMaxScoreForAssignment(assignment)}`}</div>*/}
-              </div>
-              <div className='mr-4 d-inline-block align-top'>
-                <label htmlFor='yourScore' className='xtext-darkest'>Given Score</label>
-                <input id={`yourScore`}
-                       type="number"
-                       className='form-control'
-                       min={0} max={100}
-                       onChange={onScoreAdjusted}
-                       value={scoreGiven}
-                />
               </div>
 
               {reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded &&
-              <div className='mr-2 mt-4 d-inline-block align-top'>
-                <FontAwesomeIcon className={'ml-2 mr-2'} icon={faCheck} />
+                <div className='ml-0 mr-4 d-inline-block align-top'>
+                  <label htmlFor='autoScore' className='xtext-darkest'>Given Score</label>
+                  <div className={'selected-score'} id={`yourScore`}>{`${reviewedStudent.scoreGiven}%`}</div>
+                </div>
+              }
+
+              <div className='mr-4 mt-4 d-inline-block align-middle'>
+                <div className='m-0 p-0 position-relative'>
+                  <FontAwesomeIcon
+                    size={'2x'}
+                    className={'ml-0 mr-2 text-success saved-msg position-absolute'}
+                    icon={faCheck}
+                    data-activated={expand}
+                    onAnimationEnd={() => {
+                      setExpand(0);
+                      if (reviewedStudent.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded) navToNext();
+                    }}/>
+                  {reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded &&
+                    <FontAwesomeIcon size={'2x'} className={'ml-0 mr-2 position-absolute'} icon={faCheck}/>
+                  }
+                </div>
               </div>
+
+              {reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded &&
+                <div className='mr-1 pt-3 d-inline-block align-top float-right'>
+                  <span className='ml-1 mr-0'>
+                    <Button className='btn-med xbg-darkest' onClick={handleSubmitScore}>Update</Button>
+                  </span>
+                </div>
               }
 
               {reviewedStudent.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded &&
-              <div className='mr-1 pt-3 d-inline-block align-middle float-right'>
+              <div className='mr-1 pt-3 d-inline-block align-top float-right'>
                 <span className='ml-1 mr-0'>
-                  <Button
-                    ref={props.submitBtnRef}
-                    className='btn-med xbg-darkest'
-                    // disabled={reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded}
-                    onClick={handleSubmitScore}>{(reviewedStudent.scoreGiven !== undefined) ? `Update` : `Submit`}</Button>
+                  <Button className='btn-med xbg-darkest' onClick={handleSubmitScore}>Submit & Next</Button>
                 </span>
               </div>
               }
+
+              <div className='mr-4 d-inline-block align-top float-right'>
+                <label htmlFor='yourScore' className='xtext-darkest'>{(reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded ? 'Updated Score' : 'Score to Submit')}</label>
+                <input id={`yourScore`}
+                  type="number"
+                  className='form-control'
+                  min={0} max={100}
+                  onChange={onScoreAdjusted}
+                  value={scoreGiven}
+                />
+              </div>
+
+
+
             </Col>
           </Row>
         </Col>

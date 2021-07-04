@@ -26,18 +26,21 @@ import {addDraftHomeworks} from "../../app/store/appReducer";
 * */
 function InstructorPeerReviewAssessor(props) {
   const dispatch = useDispatch();
-  const {students, gradedStudentId, assignment} = props;
+  const {students, assignment} = props;
 
+  const gradingBarRef = useRef(null);
+
+  const gradedStudentId = useSelector(state => state.app.currentlyReviewedStudentId);
   const allReviews = useSelector(state => state.app.reviews);
   const draftHomeworks = useSelector(state => state.app.draftHomeworks);
+  // const manualScore = useSelector(state => state.app.manualScore);
+  const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
+
   const [gradedStudent, setGradedStudent] = useState(students.find(s => s.id === gradedStudentId));
   const [reviewsByStudent, setReviewsByStudent] = useState(null);
   const [activeReview, setActiveReview] = useState(null);
   const [associatedReviewDraftsLoaded, setAssociatedReviewDraftsLoaded] = useState(false);
 
-  const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
-
-  const gradingBarRef = useRef(null);
   const [gradingBarHeight, setGradingBarHeight] = useState(200);
   const [manualScore, setManualScore] = useState(0);
   const [triggerSubmit, setTriggerSubmit] = useState(false);
@@ -160,7 +163,6 @@ function InstructorPeerReviewAssessor(props) {
   }
 
   function refreshHandler() {
-    console.log('InstructorPeerReviewAssessor.refreshHandler() called');
     setTriggerSubmit(true);
     props.refreshGrades();
   }
@@ -180,7 +182,7 @@ function InstructorPeerReviewAssessor(props) {
 	  <Fragment>
         <div ref={gradingBarRef}>
           <GradingBar
-            manualScore={manualScore}
+            manualScore={gradedStudent.autoScore}
             refreshHandler={refreshHandler}
             assignment={assignment}
             reviewedStudent={gradedStudent}

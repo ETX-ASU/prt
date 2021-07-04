@@ -11,7 +11,7 @@ function PeerReviewsSummaryTable(props) {
 	if (allocationMsg) return (<div className={'m-3'}>{allocationMsg}</div>);
 	if (!draftsToBeReviewedByUser && !allocationMsg) return (<LoadingIndicator loadingMsg={'LOADING PEER REVIEW DRAFT ASSIGNMENTS'} size={3} />);
 
-	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][roundNum] + ' Draft';
+	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][Math.floor(roundNum/2)] + ' Draft';
 
 	console.log("DraftsToBeReviewed", draftsToBeReviewedByUser);
 

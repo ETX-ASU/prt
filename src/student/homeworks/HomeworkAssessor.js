@@ -120,7 +120,6 @@ function HomeworkAssessor(props) {
   })
 
   useEffect(() => {
-    console.log("--- EFFECT. []");
     const tagsElem = document.getElementById('comments-layer-wrapper');
     reactQuillRef.current.editor.addContainer(tagsElem);
 
@@ -137,13 +136,11 @@ function HomeworkAssessor(props) {
       window.removeEventListener('resize', onWindowResized);
       editorElemRef.current.removeEventListener('scroll', onEditorScrolled);
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     onWindowResized();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [curExcessHeight])
 
@@ -174,7 +171,8 @@ function HomeworkAssessor(props) {
 
 
   function getInitializedUserComments(comments) {
-    const editor = reactQuillRef.current.editor;
+    const editor = reactQuillRef?.current?.editor;
+    if (!editor) return;
     const origSelection = editor.getSelection();
 
     console.log("--- getInitializedUserComments() polling origContents");
@@ -245,7 +243,6 @@ function HomeworkAssessor(props) {
     console.log("    |--- setActiveCommentId(commentId)");
     // setActiveCommentId("3d63a0cb-ae33-4be6-8fdd-66f022799f2b");
   }
-
 
   function onAddComment(e) {
     let bounds, newComment, isAvailable;
@@ -365,7 +362,7 @@ function HomeworkAssessor(props) {
   //   await props.refreshHandler();
   // }
 
-  // PRTv2 does not use autoscoring
+  // PRTv2 does not use autograding
   // async function calcAndSendScore(homework) {
   //   try {
   //     const scoreDataObj = {
@@ -418,8 +415,7 @@ function HomeworkAssessor(props) {
             {name: 'Cancel', onClick: () => setActiveModal(null)},
             {name: 'Submit', onClick: () => saveUpdatesToServer(review, true)},
           ]}>
-            <p>Once submitted, you can NOT go back to make any edits or additions to your assessment of this peer's
-              work.</p>
+            <p>Once submitted, you can NOT go back to make any edits or additions to your assessment of this peer's work.</p>
           </ConfirmationModal>
         )
       default:
@@ -469,10 +465,6 @@ function HomeworkAssessor(props) {
 
   function onCommentsEdited(e) {
     if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
-  }
-
-  function handleChange(html, delta, source) {
-    console.log("change came from: ", source);
   }
 
   return (
@@ -532,7 +524,6 @@ function HomeworkAssessor(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
-              onChange={handleChange}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}

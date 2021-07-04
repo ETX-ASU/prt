@@ -105,6 +105,14 @@ function DevUtilityDashboard() {
     }
   }
 
+  async function handleDeleteGrades() {
+    try {
+      deleteMockGrades(assignment.id);
+      console.log('grades for homework deleted.');
+    } catch (error) {
+      reportError(error, `Sorry. An error occurred.`);
+    }
+  }
 
   function handlePercentChange(e, prop) {
     let data = Object.assign({}, formData);
@@ -161,6 +169,7 @@ function DevUtilityDashboard() {
         <Row className='xbg-light'>
           <Col><h3>Clear Students & Homework</h3></Col>
           <Col><Button onClick={handleDeleteHomeworks}>Delete Homeworks</Button></Col>
+          <Col><Button onClick={handleDeleteGrades}>Delete Grades Only</Button></Col>
         </Row>
 
       </form>

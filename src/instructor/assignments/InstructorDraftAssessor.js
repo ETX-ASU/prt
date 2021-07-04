@@ -16,9 +16,11 @@ import {updateSingleReview} from "../../app/store/appReducer";
 
 function InstructorDraftAssessor(props) {
   const dispatch = useDispatch();
-  const {students, reviewedStudentId, assignment} = props;
+  const {students, assignment} = props;
   const rubricCriteria = assignment.toolAssignmentData.rubricCriteria;
 
+
+  const reviewedStudentId = useSelector(state => state.app.currentlyReviewedStudentId);
   const activeUser = useSelector(state => state.app.activeUser);
   const reviewsByActiveUser = useSelector(state => state.app.reviews);
   const [reviewedStudent, setReviewedStudent] = useState(students.find(s => s.id === reviewedStudentId));
@@ -63,6 +65,7 @@ function InstructorDraftAssessor(props) {
     } else {
       setReviewOfStudent(theReview);
       setReviewedStudent(theStudent);
+      if (theReview?.criterionRatings) onRatingChanges(theReview.criterionRatings);
     }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,6 +76,7 @@ function InstructorDraftAssessor(props) {
 
 
   async function fetchReviewAndSetReviewedStudent(theStudent) {
+    let freshReview;
     try {
       const fetchReviewsResult = await API.graphql({
         query: reviewsByHmwkAndAssessorId,
@@ -84,7 +88,7 @@ function InstructorDraftAssessor(props) {
 
       if (!fetchReviewsResult.data.reviewsByHmwkAndAssessorId.items?.length) {
         console.warn("NO instructor's review exists for this student. Attempting to create.")
-        const freshReview = Object.assign({}, EMPTY_REVIEW, {
+        freshReview = Object.assign({}, EMPTY_REVIEW, {
           id: uuid(),
           beganOnDate: moment().valueOf(),
           homeworkId: theStudent.homework.id,
@@ -103,7 +107,9 @@ function InstructorDraftAssessor(props) {
         await dispatch(updateSingleReview(theReview));
       }
 
+      setReviewOfStudent(freshReview);
       setReviewedStudent(theStudent);
+      onRatingChanges(freshReview.criterionRatings);
     } catch (error) {
       reportError(error, `We're sorry. There was an error while attempting to fetch your review of the current student. Please wait a moment and try again.`);
     }
@@ -139,7 +145,9 @@ function InstructorDraftAssessor(props) {
       return acc;
     }, 0)
 
-    if (score !== manualScore) setManualScore(Math.round(score));
+    // if (score !== manualScore)
+      setManualScore(Math.round(score));
+    console.log("manualScore", score);
   }
 
   function getStatusMsg() {
@@ -181,6 +189,7 @@ function InstructorDraftAssessor(props) {
 	  <Fragment>
         <div ref={gradingBarRef}>
           <GradingBar
+            overRideScore
             manualScore={manualScore}
             refreshHandler={refreshHandler}
             assignment={assignment}
