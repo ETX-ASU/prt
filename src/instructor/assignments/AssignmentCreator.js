@@ -69,8 +69,6 @@ function AssignmentCreator() {
     });
 
 
-    console.log("INPUT DATA: ", inputData);
-    // Temporarily disabled for development and testing
     try {
       if (window.isDevMode) inputData.lineItemId = (`FAKE-${uuid()}`);
       const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});

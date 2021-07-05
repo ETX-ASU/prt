@@ -9,37 +9,27 @@ import {API, graphqlOperation} from "aws-amplify";
 import {listHomeworks} from "../../graphql/queries";
 import {reportError} from "../../developer/DevUtils";
 import {addDraftHomeworks} from "../../app/store/appReducer";
-// import HomeworkAssessor from "../../student/homeworks/HomeworkAssessor";
-// import {API} from "aws-amplify";
-// import {reportError} from "../../developer/DevUtils";
-// import {reviewsByHmwkAndAssessorId} from "../../graphql/queries";
-// import {v4 as uuid} from "uuid";
-// import moment from "moment";
-// import {createReview} from "../../graphql/mutations";
-// import {updateSingleReview} from "../../app/store/appReducer";
 
-/*
-* The "gradedStudent" is the one the instructor is grading. This student has evaluated/assessed several peers.
-* The "assessedStudent" and "assessedHomework" is the draft that the gradedStudent evaluated. It is the draft we are looking at.
-* The
-*
-* */
+
+
 function InstructorPeerReviewAssessor(props) {
   const dispatch = useDispatch();
-  const {students, gradedStudentId, assignment} = props;
+  const {students, assignment} = props;
 
+  const gradingBarRef = useRef(null);
+  const reviewLinksRef = useRef(null);
+
+  const gradedStudentId = useSelector(state => state.app.currentlyReviewedStudentId);
   const allReviews = useSelector(state => state.app.reviews);
   const draftHomeworks = useSelector(state => state.app.draftHomeworks);
+  const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
+
   const [gradedStudent, setGradedStudent] = useState(students.find(s => s.id === gradedStudentId));
   const [reviewsByStudent, setReviewsByStudent] = useState(null);
   const [activeReview, setActiveReview] = useState(null);
   const [associatedReviewDraftsLoaded, setAssociatedReviewDraftsLoaded] = useState(false);
 
-  const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
-
-  const gradingBarRef = useRef(null);
   const [gradingBarHeight, setGradingBarHeight] = useState(200);
-  const [manualScore, setManualScore] = useState(0);
   const [triggerSubmit, setTriggerSubmit] = useState(false);
 
 
@@ -101,36 +91,10 @@ function InstructorPeerReviewAssessor(props) {
   }, [reviewsByStudent])
 
 
-
-
-  // useEffect(() => {
-  //   console.log(` >>> InstructorPeerReviewAssessor: [ reviewsByInstructor | gradedStudentId]`)
-  //
-  //   if (!students.length) return;
-  //   // if (!gradedStudentId) {
-  //   //   setReviewOfStudent(null);
-  //   //   return;
-  //   // }
-  //
-  //   console.log(`#instructorReviews = ${reviewsByInstructor?.length}, gradedStudentId = ${gradedStudentId}`)
-  //
-  //
-  //   let theStudent = students.find(s => s.id === gradedStudentId);
-  //   // let theReview = reviewsByInstructor?.find(r => r.assessorId === activeUser.id && r.homeworkId === theStudent.homework.id);
-  //   // if (!theReview && theStudent.homework.id) {
-  //   //   fetchReviewAndSetReviewedStudent(theStudent);
-  //   // } else {
-  //   //   setReviewOfStudent(theReview);
-  //     setGradedStudent(theStudent);
-  //   // }
-  //
-  // }, [reviewsByInstructor, gradedStudentId])
-
-
-
   function onWindowResized() {
     let height = gradingBarRef.current.getBoundingClientRect().height;
-    setGradingBarHeight(height + 120);
+    if (reviewLinksRef?.current) height += reviewLinksRef.current.getBoundingClientRect().height;
+    setGradingBarHeight(height);
   }
 
 
@@ -160,19 +124,11 @@ function InstructorPeerReviewAssessor(props) {
   }
 
   function refreshHandler() {
-    console.log('InstructorPeerReviewAssessor.refreshHandler() called');
     setTriggerSubmit(true);
     props.refreshGrades();
   }
 
-
-  function onShowReview() {
-    console.log('onShowReview() triggered');
-  }
-
-
   function handleReviewSelected(rev) {
-    console.log('handleReviewSelected() triggered', {rev});
     setActiveReview(rev)
   }
 
@@ -180,7 +136,7 @@ function InstructorPeerReviewAssessor(props) {
 	  <Fragment>
         <div ref={gradingBarRef}>
           <GradingBar
-            manualScore={manualScore}
+            manualScore={gradedStudent.autoScore}
             refreshHandler={refreshHandler}
             assignment={assignment}
             reviewedStudent={gradedStudent}
@@ -193,31 +149,16 @@ function InstructorPeerReviewAssessor(props) {
         </Row>
         }
 
-        {/*{hasStudentDoneWork() && reviewOfStudent &&*/}
         {hasStudentDoneWork() && reviewsByStudent &&
         <Row className={'m-0 p-0'}>
           <Col className='rounded p-0'>
-            <p>{reviewsByStudent.length} of {assignment.toolAssignmentData.minReviewsRequired} reviews completed ({gradedStudent.percentCompleted}%):
+            <p ref={reviewLinksRef}>{reviewsByStudent.length} of {assignment.toolAssignmentData.minReviewsRequired} reviews completed ({gradedStudent.percentCompleted}%):
               {reviewsByStudent.map((r, i) =>
                 <Button key={r.id} variant={'link'} onClick={() => handleReviewSelected(r)}>
                   review #{i}
                 </Button>
               )}
             </p>
-
-            {/*<HomeworkAssessor*/}
-            {/*  triggerSubmit={triggerSubmit}*/}
-            {/*  clearTrigger={clearTrigger}*/}
-
-            {/*  key={gradedStudent.id}*/}
-            {/*  excessHeight={gradingBarHeight}*/}
-            {/*  isInstructorAssessment={true}*/}
-            {/*  assignment={assignment}*/}
-            {/*  homework={gradedStudent.homework}*/}
-            {/*  onRatingChanges={onRatingChanges}*/}
-            {/*  // onReviewUpdated={onReviewUpdated}*/}
-            {/*  review={reviewOfStudent}*/}
-            {/*/>*/}
           </Col>
         </Row>
         }
@@ -230,11 +171,11 @@ function InstructorPeerReviewAssessor(props) {
               isAssessmentOfReview={true}
               key={activeReview.id}
               assignment={assignment}
-              excessHeight={gradingBarHeight + 36}
+              excessHeight={gradingBarHeight+70}
               reviewsForUser={[activeReview]}
               homework={draftHomeworks.find(h => h.id === activeReview.homeworkId)}
               engagedPeerReviewId={activeReview.id}
-              onShowReview={onShowReview}
+              onShowReview={() => {}}
             />
           </Col>
         </Row>

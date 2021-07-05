@@ -140,7 +140,7 @@ function App() {
 	}
 
 	return (
-		<Container id='app-container' className="app pt-4 mb-0 p-0 vh-100">
+		<Container id='app-container' className="app pt-4 pb-4 vh-100">
 			<div id='version-number'>v{APP_VERSION}</div>
 			<Row className='main-content-row'>
 				{!activeUser?.id && <LoadingIndicator msgClasses='xtext-white' loadingMsg='LOADING'/>}

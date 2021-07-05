@@ -129,7 +129,7 @@ function AssignmentViewer(props) {
       if (!homeworkForStudent) homeworkForStudent = getNewToolHomeworkDataForAssignment(assignment);
 
       let percentCompleted = calcPercentCompleted(assignment, homeworkForStudent, allReviews.filter(r => r.assessorId === s.id).length);
-      let autoScore = calcAutoScore(assignment, homeworkForStudent);
+      let autoScore = calcAutoScore(assignment, homeworkForStudent, percentCompleted);
       let homeworkStatus = getHomeworkStatus(gradeDataForStudent, homeworkForStudent);
       return Object.assign({}, s, {
         randomOrderNum: positions.shift(),
@@ -246,7 +246,6 @@ function AssignmentViewer(props) {
         return ({...g, scoreGiven});
       })
       await dispatch(setGradesData(grades));
-      console.log('grades fetched and set', grades);
     } catch (error) {
       reportError(error, `We're sorry. There was an error fetching student grade data. Please wait a moment and try again.`);
     }
@@ -265,8 +264,6 @@ function AssignmentViewer(props) {
       const qualifiedStudents = students.filter(s => s.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded && (!isSubmittedOnly || s.homeworkStatus === HOMEWORK_PROGRESS.submitted));
 
       await Promise.all(qualifiedStudents.map(s => handleSubmitScore(s, assignment)));
-
-      console.log("done with all");
       await fetchScores();
     } catch (error) {
       reportError(error, "Sorry. There appears to have been an error when batch submitting grades. Please refresh and try again.");
@@ -407,8 +404,11 @@ function AssignmentViewer(props) {
         }
 
         {!!(reviewedStudentId && (students?.length > 0) && (!assignment.toolAssignmentData.sequenceIds.length%2)) &&
-        <InstructorDraftAssessor availableHeight={availableHeight} refreshGrades={fetchScores} assignment={assignment}
-          students={students} reviewedStudentId={reviewedStudentId} />
+        <InstructorDraftAssessor
+          availableHeight={availableHeight}
+          refreshGrades={fetchScores}
+          assignment={assignment}
+          students={students} />
         }
 
         {!!(reviewedStudentId && (students?.length > 0) && (assignment.toolAssignmentData.sequenceIds.length%2)) &&
@@ -419,7 +419,6 @@ function AssignmentViewer(props) {
             refreshGrades={fetchScores}
             assignment={assignment}
             students={students}
-            gradedStudentId={reviewedStudentId}
           />
         }
 

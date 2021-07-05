@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useState} from 'react';
 import {useSelector} from "react-redux";
 import { Tab, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
 
@@ -20,11 +20,6 @@ function RubricAssessorPanel(props) {
   const shownCriteria = rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const shownRanks = rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const [curTabId, setCurTabId] = useState(shownCriteria[0].id);
-
-  useEffect(() => {
-    console.log(` >>> RubricAssessorPanel: [instructorReview]`, allInstructorReviews, instructorReview)
-  }, [instructorReview, allInstructorReviews]);
-
 
   function getRatingNum(curCrit, altRatings) {
     const qualityScore = (altRatings?.length) ? altRatings.find(qs => qs.criterionId === curCrit.id) : ratings.find(qs => qs.criterionId === curCrit.id);
@@ -79,7 +74,7 @@ function RubricAssessorPanel(props) {
                         <div className='selected-marker'>
                           <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
                         </div>
-                        {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}
+                        {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}{isInstructorAssessment ? ` (${rank.points})` : ''}
                           {isInstructorAssessment && (!!allInstructorReviews.length) && (getRatingNum(criterion, instructorReview.criterionRatings) === rNum) &&
                           <span className='instructors-choice'>
                             <FontAwesomeIcon className='selected-indicator' icon={faCheck} />

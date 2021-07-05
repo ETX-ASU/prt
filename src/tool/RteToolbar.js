@@ -60,19 +60,6 @@ Font.whitelist = [
 Quill.register(Font, true);
 
 
-//
-//
-// function insertStar() {
-//   console.log("INSERT STAR WORKING")
-//
-//   // const cursorPosition = this.quill.getSelection().index;
-//   // this.quill.insertText(cursorPosition, "★");
-//   // this.quill.setSelection(cursorPosition + 1);
-// }
-
-
-
-
 // Modules object for setting up the Quill editor
 export const modules = {
   toolbar: {
@@ -81,7 +68,6 @@ export const modules = {
       undo: undoChange,
       redo: redoChange,
       link: (value) => {
-        console.log("IsBtn", value)
         if (value?.isBtn) {
           this.quill.format('link', '#');
         } else if (value) {

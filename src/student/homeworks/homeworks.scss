@@ -81,15 +81,18 @@ table.student-assignment-drafts {
     width: 34px;
   }
   th:nth-child(2) {
-    width: 12%;
+    width: 140px;
   }
-  th:nth-child(3), td:nth-child(3) {
-    width: 180px;
-  }
-  th:nth-child(4) {
+  th:nth-child(3) {
     width: auto;
   }
-  th:nth-child(5), td:nth-child(5) {
+  //th:nth-child(3), td:nth-child(3) {
+  //  width: 180px;
+  //}
+  //th:nth-child(4) {
+  //  width: auto;
+  //}
+  th:nth-child(4), td:nth-child(4) {
     text-align: right;
     width: 240px;
   }

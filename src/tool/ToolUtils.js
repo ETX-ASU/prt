@@ -48,7 +48,7 @@ export function calcPercentCompleted(assignment, homework, numOfReviewsByStudent
   if (!homework?.id || !homework?.beganOnDate) return 0;
 
   // TODO: If this is a draft/writing round then return 0 if it hasn't been submitted yet, and 100 if it has. Eventually, this might be based on word count.
-  const roundNum = assignment.toolAssignmentData.sequenceIds.length - 1;
+  const roundNum = (!assignment.toolAssignmentData.sequenceIds.length) ? 0 : assignment.toolAssignmentData.sequenceIds.length-1;
   if (roundNum % 2) return (homework.submittedOnDate) ? 100 : 0;
 
   // This is an even round, which means it is a review/assessment round. These are based on how many peers this student has reviewed vs how many they must review.
@@ -57,19 +57,17 @@ export function calcPercentCompleted(assignment, homework, numOfReviewsByStudent
   return (100 * numOfReviewsByStudent / assignment.toolAssignmentData.minReviewsRequired);
 }
 
-export function calcAutoScore(assignment, homework) {
+export function calcAutoScore(assignment, homework, percentCompleted) {
   // TOOL-DEV: Given the assignment data and a student's current homework data, provide a method to return the grade a  student
   // should receive for their work. The should not go below 0, and should never exceed the value returned by calcMaxScoreForAssignment()
   if (!homework?.id || !homework?.beganOnDate) return 0;
-  // return assignment.toolAssignmentData.quizQuestions.reduce((acc, q, i) => {
-  //   let points = (homework.toolHomeworkData.quizAnswers[i] === q.correctAnswerIndex) ? q.gradePointsForCorrectAnswer : 0;
-  //   return acc + points;
-  // }, 0)
+  const roundNum = (!assignment.toolAssignmentData.sequenceIds.length) ? undefined : assignment.toolAssignmentData.sequenceIds.length-1;
 
-  // TODO: Need to write routine to autograde critiques and/or writing sessions
-  return 0;
+  // If this is a DRAFT writing round, don't autoscore. Give it 100 if it was done, 0 if it wasn't completed.
+  if (roundNum % 2) return (homework.submittedOnDate) ? 100 : undefined;
+  // Otherwise, if it was a REVIEW SESSION round, score it by percentage of completed reviews.
+  return percentCompleted;
 }
-
 
 export function generateDefaultRubric() {
   let defaultRubric = Object.assign({}, EMPTY_RUBRIC);
