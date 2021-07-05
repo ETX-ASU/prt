@@ -379,8 +379,11 @@ function ReviewSessionDash() {
 								<td className='border-top-0'>Reviews of Your Work</td>
 								<td className='border-top-0'>{(!submittedReviewsForUser) ? 0 : submittedReviewsForUser.length}</td>
 								<td className='border-top-0 text-right'>
-									<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={onSeeReviewsByPeers}>See
-										Reviews Received</Button>
+									<Button className="btn badge-pill essay-btn btn-outline-secondary"
+										disabled={!submittedReviewsForUser?.length}
+										onClick={onSeeReviewsByPeers}>
+										See Reviews Received
+									</Button>
 								</td>
 							</tr>
 							</tbody>

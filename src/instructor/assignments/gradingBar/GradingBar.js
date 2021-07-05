@@ -62,7 +62,7 @@ function GradingBar(props) {
     const lmsResult = await sendInstructorGradeToLMS(scoreDataObj);
     if (!lmsResult) reportError('', `We're sorry. We encountered an error while posting the grade for this student's work.`);
     setExpand(1);
-    props.refreshHandler();
+    props.refreshHandler({scoreGiven});
     // setTimeout(() => navToNext(), 1000);
   }
 
