@@ -1,5 +1,9 @@
 # OVERVIEW OF NEXT STEPS
 
+AssessedHomeworkViewer
+--> RubricsPanel
+  --> isReadOnly={!!review.submittedOnDate}
+
 
 
 ## To fix comment dots...

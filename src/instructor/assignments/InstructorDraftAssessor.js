@@ -47,16 +47,11 @@ function InstructorDraftAssessor(props) {
   }, [gradingBarRef])
 
   useEffect(() => {
-    console.log(` >>> InstructorDraftAssessor: [ reviewsByActiveUser | reviewedStudentId]`)
-
     if (!students.length) return;
     if (!reviewedStudentId) {
       setReviewOfStudent(null);
       return;
     }
-
-    console.log(`#instructorReviews = ${reviewsByActiveUser?.length}, reviewedStudent = ${reviewedStudentId}`)
-
 
     let theStudent = students.find(s => s.id === reviewedStudentId);
     let theReview = reviewsByActiveUser?.find(r => r.assessorId === activeUser.id && r.homeworkId === theStudent.homework.id);
@@ -70,8 +65,6 @@ function InstructorDraftAssessor(props) {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewsByActiveUser, reviewedStudentId])
-
-
 
 
 
@@ -118,19 +111,8 @@ function InstructorDraftAssessor(props) {
 
   function onWindowResized() {
     let height = gradingBarRef.current.getBoundingClientRect().height;
-    setGradingBarHeight(height + 120);
+    setGradingBarHeight(height);
   }
-
-
-  // function onReviewUpdated(studentHomework, updatedAllocations) {
-    // let updatedStudent = deepCopy(reviewedStudent);
-    // updatedStudent.homework.toolHomeworkData.commentsOnDraft = [...studentHomework.toolHomeworkData.commentsOnDraft];
-    // updatedStudent.homework.toolHomeworkData.criterionRatingsOnDraft = [...studentHomework.toolHomeworkData.criterionRatingsOnDraft];
-    //
-    // // if (updatedAllocations) setAllocations(updatedAllocations);
-    // setReviewedStudent(updatedStudent);
-    // props.onStudentUpdated(updatedStudent, updatedAllocations);
-  // }
 
 
   function onRatingChanges(instructorRatings) {
@@ -145,9 +127,7 @@ function InstructorDraftAssessor(props) {
       return acc;
     }, 0)
 
-    // if (score !== manualScore)
-      setManualScore(Math.round(score));
-    console.log("manualScore", score);
+    setManualScore(Math.round(score));
   }
 
   function getStatusMsg() {
@@ -176,7 +156,6 @@ function InstructorDraftAssessor(props) {
   }
 
   function refreshHandler() {
-    console.log('InstructorDraftAssessor.refreshHandler() called');
     setTriggerSubmit(true);
     props.refreshGrades();
   }
@@ -209,14 +188,12 @@ function InstructorDraftAssessor(props) {
             <HomeworkAssessor
               triggerSubmit={triggerSubmit}
               clearTrigger={clearTrigger}
-
               key={reviewedStudent.id}
-              excessHeight={gradingBarHeight}
+              excessHeight={gradingBarHeight + 54}
               isInstructorAssessment={true}
               assignment={assignment}
               homework={reviewedStudent.homework}
               onRatingChanges={onRatingChanges}
-              // onReviewUpdated={onReviewUpdated}
               review={reviewOfStudent}
             />
           </Col>

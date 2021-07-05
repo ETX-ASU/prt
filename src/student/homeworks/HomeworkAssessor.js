@@ -4,7 +4,12 @@ import {useDispatch, useSelector} from "react-redux";
 import {MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
 import {Button, Row} from 'react-bootstrap';
 import {API} from "aws-amplify";
-import {setActiveUiScreenMode, setCurrentlyReviewedStudentId, updateSingleReview} from "../../app/store/appReducer";
+import {
+  setActiveUiScreenMode,
+  setCurrentlyReviewedStudentId,
+  setTopZonePercent,
+  updateSingleReview
+} from "../../app/store/appReducer";
 import {reportError} from "../../developer/DevUtils";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
@@ -42,7 +47,6 @@ function HomeworkAssessor(props) {
   } = props;
   const {toolHomeworkData} = homework;
 
-  // const dragBarRef = useRef(null);
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
@@ -54,12 +58,11 @@ function HomeworkAssessor(props) {
 
   const dispatch = useDispatch();
   const activeUser = useSelector(state => state.app.activeUser);
+  const topZonePercent = useSelector(state => state.app.topZonePercent);
 
   const [userComments, setUserComments] = useState([]);
   const [activeModal, setActiveModal] = useState(null);
   const [availableHeight, setAvailableHeight] = useState(2000);
-  const [topZonePercent, setTopZonePercent] = useState(20);
-  const [curExcessHeight, setCurExcessHeight] = useState(props.excessHeight);
   const [showPlusButton, setShowPlusButton] = useState(false);
   const [activeCommentId, _setActiveCommentId] = useState('');
   const [origContent, setOrigContent] = useState(null);
@@ -115,7 +118,6 @@ function HomeworkAssessor(props) {
   useEffect(() => {
     if (!editorElemRef.current || !review?.comments?.length || prevEditorHeight.current === editorElemRef.current.getBoundingClientRect().height) return;
     prevEditorHeight.current = editorElemRef.current.getBoundingClientRect().height;
-    // setUserComments(getInitializedUserComments(review.comments));
     onWindowResized();
   })
 
@@ -140,14 +142,7 @@ function HomeworkAssessor(props) {
   }, [])
 
   useEffect(() => {
-    onWindowResized();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [curExcessHeight])
-
-  useEffect(() => {
-    console.log("--- EFFECT. activeCommentId", activeCommentId);
     if (activeCommentId === prevCommentId.current) return;
-    console.log("--- HomeworkAssessor. activeCommentId");
 
     if (prevCommentId.current) {
       const prevElems = document.querySelectorAll(`span[data-id='${prevCommentId.current}']`);
@@ -163,10 +158,11 @@ function HomeworkAssessor(props) {
   }, [activeCommentId])
 
   useEffect(() => {
-    console.log("--- EFFECT. triggerSubmit", triggerSubmit);
     if (!triggerSubmit) return;
     saveUpdatesToServer(review, true);
     clearTrigger();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triggerSubmit])
 
 
@@ -175,7 +171,6 @@ function HomeworkAssessor(props) {
     if (!editor) return;
     const origSelection = editor.getSelection();
 
-    console.log("--- getInitializedUserComments() polling origContents");
     const altUserComments = comments.map((c, i) => {
       const bounds = editor.getBounds(c.index, c.length);
       const theComment = {
@@ -196,20 +191,13 @@ function HomeworkAssessor(props) {
   function onWindowResized() {
     if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);
     setUserComments([]);
-    const {height} = getAvailableContentDims(headerZoneRef, null, curExcessHeight);
-    setAvailableHeight(height - curExcessHeight);
+    const {height} = getAvailableContentDims(headerZoneRef, null, props.excessHeight);
+    setAvailableHeight(height - props.excessHeight);
 
     throttleCallbackRef.current = window.setTimeout(() => {
-      console.log("resetting comments");
       setUserComments(getInitializedUserComments(review.comments));
     }, MIN_RESIZE_INTERVAL);
   }
-
-  // function onWindowResized() {
-  //   const {height} = getAvailableContentDims(headerZoneRef, footerZoneRef, curExcessHeight);
-  //   setAvailableHeight(height - curExcessHeight);
-  //   setUserComments(getInitializedUserComments(review.comments));
-  // }
 
   function onEditorScrolled() {
     const tagsElem = document.getElementById('comments-layer-wrapper');
@@ -219,29 +207,22 @@ function HomeworkAssessor(props) {
   }
 
   function onSelectionChanged(range, source) {
-    console.log("--- HomeworkAssessor. onSelectionChanged");
     const editor = reactQuillRef?.current?.editor;
     if (!editor || source !== 'user' || !range) return;
-    console.log("    --- look for comment");
 
     let sel = range.index;
     let comment = userComments.find(c => {
       let start = c.index, end = c.index + c.length;
       return ((sel > start) && (sel < end));
     });
-    console.log("    --- found comment", comment?.id);
     let commentId = (comment) ? comment.id : '';
     if (comment && range.length && range.index + range.length > comment.index + comment.length) {
       commentId = '';
       setShowPlusButton(false);
-      console.log("    |--- setShowPlusButton(false)");
     } else {
       setShowPlusButton(!commentId && range.length);
-      console.log("    |--- setShowPlusButton(val)");
     }
     setActiveCommentId(commentId);
-    console.log("    |--- setActiveCommentId(commentId)");
-    // setActiveCommentId("3d63a0cb-ae33-4be6-8fdd-66f022799f2b");
   }
 
   function onAddComment(e) {
@@ -252,7 +233,6 @@ function HomeworkAssessor(props) {
     const selEnd = sel?.index + sel?.length;
     if (!sel || !sel.length) {
       // TODO: Notify user of not being a range
-      console.log("Comment NOT added because selection is not a RANGE.");
       return;
     }
     bounds = editor.getBounds(sel.index, sel.length);
@@ -260,7 +240,6 @@ function HomeworkAssessor(props) {
 
     if (!isAvailable) {
       // TODO: Notify user of overlapping comment selection
-      console.log("Comment NOT added because selection overlaps an existing comment area.");
       return;
     }
 
@@ -280,7 +259,6 @@ function HomeworkAssessor(props) {
       commentRating: -1
     }
     if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
-    console.log("--- onAddComment():", newComment.origContent);
 
     editor.formatText(sel.index, sel.length, 'comment-tag', {id: newComment.id}, 'api');
     let altComments = [...userComments, newComment].sort((a, b) => a.index - b.index).map((c, i) => ({
@@ -349,7 +327,7 @@ function HomeworkAssessor(props) {
       ratings.push(rating);
     }
 
-    if (ratings.length) setCurExcessHeight(16);
+    // if (ratings.length) setCurExcessHeight(16);
     if (onRatingChanges) onRatingChanges(ratings);
     const altReview = {...review, criterionRatings: ratings};
     saveUpdatesToServer(altReview);
@@ -454,7 +432,7 @@ function HomeworkAssessor(props) {
 
       let minTopPercent = MIN_TOP_ZONE_PIXELS / availableHeight * 100
       nextTopPerc = Math.max(nextTopPerc, minTopPercent + btnHeightPerc);
-      setTopZonePercent(nextTopPerc);
+      dispatch(setTopZonePercent(nextTopPerc));
     }
 
     function onMouseUp() {
@@ -467,14 +445,19 @@ function HomeworkAssessor(props) {
     if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
   }
 
+  function handleChange(html, delta, source) {
+    // TODO: is this needed anymore?
+  }
+
   return (
     <Fragment>
       {activeModal && renderModal()}
       {!isInstructorAssessment &&
       <div className='p-0 m-0'>
         <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
-          <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon
-            icon={faChevronLeft}/></Button>
+          <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}>
+            <FontAwesomeIcon icon={faChevronLeft}/>
+          </Button>
           <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
         </Row>
         {!isInstructorAssessment && (!review.criterionRatings.length) &&
@@ -486,11 +469,9 @@ function HomeworkAssessor(props) {
       }
 
       <div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
-        {/*<div className='top-zone w-100 m-0 p-0' style={{height: topZonePercent+'%'}}>*/}
-        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent / 100)}px)`}}>
-
+        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent/100)}px)`}}>
           <RubricAssessorPanel
-            isReadOnly={!!review.submittedOnDate}
+            isReadOnly={!isInstructorAssessment && !!review.submittedOnDate}
             isInstructorAssessment={isInstructorAssessment}
             rubricRanks={assignment.toolAssignmentData.rubricRanks}
             rubricCriteria={assignment.toolAssignmentData.rubricCriteria}
@@ -504,7 +485,7 @@ function HomeworkAssessor(props) {
         </div>
 
         <div className='bottom-zone d-flex flex-row m-0 p-0'
-          style={{height: `calc(${availableHeight - (availableHeight * topZonePercent / 100)}px)`}}>
+          style={{height: `calc(${availableHeight - (availableHeight * topZonePercent/100)}px)`}}>
           <div className={`d-flex flex-column text-editor no-bar`}>
             <EditorToolbar/>
             <div id='comments-layer-wrapper'>
@@ -524,6 +505,7 @@ function HomeworkAssessor(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
+              onChange={handleChange}
               onChangeSelection={onSelectionChanged}
               placeholder={"Write something awesome..."}
               modules={modules}
@@ -531,7 +513,7 @@ function HomeworkAssessor(props) {
             />
           </div>
           <CommentsPanel
-            isReadOnly={!!review.submittedOnDate}
+            isReadOnly={!isInstructorAssessment && !!review.submittedOnDate}
             showPlusButton={showPlusButton}
             assessorId={activeUser.id}
             criteria={assignment.toolAssignmentData.rubricCriteria}

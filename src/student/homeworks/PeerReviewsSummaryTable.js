@@ -13,8 +13,6 @@ function PeerReviewsSummaryTable(props) {
 
 	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][Math.floor(roundNum/2)] + ' Draft';
 
-	console.log("DraftsToBeReviewed", draftsToBeReviewedByUser);
-
 	let enhancedDraftsToBeReviewed = draftsToBeReviewedByUser.map((d,i) => {
 		const review = reviewsByUser.find(r => r.homeworkId === d.id);
 		let btnLabel = (review.submittedOnDate) ? PEER_REVIEW_BTN_LABELS.Submitted :

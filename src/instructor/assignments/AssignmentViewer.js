@@ -246,7 +246,6 @@ function AssignmentViewer(props) {
         return ({...g, scoreGiven});
       })
       await dispatch(setGradesData(grades));
-      console.log('grades fetched and set', grades);
     } catch (error) {
       reportError(error, `We're sorry. There was an error fetching student grade data. Please wait a moment and try again.`);
     }
@@ -265,8 +264,6 @@ function AssignmentViewer(props) {
       const qualifiedStudents = students.filter(s => s.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded && (!isSubmittedOnly || s.homeworkStatus === HOMEWORK_PROGRESS.submitted));
 
       await Promise.all(qualifiedStudents.map(s => handleSubmitScore(s, assignment)));
-
-      console.log("done with all");
       await fetchScores();
     } catch (error) {
       reportError(error, "Sorry. There appears to have been an error when batch submitting grades. Please refresh and try again.");

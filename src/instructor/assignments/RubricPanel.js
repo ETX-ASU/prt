@@ -122,7 +122,6 @@ function RubricPanel(props) {
                     <input type='text' value={criterion.name} size={12}
                       draggable={true}
                       onDragStart={e => {
-                        console.log("PREVENTING");
                         e.preventDefault();
                       }}
                       onChange={(e) => props.onCriterionPropChanged(criterion, 'name', e.target.value)}/>

@@ -38,7 +38,6 @@ import AssessedHomeworkViewer from "./homeworks/AssessedHomeworkViewer";
 
 
 function ReviewSessionDash() {
-	// const dispatch = useCallback(useDispatch, []);
 	const dispatch = useDispatch();
 	const activeUiScreenMode = useSelector(state => state.app.activeUiScreenMode);
 	const activeUser = useSelector(state => state.app.activeUser);
@@ -57,9 +56,6 @@ function ReviewSessionDash() {
 	const [engagedPeerReviewId, setEngagedPeerReviewId] = useState(null);
 	const [showInstructionsAlert, setShowInstructionsAlert] = useState(false);
 
-	// const hasLoadedReviews = useRef(false);
-	// const hasLoadedStubs = useRef(false);
-
 	const roundNum = assignment.toolAssignmentData.sequenceIds.length - 1;
 	const draftAssignmentId = assignment.toolAssignmentData.sequenceIds[roundNum];
 
@@ -77,7 +73,7 @@ function ReviewSessionDash() {
 			if (!fetchHomeworkResult.data.fullHomeworkByAsmntAndStudentId.items?.length) {
 				const freshHomework = Object.assign({}, EMPTY_HOMEWORK, {
 					id: uuid(),
-					beganOnDate: 0, //moment().valueOf(),
+					beganOnDate: 0,
 					studentOwnerId: activeUser.id,
 					assignmentId: assignment.id
 				});
@@ -140,7 +136,6 @@ function ReviewSessionDash() {
 	}, []);
 
 	useEffect(() => {
-		console.log("STEP 1. fetchAndSetActiveUserReviewSessionHomework()");
 		fetchAndSetActiveUserReviewSessionHomework();
 	}, [fetchAndSetActiveUserReviewSessionHomework])
 
@@ -196,7 +191,6 @@ function ReviewSessionDash() {
 		}
 
 		const createAndSaveNewReviewToDB = async (homeworkId, activeUserId, allReviews) => {
-			console.log(" -------------- createAndSaveNewReviewToDB for this student.")
 			const freshReview = Object.assign({}, EMPTY_REVIEW, {
 				id: uuid(),
 				beganOnDate: 0,
@@ -212,8 +206,6 @@ function ReviewSessionDash() {
 
 
 		if (!allReviews && !allHomeworkStubs) {
-			console.log("STEP 2. fetchAndSetHomeworkStubs() & fetchAndSetAllReviews()");
-
 			// 1. Fetch ids of all completed homework from the previous draft-writing assignment and all reviews created for them
 			fetchAndSetHomeworkStubs();
 			fetchAndSetAllReviews();
@@ -222,7 +214,6 @@ function ReviewSessionDash() {
 			// 2. Once all homeworkStubs and allReviews are in redux store, we look for active review this student is working on
 			let theActiveReview = reviewsByUser?.find(a => !a.submittedOnDate);
 			if (theActiveReview) return;
-			console.log("STEP 3. BOTH stubs & all reviews have been loaded")
 
 			// 2A. If user didn't complete previous homework, they are not allowed to review
 			if (!activeUsersReviewedDraftStub?.submittedOnDate) {
@@ -246,7 +237,6 @@ function ReviewSessionDash() {
 				}
 
 				// 4. Create the new review. Save it to DB. Add it to redux store (no need to re-fetch)
-				console.log("STEP 4. createAndSaveNewReviewToDB");
 				createAndSaveNewReviewToDB(targetDraftId, activeUser.id, allReviews);
 			}
 		}
@@ -257,7 +247,6 @@ function ReviewSessionDash() {
 	useEffect(() => {
 		// 5. Once loadedDrafts are ready, we now must load in the associated homeworks that this student user has reviewed or has yet to review
 		const fetchAndSetDraftsToBeReviewedByUser = async () => {
-			console.log("STEP 5. fetchAndSetDraftsToBeReviewedByUser", submittedReviewsForUser);
 			// Get all of the allocated homeworks and sort them according to indexed order of the allocations list
 			const relatedHomeworkIds = (activeUsersReviewedDraftStub) ? [...reviewsByUser.map(r => r.homeworkId), activeUsersReviewedDraftStub.id] : [...reviewsByUser.map(r => r.homeworkId)];
 			const filterIdsArr = relatedHomeworkIds.map(a => ({id: {eq: a}}));
@@ -299,7 +288,6 @@ function ReviewSessionDash() {
 
 
 	async function updateReviewSessionHomeworkProgress() {
-		console.log("&&&&&&&&& updateReviewSessionHomeworkProgress()");
 		try {
 			const freshHomework = Object.assign({}, reviewSessionHomework);
 			delete freshHomework.createdAt;
@@ -312,14 +300,17 @@ function ReviewSessionDash() {
 				freshHomework.beganOnDate = moment().valueOf();
 			}
 			await API.graphql({query: updateHomework, variables: {input: freshHomework}});
-			await setReviewSessionHomework(Object.assign({}, freshHomework, {homeworkStatus: HOMEWORK_PROGRESS.inProgress, scoreGiven: reviewSessionHomework.scoreGiven, comment: reviewSessionHomework.comment}));
+			await setReviewSessionHomework(Object.assign({}, freshHomework, {
+				homeworkStatus: HOMEWORK_PROGRESS.inProgress,
+				scoreGiven: reviewSessionHomework.scoreGiven,
+				comment: reviewSessionHomework.comment
+			}));
 		} catch (error) {
 			reportError(error, `We're sorry. There was an error while attempting to update review session homework status. Please wait a moment and try again.`);
 		}
 	}
 
 	async function submitReviewSessionHomework() {
-		console.log("User clicked button to submit review session assignment.")
 		try {
 			const freshHomework = Object.assign({}, reviewSessionHomework, {submittedOnDate: moment().valueOf()});
 			delete freshHomework.createdAt;
@@ -336,9 +327,7 @@ function ReviewSessionDash() {
 
 	// Why aren't we using "submittedReviewsForUser"
 	function onSeeReviewsByPeers() {
-		// console.log("onSeeReviewsByPeers() called", activeUsersReviewedDraftStub.id);
 		const revId = submittedReviewsForUser[0].id;
-		console.log("onSeeReviewsByPeers() --> engaged review id", revId);
 		setEngagedPeerReviewId(revId);
 		dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.viewAssessedHomework));
 	}
@@ -389,7 +378,7 @@ function ReviewSessionDash() {
 								<td className='border-top-0'>{['1st', '2nd', '3rd', '4th', '5th'][roundNum] + ' Draft'}</td>
 								<td className='border-top-0'>Reviews of Your Work</td>
 								<td className='border-top-0'>{(!submittedReviewsForUser) ? 0 : submittedReviewsForUser.length}</td>
-								<td className='border-top-0'>
+								<td className='border-top-0 text-right'>
 									<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={onSeeReviewsByPeers}>See
 										Reviews Received</Button>
 								</td>
@@ -420,23 +409,32 @@ function ReviewSessionDash() {
 
 				<Row className='m-0 mb-3 p-0'>
 					<Col className='m-0 p-0 col-9'>
-						{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.notBegun &&
-						<p>Begin reviewing your peer's work. When you have completed and submitted the {assignment.toolAssignmentData.minReviewsRequired} required
-							peer reviews you will be able to submit your assessment assignment for grading.</p>
-						}
-						{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress &&
-						(allReviews.filter(a => a.assessorId === activeUser.id).length < assignment.toolAssignmentData.minReviewsRequired) &&
-						<p>You have completed {allReviews.filter(a => a.assessorId === activeUser.id).length - 1} of the {assignment.toolAssignmentData.minReviewsRequired} required peer reviews.
-							You must complete and submit all {assignment.toolAssignmentData.minReviewsRequired} reviews before you will be able to submit your assessment assignment for grading.</p>
-						}
-						{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress &&
-						(allReviews.filter(a => a.assessorId === activeUser.id).length >= assignment.toolAssignmentData.minReviewsRequired) &&
-						<p>You have completed and submitted all of the required reviews! If you have no more changes to make, click the submit button
-							to submit your assessment assignment for grading.</p>
-						}
-						{(reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.submitted || reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded)&&
-						(allReviews.filter(a => a.assessorId === activeUser.id).length >= assignment.toolAssignmentData.minReviewsRequired) &&
-						<p>You have completed all of the required reviews and submitted your assessment assignment for grading.</p>
+						{draftsToBeReviewedByUser?.length &&
+						<Fragment>
+							{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.notBegun &&
+							<p>Begin reviewing your peer's work. When you have completed and submitted
+								the {assignment.toolAssignmentData.minReviewsRequired} required
+								peer reviews you will be able to submit your assessment assignment for grading.</p>
+							}
+							{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress &&
+							(allReviews.filter(a => a.assessorId === activeUser.id).length < assignment.toolAssignmentData.minReviewsRequired) &&
+							<p>You have completed {allReviews.filter(a => a.assessorId === activeUser.id).length - 1} of
+								the {assignment.toolAssignmentData.minReviewsRequired} required peer reviews.
+								You must complete and submit all {assignment.toolAssignmentData.minReviewsRequired} reviews before you
+								will be able to submit your assessment assignment for grading.</p>
+							}
+							{reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress &&
+							(allReviews.filter(a => a.assessorId === activeUser.id).length >= assignment.toolAssignmentData.minReviewsRequired) &&
+							<p>You have completed and submitted all of the required reviews! If you have no more changes to make,
+								click the submit button
+								to submit your assessment assignment for grading.</p>
+							}
+							{(reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.submitted || reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded) &&
+							(allReviews.filter(a => a.assessorId === activeUser.id).length >= assignment.toolAssignmentData.minReviewsRequired) &&
+							<p>You have completed all of the required reviews and submitted your assessment assignment for
+								grading.</p>
+							}
+						</Fragment>
 						}
 					</Col>
 					<Col className='m-0 p-0 col-3 text-right'>
@@ -459,7 +457,7 @@ function ReviewSessionDash() {
 						isInstructorAssessment={false}
 						key={activelyReviewedPeerDraft.id}
 						assignment={assignment}
-						excessHeight={showInstructionsAlert ? 48 : 16}
+						excessHeight={showInstructionsAlert ? 76 : 42}
 						homework={activelyReviewedPeerDraft}
 						review={allReviews.find(r => r.id === engagedPeerReviewId)}
 						// onReviewUpdated={onReviewUpdated}

@@ -21,8 +21,6 @@ function SelectionDashboard() {
 		if (hasFetchedAllData.current) return;
 
 		async function fetchAssignmentList() {
-			console.log("attempting to fetchAssignmentList()");
-
 			try {
 				let nextTokenVal = null;
 				let allAssignments = [];

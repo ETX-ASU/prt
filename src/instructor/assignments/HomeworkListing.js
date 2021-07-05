@@ -137,7 +137,6 @@ function HomeworkListing(props) {
   }
 
   function handleStudentsPerPageSelected(e) {
-    console.log(`SPP => ${e}`)
     setStudentsPerPage(parseInt(e));
   }
 

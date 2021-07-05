@@ -9,6 +9,7 @@ import DraftWriter from "../../tool/DraftWriter";
 function HomeworkViewer(props) {
 	const {homework, assignment, availableHeight} = props;
 
+	// TODO: Get rid of someFunc
 	return (
 		<div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight}px - 6em)`}}>
       <DraftWriter

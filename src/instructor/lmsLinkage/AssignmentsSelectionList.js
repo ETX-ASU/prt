@@ -29,7 +29,6 @@ function AssignmentsSelectionList(props) {
       await document.body.insertAdjacentHTML('afterbegin', linkToLmsResult);
       document.getElementById("ltijs_submit").submit();
     } catch (error) {
-      console.log(error);
       reportError(error, `Sorry. An error occurred while trying to connect and create this assignment within the LMS.`);
     }
   }

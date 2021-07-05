@@ -2,7 +2,12 @@ import React, {Fragment, useEffect, useRef, useState} from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import {UI_SCREEN_MODES} from "../../app/constants";
 import {Button, Row, Col} from 'react-bootstrap';
-import {setActiveUiScreenMode, setCurrentlyReviewedStudentId, updateSingleReview} from "../../app/store/appReducer";
+import {
+  setActiveUiScreenMode,
+  setCurrentlyReviewedStudentId,
+  setTopZonePercent,
+  updateSingleReview
+} from "../../app/store/appReducer";
 
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faCheck, faChevronLeft, faChevronRight, faGripLines, faTimes} from '@fortawesome/free-solid-svg-icons'
@@ -31,7 +36,6 @@ function AssessedHomeworkViewer(props) {
     isInstructorAssessment,
     reviewsForUser,
     engagedPeerReviewId,
-    excessHeight,
     onShowReview
   } = props;
   const {toolHomeworkData} = homework;
@@ -45,6 +49,7 @@ function AssessedHomeworkViewer(props) {
     return {isActive: r.id === engagedPeerReviewId, linkName, reviewId: r.id};
   })
 
+  const topZonePercent = useSelector(state => state.app.topZonePercent);
   const activeUser = useSelector(state => state.app.activeUser);
   const headerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
@@ -54,10 +59,8 @@ function AssessedHomeworkViewer(props) {
 
   const [userComments, setUserComments] = useState([]);
   const [availableHeight, setAvailableHeight] = useState(2000);
-  const [topZonePercent, setTopZonePercent] = useState(20);
   const [prevCommentId, setPrevCommentId] = useState('');
   const [activeCommentId, _setActiveCommentId] = useState('');
-  const [curExcessHeight, setCurExcessHeight] = useState(props.excessHeight);
 
   const setActiveCommentId = (id) => {
     setPrevCommentId(activeCommentId || '');
@@ -70,7 +73,6 @@ function AssessedHomeworkViewer(props) {
   useEffect(() => {
     if (!editorElemRef.current || !review?.comments?.length || prevEditorHeight.current === editorElemRef.current.getBoundingClientRect().height) return;
     prevEditorHeight.current = editorElemRef.current.getBoundingClientRect().height;
-    // setUserComments(getInitializedUserComments(review.comments));
     onWindowResized();
   })
 
@@ -96,12 +98,6 @@ function AssessedHomeworkViewer(props) {
   }, [])
 
   useEffect(() => {
-    onWindowResized();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [curExcessHeight])
-
-  useEffect(() => {
     if (activeCommentId === prevCommentId) return;
 
     if (prevCommentId) {
@@ -122,7 +118,6 @@ function AssessedHomeworkViewer(props) {
     const editor = reactQuillRef.current.editor;
     const origSelection = editor.getSelection();
 
-    // console.log("--- getInitializedUserComments() polling origContents");
     const altUserComments = comments.map((c, i) => {
       const bounds = editor.getBounds(c.index, c.length);
       const theComment = {
@@ -143,11 +138,10 @@ function AssessedHomeworkViewer(props) {
   function onWindowResized() {
     if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);
     setUserComments([]);
-    const {height} = getAvailableContentDims(headerZoneRef, null, curExcessHeight);
-    setAvailableHeight(height - curExcessHeight);
+    const {height} = getAvailableContentDims(headerZoneRef, null, props.excessHeight);
+    setAvailableHeight(height - props.excessHeight);
 
     throttleCallbackRef.current = window.setTimeout(() => {
-      console.log("resetting comments");
       setUserComments(getInitializedUserComments(review.comments));
     }, MIN_RESIZE_INTERVAL);
   }
@@ -189,7 +183,6 @@ function AssessedHomeworkViewer(props) {
       let curY = e.clientY;
       let pixelDeltaY = curY - dragStartY;
       let percentDeltaY = pixelDeltaY / availableHeight * 100;
-      // let btnHeightPerc = 22/availableHeight * 100;
       let btnHeightPerc = 48 / availableHeight * 100;
 
       let newPerc = origTopZonePerc + percentDeltaY;
@@ -197,7 +190,7 @@ function AssessedHomeworkViewer(props) {
 
       let minTopPercent = MIN_TOP_ZONE_PIXELS / availableHeight * 100
       nextTopPerc = Math.max(nextTopPerc, minTopPercent + btnHeightPerc);
-      setTopZonePercent(nextTopPerc);
+      dispatch(setTopZonePercent(nextTopPerc));
     }
 
     function onMouseUp() {
@@ -212,8 +205,6 @@ function AssessedHomeworkViewer(props) {
     const altComments = [...review.comments];
     altComments[i] = comment;
     const altReview = {...review, comments: altComments};
-    console.log(`onCommentRated: `, comment);
-    // dispatch(updateSingleReview(altReview));
     saveUpdatesToServer(altReview);
   }
 
@@ -239,14 +230,14 @@ function AssessedHomeworkViewer(props) {
     }
   }
 
-
   return (
     <Fragment>
       {!isInstructorAssessment &&
       <Row ref={headerZoneRef} className={'m-0 p-0 pb-2'}>
         <Col className='p-0'>
-          <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon
-            icon={faChevronLeft}/></Button>
+          <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}>
+            <FontAwesomeIcon icon={faChevronLeft}/>
+          </Button>
           <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>
         </Col>
         <Col className='text-right p-0 col-4'>
@@ -262,7 +253,7 @@ function AssessedHomeworkViewer(props) {
       }
 
       <div className='assessor-wrapper d-flex flex-column' style={{height: `calc(${availableHeight}px)`}}>
-        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent / 100)}px)`}}>
+        <div className='top-zone w-100 m-0 p-0' style={{height: `calc(${(availableHeight * topZonePercent/100)}px)`}}>
           <RubricAssessorPanel
             isReadOnly={!!review.submittedOnDate}
             isInstructorAssessment={isInstructorAssessment}
@@ -277,7 +268,7 @@ function AssessedHomeworkViewer(props) {
         </div>
 
         <div className='bottom-zone d-flex flex-row m-0 p-0'
-          style={{height: `calc(${availableHeight - (availableHeight * topZonePercent / 100)}px)`}}>
+          style={{height: `calc(${availableHeight - (availableHeight * topZonePercent/100)}px)`}}>
           <div className={`d-flex flex-column text-editor no-bar`}>
             <EditorToolbar/>
             <div id='comments-layer-wrapper'>

@@ -77,14 +77,12 @@ function DevUtilityDashboard() {
     })
 
     const dbHomeworks = mockHomeworks.filter(h => h.beganOnDate);
-    console.log(`-----> dbHomeworks`, dbHomeworks);
 
     let results;
     try {
       results = await Promise.all(dbHomeworks.map(h => API.graphql({query: createHomework, variables: {input: h}})));
       createMockGrades(mockGrades);
       console.log(`-----> mockGrades`, mockGrades);
-
     } catch (error) {
       reportError(error, `Sorry. An error occurred.`);
     }

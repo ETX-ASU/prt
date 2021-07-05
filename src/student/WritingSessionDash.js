@@ -99,7 +99,6 @@ function WritingSessionDash() {
 	}, [assignment, homework, fetchAndSetActiveUserCurrentHomework]);
 
 	function handleEditButton() {
-		console.log("handleEditButton() called")
 		const uiMode = (homework.submittedOnDate) ? UI_SCREEN_MODES.reviewHomework : UI_SCREEN_MODES.editHomework;
 		dispatch(setActiveUiScreenMode(uiMode));
 	}

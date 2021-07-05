@@ -28,7 +28,6 @@ function HomeworkListItem(props) {
 
   function handleShowComment(e) {
     e.stopPropagation();
-    console.log(`Show comment: ${student.comment}`);
   }
 
 	return (

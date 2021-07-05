@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {useDispatch, useSelector} from "react-redux";
 import "./GradingBar.scss";
 import {Container, Col, Row, Button} from 'react-bootstrap';
@@ -27,15 +27,9 @@ function GradingBar(props) {
   const isHideStudentIdentity = useSelector(state => state.app.isHideStudentIdentity);
 
   useEffect(() => {
-    // if (prevReviewedStudentId.current === reviewedStudent.id) return;
-
-    console.log("manual | auto: ", manualScore, reviewedStudent.autoScore)
     setComment(reviewedStudent.comment || '');
     setScoreGiven((reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded)
       ? reviewedStudent.scoreGiven : manualScore
-      // : (reviewedStudent.autoScore === undefined)
-        // ? manualScore
-        // : reviewedStudent.autoScore
     );
 
     prevReviewedStudentId.current = reviewedStudent.id;
@@ -55,7 +49,6 @@ function GradingBar(props) {
   }
 
   async function handleSubmitScore() {
-    console.log("handleSubmitScore()")
     const scoreDataObj = {
       assignmentId: assignment.id,
       studentId: reviewedStudent.id,
@@ -92,14 +85,14 @@ function GradingBar(props) {
 
         <Col className='p-0 m-0'>
           <Row className='p-0 m-0'>
-            <Col className='col-4' style={{'width':'calc(100% - 100px)'}}>
+            <Col className='col-3' style={{'width':'calc(100% - 100px)'}}>
               <h2>{(isHideStudentIdentity) ? `Student #${reviewedStudent.randomOrderNum}` : reviewedStudent.name}</h2>
               <span className='aside'><h3 className='subtext d-inline-block'>{reviewedStudent.percentCompleted}% Complete</h3>
                 <br/>
                 {STATUS_TEXT[reviewedStudent.homeworkStatus]}
               </span>
             </Col>
-            <Col className='col-8 pt-1 pb-2 xbg-light'>
+            <Col className='col-9 pt-1 pb-2 xbg-light'>
               <div className='ml-0 mr-4 d-inline-block align-top'>
                 <label htmlFor='autoScore' className='xtext-darkest'>Auto Score</label>
                 <div className={'selected-score'} id={`yourScore`}>{`${manualScore}%`}</div>

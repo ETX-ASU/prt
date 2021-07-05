@@ -70,7 +70,6 @@ function RootPhaseSettings(props) {
   }
 
   function onToggleRankVisibility(index) {
-    console.log("rank visibility toggled");
     const ranks = deepCopy(rubricRanks);
     ranks[index].isVisible = !ranks[index].isVisible;
     updateToolAssignmentData({...toolAssignmentData, rubricRanks:ranks});
@@ -79,7 +78,6 @@ function RootPhaseSettings(props) {
   function onDropped(e) {
     const idx = e.dataTransfer.getData('rankIndex');
     let ranks = deepCopy(rubricRanks);
-    console.log(`dropped rank ${ranks[idx].name} onto zone ${activeDropZoneIndex}`);
     setActiveDropZoneIndex(-1);
     setActiveDraggedRankIndex(-1);
     ranks[idx].orderNum = activeDropZoneIndex - 0.5;
@@ -91,7 +89,6 @@ function RootPhaseSettings(props) {
   function onDragStarted(e, rankIndex) {
     setActiveDraggedRankIndex(rankIndex);
     e.dataTransfer.setData('rankIndex', rankIndex);
-    console.log(`started dragging rank ${rubricRanks[rankIndex].name}`);
   }
 
   function isRankVisToggleDisabled(rank) {

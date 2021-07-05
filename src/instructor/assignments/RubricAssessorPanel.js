@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useState} from 'react';
 import {useSelector} from "react-redux";
 import { Tab, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap";
 
@@ -20,11 +20,6 @@ function RubricAssessorPanel(props) {
   const shownCriteria = rubricCriteria.filter(c => c.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const shownRanks = rubricRanks.filter(r => r.isVisible).sort((a,b) => a.orderNum - b.orderNum);
   const [curTabId, setCurTabId] = useState(shownCriteria[0].id);
-
-  // useEffect(() => {
-  //   console.log(` >>> RubricAssessorPanel: [instructorReview]`, allInstructorReviews, instructorReview)
-  // }, [instructorReview, allInstructorReviews]);
-
 
   function getRatingNum(curCrit, altRatings) {
     const qualityScore = (altRatings?.length) ? altRatings.find(qs => qs.criterionId === curCrit.id) : ratings.find(qs => qs.criterionId === curCrit.id);
