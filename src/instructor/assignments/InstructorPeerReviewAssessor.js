@@ -9,6 +9,7 @@ import {API, graphqlOperation} from "aws-amplify";
 import {listHomeworks} from "../../graphql/queries";
 import {reportError} from "../../developer/DevUtils";
 import {addDraftHomeworks} from "../../app/store/appReducer";
+import LoadingIndicator from "../../app/components/LoadingIndicator";
 
 
 
@@ -30,7 +31,7 @@ function InstructorPeerReviewAssessor(props) {
   const [associatedReviewDraftsLoaded, setAssociatedReviewDraftsLoaded] = useState(false);
 
   const [gradingBarHeight, setGradingBarHeight] = useState(200);
-  const [triggerSubmit, setTriggerSubmit] = useState(false);
+  // const [triggerSubmit, setTriggerSubmit] = useState(false);
 
 
 
@@ -40,7 +41,8 @@ function InstructorPeerReviewAssessor(props) {
     let theStudent = students.find(s => s.id === gradedStudentId);
     setGradedStudent(theStudent);
     let revs = allReviews.filter(r => r.assessorId === gradedStudentId);
-    setReviewsByStudent(revs)
+    setReviewsByStudent(revs);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gradedStudentId])
 
   useEffect(() => {
@@ -87,7 +89,8 @@ function InstructorPeerReviewAssessor(props) {
     } else {
       setAssociatedReviewDraftsLoaded(true);
       setActiveReview(reviewsByStudent[0]);
-    };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewsByStudent])
 
 
@@ -123,8 +126,8 @@ function InstructorPeerReviewAssessor(props) {
       gradedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded);
   }
 
-  function refreshHandler() {
-    setTriggerSubmit(true);
+  function refreshHandler(updatedProps) {
+    if (updatedProps) setGradedStudent(Object.assign({}, gradedStudent, updatedProps));
     props.refreshGrades();
   }
 
@@ -143,19 +146,25 @@ function InstructorPeerReviewAssessor(props) {
           />
         </div>
 
-        {(!hasStudentDoneWork() || draftHomeworks.length === 0) &&
+        {(!hasStudentDoneWork()) &&
         <Row className='mt-5 mb-5'>
           <Col className='w-auto xt-large xtext-dark font-weight-bold'>{getStatusMsg()}</Col>
         </Row>
         }
 
-        {hasStudentDoneWork() && reviewsByStudent &&
+        {hasStudentDoneWork() && draftHomeworks.length === 0 &&
+        <Row className='mt-5 mb-5'>
+          <LoadingIndicator className='p-4 text-center h-100 align-middle' isDarkSpinner={true} loadingMsg={'LOADING STUDENT WORK...'} size={3} />
+        </Row>
+        }
+
+        {hasStudentDoneWork() && reviewsByStudent && associatedReviewDraftsLoaded && (!!draftHomeworks?.length) &&
         <Row className={'m-0 p-0'}>
           <Col className='rounded p-0'>
             <p ref={reviewLinksRef}>{reviewsByStudent.length} of {assignment.toolAssignmentData.minReviewsRequired} reviews completed ({gradedStudent.percentCompleted}%):
               {reviewsByStudent.map((r, i) =>
-                <Button key={r.id} variant={'link'} onClick={() => handleReviewSelected(r)}>
-                  review #{i}
+                <Button key={r.id} variant={'link'} onClick={() => handleReviewSelected(r)} className={`pt-0 pb-0 text-btn${(r.id === activeReview?.id) ? ' text-dark' : ''}`}>
+                  review #{i+1}
                 </Button>
               )}
             </p>

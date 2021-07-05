@@ -104,14 +104,14 @@ function CommentsPanel(props) {
   return (
     <Container className='comments-panel m-0 p-0'>
       <Row className='criterion-nav m-0 p-2'>
-        <Col className='p-0 m-0'>
+        <Col className={`p-0 m-0${isReadOnly ? ' pt-1' : ''}`}>
+          {!isReadOnly &&
           <div className='comment-buttons'>
-            {!isReadOnly &&
             <Button className='align-middle m-0 mr-2' disabled={!activeCommentId} onClick={() => onDeleteComment(activeCommentId)}>
               <FontAwesomeIcon className='btn-icon' icon={faTrash}/>
             </Button>
-            }
           </div>
+          }
           {activeCommentId && <h3 className='align-middle d-inline'>Note #{activeComment?.tagName}</h3>}
           {!activeCommentId && <h3 className='align-middle d-inline'>Notes</h3>}
         </Col>

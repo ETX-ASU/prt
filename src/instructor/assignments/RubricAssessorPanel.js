@@ -32,11 +32,6 @@ function RubricAssessorPanel(props) {
   }
 
 
-  // function isVisibilityToggleDisabled(crit) {
-  //   const totalVisible = shownCriteria.filter(c => c.isVisible).length;
-  //   return (crit.isVisible && totalVisible <= MIN_NUM_ACTIVE_CRITERIA);
-  // }
-
   function getWeightPercentage(crit) {
     if (!crit.isVisible) return 0;
     const trueShownCriteria = shownCriteria.filter(c => c.isVisible);
@@ -56,7 +51,8 @@ function RubricAssessorPanel(props) {
                       <Fragment><span className='tab-percent'>{getWeightPercentage(crit)}%</span> | {crit.name}</Fragment>
                     }
                     {!isInstructorAssessment && <Fragment>{crit.name}</Fragment>}
-                    {(getRatingNum(crit) > -1) && (!isInstructorAssessment) && <FontAwesomeIcon className='tab-icon ml-1 mr-0' icon={faCheck} />}
+
+                    {(getRatingNum(crit) > -1) && <FontAwesomeIcon className='tab-icon ml-2 mr-0' icon={faCheck} />}
                   </NavLink>
                 }
               </NavItem>)
@@ -75,7 +71,7 @@ function RubricAssessorPanel(props) {
                           <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
                         </div>
                         {isReadOnly && <div className='rank-title w-100 pt-2 pb-1 pl-2 pr-2'>{rank.name}{isInstructorAssessment ? ` (${rank.points})` : ''}
-                          {isInstructorAssessment && (!!allInstructorReviews.length) && (getRatingNum(criterion, instructorReview.criterionRatings) === rNum) &&
+                          {isInstructorAssessment && (!!allInstructorReviews.length) && (getRatingNum(criterion, instructorReview?.criterionRatings) === rNum) &&
                           <span className='instructors-choice'>
                             <FontAwesomeIcon className='selected-indicator' icon={faCheck} />
                           </span>

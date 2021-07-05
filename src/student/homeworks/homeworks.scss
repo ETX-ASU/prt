@@ -297,6 +297,10 @@ Button.essay-btn {
   padding: 0;
 }
 
+.text-btn, .text-btn:active, .text-btn:hover, .text-btn:focus {
+  background-color: transparent !important;
+}
+
 .text-editor {
   height: auto;
   width: 65%;

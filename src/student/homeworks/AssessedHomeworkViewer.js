@@ -303,7 +303,7 @@ function AssessedHomeworkViewer(props) {
             assessorId={review.assessorId}
             criteria={assignment.toolAssignmentData.rubricCriteria}
             activeCommentId={activeCommentId}
-            comments={review.comments}
+            comments={userComments}
             setActiveCommentId={setActiveCommentId}
             isAbleToRateComments={(activeUser.id !== review.assessorId && !isInstructorAssessment)}
             isAbleToSeeRatings={(activeUser.id === assignment.ownerId || (activeUser.id === review.assessorId && review.submittedOnDate))}
