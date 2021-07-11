@@ -1,5 +1,22 @@
 # OVERVIEW OF NEXT STEPS
 
+When instructor is reviewing a draft and adds a comment (or edits an existing one) and then clicks
+on the UPDATE button, this doesn't save the change to the comment to the DB. The new comment exists,
+but no text was added/altered. 
+
+In the HomeworkAssessor, when a review comment is updated via onCommentUpdated(), we save changes to
+the server AND the app state. But the changes in app state don't get used when the UPDATE button then 
+saves the review... So... the UPDATE save action doesn't read in the most recent app state data?
+
+But here's the real trick...
+
+Any comment change or rating change is SAVED IMMEDIATELY!... this means the instructor doesn't need to
+push the UPDATE button at all-- it's just updated already. But that in itself is an issue. We need to
+capture the edits but NOT submit them until the "UPDATE" button is clicked. :(
+
+
+
+
 AssessedHomeworkViewer
 --> RubricsPanel
   --> isReadOnly={!!review.submittedOnDate}

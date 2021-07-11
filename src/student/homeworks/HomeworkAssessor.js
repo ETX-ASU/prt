@@ -159,7 +159,16 @@ function HomeworkAssessor(props) {
 
   useEffect(() => {
     if (!triggerSubmit) return;
-    saveUpdatesToServer(review, true);
+    console.log("Saving UPDATE to server", {userComments}, {review});
+
+    // If instructor makes comment and then clicks grading bar SUBMIT & NEXT button, the blur event
+    // doesn't have time to update the redux store review value... causing the comment changes to be lost.
+    // Thus, we must add them manually here. They will populate correctly after this.
+    if (JSON.stringify(userComments) !== JSON.stringify(review.comments)) {
+      saveUpdatesToServer({...review, comments: userComments}, true);
+    } else {
+      saveUpdatesToServer(review, true);
+    }
     clearTrigger();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -307,7 +316,14 @@ function HomeworkAssessor(props) {
     if (!userComments[index] || userComments[index].content !== comment.content) {
       altComments[index] = comment;
       setUserComments(altComments);
-      saveUpdatesToServer({...review, comments: altComments});
+      let altReview = {...review, comments: altComments};
+
+      // Do not immediately save updates to the server if instructor is making updates to previously submitted review
+      if (isInstructorAssessment && review.submittedOnDate){
+        dispatch(updateSingleReview(altReview));
+      } else {
+        saveUpdatesToServer(altReview);
+      }
     }
   }
 
@@ -327,18 +343,15 @@ function HomeworkAssessor(props) {
       ratings.push(rating);
     }
 
-    // if (ratings.length) setCurExcessHeight(16);
     if (onRatingChanges) onRatingChanges(ratings);
     const altReview = {...review, criterionRatings: ratings};
-    saveUpdatesToServer(altReview);
+
+    if (isInstructorAssessment && review.submittedOnDate){
+      dispatch(updateSingleReview(altReview));
+    } else {
+      saveUpdatesToServer(altReview);
+    }
   }
-
-
-  // async function closeModalAndReview() {
-  //   setActiveModal(null);
-  //   dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.reviewHomework));
-  //   await props.refreshHandler();
-  // }
 
   // PRTv2 does not use autograding
   // async function calcAndSendScore(homework) {
