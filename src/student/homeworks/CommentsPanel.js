@@ -62,7 +62,9 @@ function CommentsPanel(props) {
   }
 
   function onBlur(e) {
-    if (!isReadOnly) updateComment({...activeComment, content:commentText})
+    if (!isReadOnly) {
+      updateComment({...activeComment, content:commentText})
+    }
   }
 
   function onStarSelected(starNum) {
@@ -137,10 +139,8 @@ function CommentsPanel(props) {
               <p>Average Comment Rating: {ratingStats.average}</p>
             </div>
           }
-          {/*<Button className='text-area-overlay-btn position-absolute w-100 h-50 mt-2 bg-warning' style={{display: !activeCommentId ? 'block' : 'none'}} onClick={onAddComment} />*/}
           <textarea
             ref={commentTextArea}
-            // readOnly={isReadOnly}
             className={`mt-2 form-control h-50${isReadOnly ? ' read-only-mode' : ''}`}
             onBlur={onBlur}
             onChange={onChange}
@@ -148,10 +148,6 @@ function CommentsPanel(props) {
             disabled={!activeCommentId || isReadOnly}
             value={commentText}/>
 
-          {/*<Button className='position-absolute w-100 h-50 mt-2 bg-warning' onClick={testAdd} />*/}
-          {/*{!!activeCommentId && !isReadOnly &&*/}
-          {/*  <Button className='bt-sm mt-2 bg-success'>Save</Button>*/}
-          {/*}*/}
           {Boolean(isAbleToRateComments || isAbleToSeeRatings) && Boolean(activeComment) &&
           <div>
             <p className='rating-prompt text-right pt-2 float-right'><span className='mr-2'>How helpful was this feedback?</span>
@@ -167,10 +163,6 @@ function CommentsPanel(props) {
               )}
             </p>
           </div>}
-
-          {/*{shownRanks.map((rank, rNum) =>*/}
-          {/*  <p key={rNum}><strong>{rank.name}: </strong>{shownCriteria[critIndex].rankSummaries[rNum]}</p>*/}
-          {/*)}*/}
         </Col>
       </Row>
     </Container>
