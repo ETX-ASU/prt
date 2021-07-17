@@ -29,7 +29,7 @@ import {updateReview} from "../../graphql/mutations";
 library.add(faCheck, faTimes, faGripLines);
 
 const MAX_TOP_ZONE_PERCENT = 80;
-const MIN_TOP_ZONE_PIXELS = 70;
+const MIN_TOP_ZONE_PIXELS = 90;
 const MIN_REQUIRED_COMMENTS = 1;
 const MIN_RESIZE_INTERVAL = 200;
 
@@ -201,10 +201,19 @@ function HomeworkAssessor(props) {
     if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);
     setUserComments([]);
     const {height} = getAvailableContentDims(headerZoneRef, null, props.excessHeight);
-    setAvailableHeight(height - props.excessHeight);
+    const availHeight = height - props.excessHeight;
+    setAvailableHeight(availHeight);
 
     throttleCallbackRef.current = window.setTimeout(() => {
       setUserComments(getInitializedUserComments(review.comments));
+
+      let btnHeightPerc = 48 / availHeight * 100;
+      let nextTopPerc = Math.min(topZonePercent, MAX_TOP_ZONE_PERCENT - btnHeightPerc);
+
+      let minTopPercent = MIN_TOP_ZONE_PIXELS / availHeight * 100
+      nextTopPerc = Math.max(nextTopPerc, minTopPercent + btnHeightPerc);
+      dispatch(setTopZonePercent(nextTopPerc));
+
     }, MIN_RESIZE_INTERVAL);
   }
 
