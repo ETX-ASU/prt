@@ -21,6 +21,7 @@ function GradingBar(props) {
   const {assignment, reviewedStudent, manualScore} = props;
 
   const displayOrder = useSelector(state => state.app.displayOrder);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [scoreGiven, setScoreGiven] = useState(0);
   const [comment, setComment] = useState('');
   const [expand, setExpand] = React.useState(0)
@@ -49,6 +50,7 @@ function GradingBar(props) {
   }
 
   async function handleSubmitScore() {
+    setIsSubmitting(true);
     const scoreDataObj = {
       assignmentId: assignment.id,
       studentId: reviewedStudent.id,
@@ -62,6 +64,7 @@ function GradingBar(props) {
     const lmsResult = await sendInstructorGradeToLMS(scoreDataObj);
     if (!lmsResult) reportError('', `We're sorry. We encountered an error while posting the grade for this student's work.`);
     setExpand(1);
+    setIsSubmitting(false);
     props.refreshHandler({scoreGiven});
     // setTimeout(() => navToNext(), 1000);
   }
@@ -125,7 +128,7 @@ function GradingBar(props) {
               {reviewedStudent.homeworkStatus === HOMEWORK_PROGRESS.fullyGraded &&
                 <div className='mr-1 pt-3 d-inline-block align-top float-right'>
                   <span className='ml-1 mr-0'>
-                    <Button className='btn-med xbg-darkest' onClick={handleSubmitScore}>Update</Button>
+                    <Button className='btn-med xbg-darkest' onClick={handleSubmitScore}>{isSubmitting ? 'Submitting...' : 'Update'}</Button>
                   </span>
                 </div>
               }
@@ -133,7 +136,7 @@ function GradingBar(props) {
               {reviewedStudent.homeworkStatus !== HOMEWORK_PROGRESS.fullyGraded &&
               <div className='mr-1 pt-3 d-inline-block align-top float-right'>
                 <span className='ml-1 mr-0'>
-                  <Button className='btn-med xbg-darkest' onClick={handleSubmitScore}>Submit & Next</Button>
+                  <Button className='btn-med xbg-darkest' onClick={handleSubmitScore}>{isSubmitting ? 'Submitting...' : 'Submit & Next'}</Button>
                 </span>
               </div>
               }
