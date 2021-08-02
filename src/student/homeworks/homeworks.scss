@@ -319,7 +319,7 @@ Button.essay-btn {
 
   .criterion-nav {
     height: 48px;
-    background-color: var(--x-lightest-gray);
+    background-color: #9aabb5;
 
     .nav-btn {
       height: 30px;
@@ -331,9 +331,11 @@ Button.essay-btn {
     height: calc(100% - 50px);
     overflow-y: scroll;
     padding-top: 2em;
+    background-color: #ccd5da;
 
     .criterion-name {
-      color: var(--x-gray);
+      color: #1b1c1d;
+      font-weight: bold;
       text-transform: uppercase;
       margin: 1em 0 4px 0;
       border-top: 2px solid var(--x-lightest-gray);

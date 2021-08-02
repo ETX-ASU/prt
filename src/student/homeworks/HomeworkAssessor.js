@@ -403,7 +403,7 @@ function HomeworkAssessor(props) {
       case MODAL_TYPES.warningInvalidSubmission:
         const explanation = getValidationResults().reason;
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Unable to Submit'} buttons={[
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Unable to Submit'} buttons={[
             {name: 'Cancel', onClick: () => setActiveModal(null)},
           ]}>
             <p>{explanation}</p>
@@ -411,7 +411,7 @@ function HomeworkAssessor(props) {
         )
       case MODAL_TYPES.warningBeforeHomeworkSubmission:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
             {name: 'Cancel', onClick: () => setActiveModal(null)},
             {name: 'Submit', onClick: () => saveUpdatesToServer(review, true)},
           ]}>

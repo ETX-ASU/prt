@@ -19,7 +19,7 @@ function PeerReviewSummaryRow(props) {
 			<td className='border-top-0 text-left'>{`Review of Peer ${targetName}`}</td>
 			<td className='border-top-0'>{feedbackRating}</td>
 			<td className='border-top-0'>
-				<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={handleReviewButton}>
+				<Button variant="secondary" onClick={handleReviewButton}>
 					{btnLabel}
 				</Button>
 			</td>

@@ -17,6 +17,7 @@
     "@testing-library/user-event": "^7.1.2",
     "aws-amplify": "^3.3.24",
     "bootstrap": "^4.6.0",
+    "clsx": "^1.1.1",
     "moment": "^2.29.1",
     "node-sass": "^4.14.1",
     "parchment": "^2.0.0-dev.2",

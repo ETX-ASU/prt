@@ -149,7 +149,7 @@ function WritingSessionDash() {
 								<td className='border-top-0'>
 									{/*<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={handleEditButton}>Edit Essay</Button>*/}
 									<Button value={DRAFT_BTN_LABELS[homework.homeworkStatus]}
-										className="btn badge-pill essay-btn btn-outline-secondary"
+										variant="secondary"
 										onClick={handleEditButton}>{DRAFT_BTN_LABELS[homework.homeworkStatus]}</Button>
 								</td>
 							</tr>

@@ -1,5 +1,6 @@
 import React, {Fragment} from "react";
 import {Col, Row} from "react-bootstrap";
+import styles from "./BasicAssignmentSettings.module.scss";
 
 
 function BasicAssignmentSettings(props) {
@@ -11,12 +12,14 @@ function BasicAssignmentSettings(props) {
 
 	return (
 		<Fragment>
-			<Row className={'mt-4 mb-2'}>
-				<Col><h2>Assignment Details</h2></Col>
+			<Row className={styles.row}>
+				<Col className={styles.column}>
+					<h2>Assignment Details</h2>
+				</Col>
 			</Row>
 
-			<Row className={'m-0'}>
-				<Col className={'col-12 p-0'}>
+			<Row className={styles.row}>
+				<Col className={styles.column}>
 					<div className={'form-group'}>
 						<label htmlFor='dataTitle'><h3>Title</h3></label>
 						<input id='dataTitle'

@@ -15,7 +15,7 @@ function InstructorDashboard() {
 	const activeUiScreenMode = useSelector(state => state.app.activeUiScreenMode);
 
   return (
-		<Container className='p-4 instructor-dashboard dashboard bg-white rounded h-100'>
+		<Container className='instructor-dashboard dashboard bg-white rounded h-100'>
 			<Row className='m-0 p-0'>
 				<Col className='rounded p-0'>
           {(activeUiScreenMode === UI_SCREEN_MODES.returnToLmsScreen) &&
