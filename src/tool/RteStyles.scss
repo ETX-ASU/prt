@@ -26,6 +26,12 @@
 
   .text-area-overlay-btn {
     opacity: 0.2;
+    background-color: #83e2dc !important;
+
+    &:hover {
+      opacity: 0.5 !important;
+      background-color: #83e2dc !important;
+    }
   }
 
   textarea {

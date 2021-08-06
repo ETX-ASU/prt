@@ -311,11 +311,11 @@
 
           &.rank-btn {
             cursor: pointer;
-            background-color: #007bffaa; // primary blue
-            color: white;
+            background-color: #ef9491;
+            color: #000;
 
             &:hover {
-              background-color: black;
+              background-color: #de312b;
             }
           }
 
@@ -373,7 +373,7 @@
           padding-top: 2.25rem;
           width: 100%;
           height: 100%;
-          background-color: var(--x-light-gray);
+          background-color: #de312b;
           opacity: 0.25;
           color: white;
           text-align: center;
@@ -400,7 +400,7 @@
 
         .selected-marker {
           pointer-events: none;
-          background-color: limegreen;
+          background: linear-gradient(180deg, transparent, transparent 12%, #83e2dc 12%);
           overflow-y: hidden;
         }
 
@@ -415,7 +415,8 @@
 
           .rank-title.rank-btn {
             pointer-events: none;
-            background-color: limegreen;
+            background-color: #de312b;
+            color: #fff;
           }
         }
       }
