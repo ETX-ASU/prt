@@ -4,3 +4,11 @@
   padding-bottom: 1rem;
   margin: 0;
 }
+
+.tabs {
+  > div {
+    > a {
+      padding: 6px 20px 4px !important;
+    }
+  }
+}

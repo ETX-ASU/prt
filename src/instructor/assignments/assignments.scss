@@ -400,8 +400,18 @@
 
         .selected-marker {
           pointer-events: none;
-          background: linear-gradient(180deg, transparent, transparent 12%, #83e2dc 12%);
+          // background: linear-gradient(180deg, transparent, #83e2dc 12%);
           overflow-y: hidden;
+
+          &:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-color: #83e2dc;
+          }
         }
 
         &.mark-as-hidden .hidden-marker, &.mark-as-selected .selected-marker {
@@ -415,7 +425,7 @@
 
           .rank-title.rank-btn {
             pointer-events: none;
-            background-color: #de312b;
+            background-color: #ce0f08;
             color: #fff;
           }
         }
