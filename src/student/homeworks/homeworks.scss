@@ -81,15 +81,18 @@ table.student-assignment-drafts {
     width: 34px;
   }
   th:nth-child(2) {
-    width: 12%;
+    width: 140px;
   }
-  th:nth-child(3), td:nth-child(3) {
-    width: 180px;
-  }
-  th:nth-child(4) {
+  th:nth-child(3) {
     width: auto;
   }
-  th:nth-child(5), td:nth-child(5) {
+  //th:nth-child(3), td:nth-child(3) {
+  //  width: 180px;
+  //}
+  //th:nth-child(4) {
+  //  width: auto;
+  //}
+  th:nth-child(4), td:nth-child(4) {
     text-align: right;
     width: 240px;
   }
@@ -294,6 +297,10 @@ Button.essay-btn {
   padding: 0;
 }
 
+.text-btn, .text-btn:active, .text-btn:hover, .text-btn:focus {
+  background-color: transparent !important;
+}
+
 .text-editor {
   height: auto;
   width: 65%;
@@ -312,7 +319,7 @@ Button.essay-btn {
 
   .criterion-nav {
     height: 48px;
-    background-color: var(--x-lightest-gray);
+    background-color: #9aabb5;
 
     .nav-btn {
       height: 30px;
@@ -324,9 +331,11 @@ Button.essay-btn {
     height: calc(100% - 50px);
     overflow-y: scroll;
     padding-top: 2em;
+    background-color: #ccd5da;
 
     .criterion-name {
-      color: var(--x-gray);
+      color: #1b1c1d;
+      font-weight: bold;
       text-transform: uppercase;
       margin: 1em 0 4px 0;
       border-top: 2px solid var(--x-lightest-gray);

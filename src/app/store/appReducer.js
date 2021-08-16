@@ -13,16 +13,23 @@ export const EDIT_ASSIGNMENT_PHASE = APP_NAMESPACE+'.EDIT_ASSIGNMENT_PHASE';
 export const ADD_HOMEWORKS_DATA = APP_NAMESPACE+'.ADD_HOMEWORKS_DATA';
 export const ADD_DRAFT_HOMEWORKS = APP_NAMESPACE+'.ADD_DRAFT_HOMEWORKS';
 export const REPLACE_HOMEWORKS_DATA = APP_NAMESPACE+'.REPLACE_HOMEWORKS_DATA';
-export const REPLACE_ALLOCATIONS_DATA = APP_NAMESPACE+'.REPLACE_ALLOCATIONS_DATA';
 export const TOGGLE_HIDE_STUDENT_IDENTITY = 'grading-bar.TOGGLE_HIDE_STUDENT_IDENTITY';
 
 export const SET_HOMEWORK_STUBS = 'SET_HOMEWORK_STUBS';
 export const SET_REVIEWS = 'SET_REVIEWS';
 export const SET_INSTRUCTOR_REVIEWS = 'SET_INSTRUCTOR_REVIEWS';
 export const UPDATE_REVIEW = 'UPDATE_REVIEW';
+export const SET_ACTIVE_COMMENT_ID = 'SET_ACTIVE_COMMENT_ID';
+export const SET_TOP_ZONE_PERCENT = 'SET_TOP_ZONE_PERCENT';
 
 
 
+export function setActiveCommentId(id) {
+  return {
+    type: SET_ACTIVE_COMMENT_ID,
+    id
+  }
+}
 export function setReviews(reviews) {
   return {
     type: SET_REVIEWS,
@@ -125,15 +132,6 @@ export function replaceHomeworksData(homeworks) {
   }
 }
 
-
-// TODO: Allocation Change 6
-export function replaceAllocationsData(allocations) {
-  return {
-    type: REPLACE_ALLOCATIONS_DATA,
-    allocations
-  }
-}
-
 export function setGradesData(grades) {
   return {
     type: SET_GRADES_DATA,
@@ -159,6 +157,13 @@ export function toggleHideStudentIdentity(isHideStudentIdentity) {
   return {
     type: TOGGLE_HIDE_STUDENT_IDENTITY,
     isHideStudentIdentity
+  }
+}
+
+export function setTopZonePercent(percent) {
+  return {
+    type: SET_TOP_ZONE_PERCENT,
+    percent
   }
 }
 
@@ -188,7 +193,9 @@ const defaultState = {
   activeUsersReviewedDraftStub: null,
   reviewsByUser: null,
   submittedReviewsForUser: null,
-  draftHomeworks: []
+  draftHomeworks: [],
+  activeCommentId: '',
+  topZonePercent: 20
 }
 
 
@@ -217,6 +224,9 @@ function appReducer(currentState = defaultState, action) {
       activeUsersReviewedDraftStub = (!currentState.homeworkStubs) ? null : currentState.homeworkStubs.find(hs => hs.studentOwnerId === currentState.activeUser.id);
       submittedReviewsForUser = (!activeUsersReviewedDraftStub) ? [] : altReviews.filter(r => r.homeworkId === activeUsersReviewedDraftStub.id && r.submittedOnDate);
       return Object.assign({}, currentState, {reviews: altReviews, reviewsByUser, submittedReviewsForUser});
+
+    case SET_ACTIVE_COMMENT_ID:
+      return Object.assign({}, currentState, {activeCommentId: action.id});
 
     case SET_INSTRUCTOR_REVIEWS:
       return Object.assign({}, currentState, {instructorReviews: action.reviews});
@@ -262,10 +272,8 @@ function appReducer(currentState = defaultState, action) {
     case SET_ASSIGNMENT_DATA:
       return Object.assign({}, currentState, {assignment: action.assignment});
 
-
-    // TODO: Allocation Change 7
-    case REPLACE_ALLOCATIONS_DATA:
-      return Object.assign({}, currentState, {assignment: {...currentState.assignment, toolAssignmentData: {...currentState.assignment.toolAssignmentData, allocations: action.allocations}}});
+    case SET_TOP_ZONE_PERCENT:
+      return Object.assign({}, currentState, {topZonePercent: action.percent});
 
     case SET_DISPLAY_ORDER:
       return Object.assign({}, currentState, {displayOrder: action.displayOrder});

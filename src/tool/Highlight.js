@@ -9,6 +9,7 @@ Parchment.register(Highlight);
 
 let node = document.createElement('div');
 Highlight.add(node, 'right');
+// TODO: Is this file needed?!
 console.log(node.outerHTML);
 
 

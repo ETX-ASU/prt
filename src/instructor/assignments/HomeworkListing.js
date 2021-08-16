@@ -1,4 +1,5 @@
 import React, {Fragment, useEffect, useState} from 'react';
+import classNames from 'clsx';
 import {Button, Col, DropdownButton, Row, Dropdown} from "react-bootstrap";
 import LoadingIndicator from "../../app/components/LoadingIndicator";
 import HomeworkListItem from "./HomeworkListItem";
@@ -16,6 +17,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {useDispatch, useSelector} from "react-redux";
 import {setDisplayOrder} from "../../app/store/appReducer";
+import styles from "./HomeworkListing.module.scss";
 
 
 function HomeworkListing(props) {
@@ -137,35 +139,40 @@ function HomeworkListing(props) {
   }
 
   function handleStudentsPerPageSelected(e) {
-    console.log(`SPP => ${e}`)
     setStudentsPerPage(parseInt(e));
   }
 
 
   return (
     <Fragment>
-      <Row className='pt-0 pb-2'>
-        <Col className='col-9'>
+      <Row className={styles.pagination}>
+      <Col className='col-9'>
           {pageCount > 5 &&
-          <Button className='page-nav-btn mr-1 xbg-dark text-white' onClick={() => setCurPageNum(Math.max(curPageNum-5, 0))}>
+          <Button variant="dark" onClick={() => setCurPageNum(Math.max(curPageNum-5, 0))}>
             <FontAwesomeIcon icon={faBackward}/>
           </Button>}
-          <Button className='page-nav-btn mr-1 xbg-dark text-white' onClick={() => setCurPageNum(Math.max(curPageNum-1, 0))}>
+          <Button variant="dark" onClick={() => setCurPageNum(Math.max(curPageNum-1, 0))}>
             <FontAwesomeIcon icon={faCaretLeft}/>
           </Button>
           {pageBtns.map((b, i) => (
-            <Button className={`page-btn mr-1 ${curPageNum === b ? 'selected' : ''}`} key={i} onClick={() => setCurPageNum(b)}>{b+1}</Button>
+            <Button 
+              variant="light"
+              className={classNames(
+                styles.pageButton,
+                curPageNum === b && styles.selected
+              )}
+              key={i} onClick={() => setCurPageNum(b)}>{b+1}</Button>
           ))}
-          <Button className='page-nav-btn mr-1 xbg-dark text-white' onClick={() => setCurPageNum(Math.min(curPageNum+1, pageCount-1))}>
+          <Button variant="dark" onClick={() => setCurPageNum(Math.min(curPageNum+1, pageCount-1))}>
             <FontAwesomeIcon icon={faCaretRight}/>
           </Button>
           {pageCount > 5 &&
-          <Button className='page-nav-btn mr-1 xbg-dark text-white' onClick={() => setCurPageNum(Math.min(curPageNum+5, pageCount-1))}>
+          <Button variant="dark" onClick={() => setCurPageNum(Math.min(curPageNum+5, pageCount-1))}>
             <FontAwesomeIcon icon={faForward}/>
           </Button>}
         </Col>
         <Col className='text-right'>
-          <span>Per page
+          <span className={styles.dropdownButton}>Per page
             <DropdownButton className='d-inline-block ml-2' title={studentsPerPage} onSelect={handleStudentsPerPageSelected}>
               <Dropdown.Item eventKey={10}>10</Dropdown.Item>
               <Dropdown.Item eventKey={15}>15</Dropdown.Item>

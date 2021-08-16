@@ -99,11 +99,12 @@ function WritingSessionDash() {
 	}, [assignment, homework, fetchAndSetActiveUserCurrentHomework]);
 
 	function handleEditButton() {
-		console.log("handleEditButton() called")
 		const uiMode = (homework.submittedOnDate) ? UI_SCREEN_MODES.reviewHomework : UI_SCREEN_MODES.editHomework;
 		dispatch(setActiveUiScreenMode(uiMode));
 	}
 
+	const roundNum = (!assignment.toolAssignmentData.sequenceIds.length) ? 0 : assignment.toolAssignmentData.sequenceIds.length - 1;
+	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][Math.floor((roundNum)/2)] + ' Draft';
 
 	return (
 		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100 position-relative'>
@@ -136,8 +137,6 @@ function WritingSessionDash() {
 							<tr className='draft-table-row'>
 								<th scope="col" className='border-top-0'/>
 								<th scope="col" className='border-top-0'>Version</th>
-								<th scope="col" className='border-top-0'>Due Date</th>
-								<th scope="col" className='border-top-0'>Reviews</th>
 								<th scope="col" className='border-top-0'>Progress</th>
 								<th scope="col" className='border-top-0'/>
 							</tr>
@@ -145,14 +144,12 @@ function WritingSessionDash() {
 							<tbody>
 							<tr className='draft-table-row'>
 								<td className='border-top-0'><img src={IconEssay} alt={''} className='inline-essay-icon'/></td>
-								<td className='border-top-0'>{homework.toolHomeworkData.title}</td>
-								<td className='border-top-0'>{moment(assignment.lockOnDate).format('MMM-DD-YY')}</td>
-								<td className='border-top-0'>none</td>
+								<td className='border-top-0'>{draftName}</td>
 								<td className='border-top-0'>{STATUS_TEXT[homework.homeworkStatus]}</td>
 								<td className='border-top-0'>
 									{/*<Button className="btn badge-pill essay-btn btn-outline-secondary" onClick={handleEditButton}>Edit Essay</Button>*/}
 									<Button value={DRAFT_BTN_LABELS[homework.homeworkStatus]}
-										className="btn badge-pill essay-btn btn-outline-secondary"
+										variant="secondary"
 										onClick={handleEditButton}>{DRAFT_BTN_LABELS[homework.homeworkStatus]}</Button>
 								</td>
 							</tr>

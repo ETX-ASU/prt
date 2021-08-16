@@ -1,6 +1,6 @@
 import {EMPTY_TOOL_HOMEWORK_DATA} from '../tool/constants'
 
-export const APP_VERSION = '1.4.8';
+export const APP_VERSION = '1.5.2';
 export const APP_NAMESPACE = 'QUIZ_APP'; // Change this to name of tool
 
 

@@ -42,3 +42,33 @@
   font-size: 24px;
   color: var(--x-light-gray)
 }
+
+.saved-msg[data-activated='0'] {
+  position: absolute;
+  opacity: 0;
+}
+.saved-msg[data-activated='1'] {
+  animation: expand 1s 1;
+}
+
+@keyframes expand {
+  0% {
+    opacity: 0%;
+    top: 0px;
+    left: 0px;
+    //font-size: 12px;
+    //line-height: 12px;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 50%;
+  }
+  100% {
+    opacity: 0%;
+    top: -10px;
+    left: 10px;
+    //font-size: 28px;
+    //line-height: 28px;
+    transform: scale(3);
+  }
+}

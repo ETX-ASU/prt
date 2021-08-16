@@ -69,8 +69,6 @@ function AssignmentCreator() {
     });
 
 
-    console.log("INPUT DATA: ", inputData);
-    // Temporarily disabled for development and testing
     try {
       if (window.isDevMode) inputData.lineItemId = (`FAKE-${uuid()}`);
       const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});
@@ -98,17 +96,22 @@ function AssignmentCreator() {
     switch (activeModal.type) {
       case MODAL_TYPES.cancelNewAssignmentEditsWarning:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Cancel Creation Warning'} buttons={[
-            {name: 'Cancel', onClick: handleReturnToCreateOrDupe},
-            {name: 'Continue Creating', onClick: () => setActiveModal(null)},
-          ]}>
+          <ConfirmationModal
+            isStatic
+            onHide={() => setActiveModal(null)}
+            title="Cancel New Assignment"
+            buttons={[
+              {name: 'Cancel new assignment', variant: 'secondary', onClick: handleReturnToCreateOrDupe},
+              {name: 'Continue Creating', onClick: () => setActiveModal(null)},
+            ]}
+          >
             <p>Do you want to cancel new assignment or continue editing?</p>
             <p>Canceling will not save your new assignment.</p>
           </ConfirmationModal>
         );
       case MODAL_TYPES.confirmAssignmentSaved:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'} buttons={[
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title="Assignment Saved" buttons={[
             {name: 'Continue', onClick: handleReturnToLms},
           ]}>
             <p>Assignment has been saved! In order to access it, use this assignmentId: {activeModal.id}</p>
@@ -123,8 +126,8 @@ function AssignmentCreator() {
 	return (
     <Fragment>
       {activeModal && renderModal()}
-      <HeaderBar title='Create New Assignment - PRTv2'>
-        <Button onClick={() => setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning})} className='mr-2'>Cancel</Button>
+      <HeaderBar withLogo title='Create New Assignment'>
+        <Button variant="secondary" onClick={() => setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning})} className='mr-2'>Cancel</Button>
         <Button onClick={handleSubmitBtn}>Create</Button>
       </HeaderBar>
 
@@ -134,7 +137,7 @@ function AssignmentCreator() {
           <RootPhaseSettings formData={formData} setFormData={setFormData} />
           <Row className={'m-0 p-0 pt-2 position-relative'}>
             <div className={'right-side-buttons'}>
-              <Button onClick={() => setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning})} className='mr-2'>Cancel</Button>
+              <Button variant="secondary" onClick={() => setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning})} className='mr-2'>Cancel</Button>
               <Button onClick={handleSubmitBtn}>Create</Button>
             </div>
           </Row>

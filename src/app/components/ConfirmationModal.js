@@ -1,10 +1,10 @@
 import React from "react";
 import {Modal, Button} from "react-bootstrap";
+import styles from "./ConfirmationModal.module.scss";
 
-
-function ConfirmationModal(props) {
+function ConfirmationModal({ isStatic, ...props }) {
   return(
-    <Modal show={true} onHide={props.onHide}>
+    <Modal show={true} onHide={props.onHide} className={styles.confirmationModal} backdrop={isStatic ? "static" : true}>
       <Modal.Header>
         <Modal.Title>{props.title}</Modal.Title>
       </Modal.Header>
@@ -13,7 +13,9 @@ function ConfirmationModal(props) {
       </Modal.Body>
       <Modal.Footer>
         {props.buttons.map((b, i) =>
-          <Button key={i} onClick={b.onClick}>{b.name}</Button>
+          <Button key={i} onClick={b.onClick} variant={b.variant || "primary"}>
+            {b.name}
+          </Button>
         )}
       </Modal.Footer>
     </Modal>

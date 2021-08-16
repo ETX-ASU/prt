@@ -1,11 +1,10 @@
 @import "root-styles";
-@import url('https://fonts.googleapis.com/css?family=Open+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@700&family=IBM+Plex+Sans:wght@400,700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css');
 
 
 body {
-  font-family: 'Open Sans', sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   background-color: var(--x-dark-gray) !important;
   height: 100vh;
   margin: 0;
@@ -16,7 +15,7 @@ body {
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: 'Open Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-weight: bold;
   color: black;
   margin: 0;
@@ -99,11 +98,6 @@ input, .form-control {
   }
 }
 
-
-h1 {
-  font-size: 24px;
-  line-height: 38px;
-}
 h2 {
   font-size: 22px;
 }
@@ -116,7 +110,6 @@ h4 {
 
 .dashboard {
   min-height: calc(100vh - 3rem);
-  font-family: 'Arial', 'Regular', sans-serif;
 }
 
 .screen-header-bar {
@@ -128,33 +121,8 @@ h4 {
   border-right: 1px solid black;
 }
 
-.vertical-separator {
-  position: absolute;
-  top: calc(50% + 30px);
-  bottom: 50%;
-  left: 34%;
-  right: 34%;
-  height: auto;
-
-  &.right-side {
-    left: 67%;
-    right: 67%
-  }
-
-  h3.spacer-word {
-    height: 60px;
-    line-height: 60px;
-    width: fit-content;
-    background-color: white;
-    text-align: center;
-    vertical-align: middle;
-  }
-}
-
 button {
-  font-family: 'Open Sans', sans-serif !important;
   font-size: 16px !important;
-  font-weight: bold !important;
 
   .btn-icon {
     display: inline-block;
@@ -162,7 +130,57 @@ button {
     color: white;
   }
 
-  border: none !important;
+  &.btn-primary {
+    border: none !important;
+    background-color: #DE312B;
+    font-weight: 700;
+
+    &.disabled,
+    &:disabled {
+      background-color: #ef9491 !important;
+    }
+
+    &:hover {
+      &:not(:disabled) {
+        border: none;
+        box-shadow: none;
+        background-color: #9f0802; 
+      }
+    }
+
+    &:focus {
+      background-color: #9f0802; 
+      box-shadow: none;
+    }
+  }
+
+  &.btn-dark {
+    background-color: #042d46;
+    border: 0;
+    box-shadow: none;
+    font-weight: 700;
+
+    &:active, &:focus {
+      box-shadow: none;
+    }
+  }
+
+  &.btn-secondary {
+    background-color: #fff !important;
+    border: 1px solid #DE312B;
+    color: #DE312B !important;
+    font-weight: 700;
+
+    &:hover, &:active, &:focus {
+      &:not(:disabled) {
+        box-shadow: none;
+        background-color: #fceae9 !important;
+        border-color: #ee8986 !important;
+        color: #DE312B !important;
+      }
+    }
+  }
+
   background-color: var(--x-dark-gray);
   &:visited, &::selection {
     border: none;
@@ -172,10 +190,13 @@ button {
     border: none;
     background-color: var(--x-black) !important;
   }
-  &:hover, &:focus {
-    box-shadow: none;
-    border: none;
-    background-color: var(--x-black) !important;
+
+  &.close {
+    font-size: 1.5rem !important;
+
+    &:hover, &:focus {
+      background-color: transparent !important;
+    }
   }
 }
 
@@ -216,36 +237,6 @@ table.listing {
     }
   }
 }
-.page-btn {
-  border: none;
-  font-weight: normal !important;
-  background-color: var(--x-lightest-gray) !important;
-  color: var(--x-dark-gray);
-
-  &.selected {
-    border: 1px solid black !important;
-    background-color: white !important;
-    color: black;
-  }
-}
-
-//button.page-nav-btn {
-//  border: none;
-//  background-color: var(--x-dark-gray);
-//  &:visited, &::selection {
-//    border: none;
-//    background-color: var(--x-dark-gray);
-//  }
-//  &:active {
-//    border: none;
-//    background-color: var(--x-black) !important;
-//  }
-//  &:hover, &:focus {
-//    box-shadow: none;
-//    border: none;
-//    background-color: var(--x-black);
-//  }
-//}
 
 .bottom-row {
   position: relative;
@@ -284,7 +275,7 @@ label {
   grid-template-columns: 3fr 4fr;
   padding: 5px 0 20px 0;
   font-size: 1em;
-  color: var(--x-darkest-gray)
+  color: var(--x-darkest-gray);
 }
 
 .input-bar.hidden {
@@ -316,5 +307,16 @@ label {
   left: 50%;
   color: var(--x-light-gray);
   font-size: 12px;
-  top: 50px;
+  top: 3px;
+}
+
+.modal-header {
+  background-color: #032D46;
+}
+
+.modal-title {
+  color: #fff;
+  padding: 0;
+  font-size: 18px;
+  font-weight: bold;
 }

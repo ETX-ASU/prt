@@ -107,6 +107,10 @@
       opacity: 0.75;
     }
 
+    .tab-icon {
+      opacity: 0.25;
+    }
+
     a {
       color: var(--x-darkest-gray);
       padding: 0.325rem 0.75rem;
@@ -307,11 +311,11 @@
 
           &.rank-btn {
             cursor: pointer;
-            background-color: #007bffaa; // primary blue
-            color: white;
+            background-color: #ef9491;
+            color: #000;
 
             &:hover {
-              background-color: black;
+              background-color: #de312b;
             }
           }
 
@@ -369,7 +373,7 @@
           padding-top: 2.25rem;
           width: 100%;
           height: 100%;
-          background-color: var(--x-light-gray);
+          background-color: #de312b;
           opacity: 0.25;
           color: white;
           text-align: center;
@@ -396,8 +400,18 @@
 
         .selected-marker {
           pointer-events: none;
-          background-color: limegreen;
+          // background: linear-gradient(180deg, transparent, #83e2dc 12%);
           overflow-y: hidden;
+
+          &:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            background-color: #83e2dc;
+          }
         }
 
         &.mark-as-hidden .hidden-marker, &.mark-as-selected .selected-marker {
@@ -411,7 +425,8 @@
 
           .rank-title.rank-btn {
             pointer-events: none;
-            background-color: limegreen;
+            background-color: #ce0f08;
+            color: #fff;
           }
         }
       }
@@ -459,7 +474,7 @@ div.drag-bar {
   color: var(--x-light-gray);
   align-content: center;
   text-align: center;
-  z-index: 2000;
+  z-index: 1000;
 
   //.drag-bar-line {
   //  position: relative;
