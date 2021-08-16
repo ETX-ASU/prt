@@ -89,15 +89,13 @@
 
 
 body {
-  font-family: 'Open Sans', sans-serif;
   background-color: var(--x-dark-gray) !important;
   height: 100vh;
   margin: 0;
 }
 
 .main-content-row {
-  //height: calc(100% - 1.5rem);
-  font-family: 'Open Sans', sans-serif;
+  min-height: calc(100vh - 80px - 3rem);
 }
 //
 //.box-shadow {

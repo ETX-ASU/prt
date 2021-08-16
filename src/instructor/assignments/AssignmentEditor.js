@@ -105,8 +105,8 @@ function AssignmentEditor() {
     switch (activeModal.type) {
       case MODAL_TYPES.cancelDupedAssignmentEditsWarning:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Cancel Edits Warning'} buttons={[
-            {name:'Cancel', onClick:returnToNewOrDupeAssignmentScreen},
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title="Cancel Editing Assignment" buttons={[
+            {name:'Cancel', variant: 'secondary', onClick:returnToNewOrDupeAssignmentScreen},
             {name:'Continue Editing', onClick: () => setActiveModal(null)},
           ]}>
             <p>Do you want to cancel editing this duplicated assignment or continue?</p>
@@ -115,8 +115,8 @@ function AssignmentEditor() {
         )
       case MODAL_TYPES.cancelNewAssignmentEditsWarning:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Cancel Editing Assignment'} buttons={[
-            {name:'Cancel', onClick:returnToViewAssignmentScreen},
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Cancel Editing Assignment'} buttons={[
+            {name:'Cancel', variant: 'secondary', onClick:returnToViewAssignmentScreen},
             {name:'Continue Editing', onClick: () => setActiveModal(null)},
           ]}>
             <p>Do you want to cancel editing this assignment or continue?</p>
@@ -125,7 +125,7 @@ function AssignmentEditor() {
         )
       case MODAL_TYPES.confirmAssignmentSaved:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'} buttons={[
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Assignment Saved'} buttons={[
             {name: 'Continue', onClick: handleReturnToLms},
           ]}>
             <p>Assignment has been saved! In order to access it, use this assignmentId: {activeModal.id}</p>
@@ -141,7 +141,7 @@ function AssignmentEditor() {
       {activeModal && renderModal()}
 
       <HeaderBar title={`Edit: ${formData.title}`} >
-        {!isNewPhase && <Button onClick={handleCancelBtn} className='mr-2'>Cancel</Button>}
+        {!isNewPhase && <Button variant="secondary" onClick={handleCancelBtn} className='mr-2'>Cancel</Button>}
         <Button onClick={handleUpdateBtn}>{isNewPhase ? 'Complete Creation' : 'Update'}</Button>
       </HeaderBar>
 

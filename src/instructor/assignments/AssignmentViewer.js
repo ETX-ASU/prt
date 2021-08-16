@@ -295,8 +295,8 @@ function AssignmentViewer(props) {
     switch (activeModal.type) {
       case MODAL_TYPES.showBatchSubmitOptions:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Batch Submit'} buttons={[
-            {name: 'Cancel', onClick: () => setActiveModal(null)},
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Batch Submit'} buttons={[
+            {name: 'Cancel', variant: 'secondary', onClick: () => setActiveModal(null)},
             {name: 'Submit', onClick: (e) => handleBatchSubmit(e)},
           ]}>
             <p>Submit auto-scores for...</p>
@@ -318,7 +318,7 @@ function AssignmentViewer(props) {
 
       case MODAL_TYPES.showWaitingForGrades:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Batch Submit... processing'} buttons={[]}>
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Batch Submit... processing'} buttons={[]}>
             <p>Processing Grades Submission.</p>
             <div className='ml-4'>
               <LoadingIndicator loadingMsg={'BATCH SUBMITTING GRADES...'}/>
@@ -355,7 +355,7 @@ function AssignmentViewer(props) {
             <span>
               <input className='mr-2' type={'checkbox'} onChange={toggleHideAndRandomize}
                 checked={isHideStudentIdentity}/>
-              Hide identity & randomize
+              Hide identity &amp; randomize
             </span>
           </HeaderBar>
         </div>
@@ -379,7 +379,7 @@ function AssignmentViewer(props) {
               <span className='m-0'>
                 <input className='mr-2' type={'checkbox'} onChange={toggleHideAndRandomize}
                   checked={isHideStudentIdentity}/>
-                Hide identity & randomize
+                Hide identity &amp; randomize
               </span>
             </Col>
           </Row>

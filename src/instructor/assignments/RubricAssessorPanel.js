@@ -5,6 +5,8 @@ import { Tab, Col, Container, Row, Nav, NavItem, NavLink} from "react-bootstrap"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import {faPlus, faEyeSlash, faCheck} from "@fortawesome/free-solid-svg-icons";
+import styles from "./RubricAssessorPanel.module.scss";
+
 library.add(faPlus, faEyeSlash, faCheck);
 
 // const MIN_NUM_ACTIVE_CRITERIA = 1;
@@ -40,9 +42,9 @@ function RubricAssessorPanel(props) {
 
   return (
     <Fragment>
-      <Row className='h-100 w-100 m-0 pb-3'>
+      <Row className={styles.row}>
         <Tab.Container activeKey={curTabId} onSelect={(k) => setCurTabId(k)} id="criterion-tab" transition={false}>
-          <Nav>
+          <Nav className={styles.tabs}>
             {shownCriteria.map(crit =>
               <NavItem key={crit.id}>
                 {crit.isVisible &&

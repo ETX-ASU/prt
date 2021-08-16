@@ -1,0 +1,39 @@
+.header {
+  background-color: #032D46;
+  height: 66px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  &.withLogo {
+    background: #032D46 url("../../logo.svg") 10px center no-repeat;
+    background-size: 40px 40px;
+    padding-left: 45px;
+  }
+
+  h1 {
+    color: #fff;
+    text-transform: uppercase;
+    font-size: 30px;
+    white-space: nowrap;
+
+    @media (max-width: 850px) {
+      font-size: 24px;
+    }
+
+    @media (max-width: 670px) {
+      font-size: 22px;
+    }
+
+    @media (max-width: 620px) {
+      font-size: 18px;
+    }
+  }
+
+  &.smallTitle {
+    h1 {
+      text-transform: none;
+      font-size: 20px !important;
+    }
+  }
+}

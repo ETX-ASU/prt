@@ -13,22 +13,20 @@ import store from './app/combinedStore';
 
 
 // THIS SHOULD BE SET TO FALSE FOR LIVE PRODUCTION VERSION
-window.isDevMode = false;
+window.isDevMode = process.env.REACT_APP_DEV_MODE === "true";
 window.isMockingFailures = false;
 
 Amplify.configure(config);
 
 ReactDOM.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
-        <Switch>
-          {/*<Route path='/select' component={SelectionTool} />*/}
-          <Route path='/' component={App} />
-        </Switch>
-      </BrowserRouter>
-    </Provider>
-  </React.StrictMode>,
+  <Provider store={store}>
+    <BrowserRouter>
+      <Switch>
+        {/*<Route path='/select' component={SelectionTool} />*/}
+        <Route path='/' component={App} />
+      </Switch>
+    </BrowserRouter>
+  </Provider>,
   document.getElementById('root')
 );
 

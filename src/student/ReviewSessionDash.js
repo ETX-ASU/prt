@@ -379,7 +379,7 @@ function ReviewSessionDash() {
 								<td className='border-top-0'>Reviews of Your Work</td>
 								<td className='border-top-0'>{(!submittedReviewsForUser) ? 0 : submittedReviewsForUser.length}</td>
 								<td className='border-top-0 text-right'>
-									<Button className="btn badge-pill essay-btn btn-outline-secondary"
+									<Button variant="secondary"
 										disabled={!submittedReviewsForUser?.length}
 										onClick={onSeeReviewsByPeers}>
 										See Reviews Received
@@ -442,7 +442,7 @@ function ReviewSessionDash() {
 					</Col>
 					<Col className='m-0 p-0 col-3 text-right'>
 						{(!reviewSessionHomework || reviewSessionHomework?.homeworkStatus === HOMEWORK_PROGRESS.inProgress) &&
-						<Button className="btn badge-pill essay-btn btn-outline-secondary"
+						<Button variant="secondary"
 							disabled={!reviewsByUser || (reviewsByUser?.length < assignment.toolAssignmentData.minReviewsRequired)}
 							onClick={submitReviewSessionHomework}>Submit Assignment</Button>
 						}

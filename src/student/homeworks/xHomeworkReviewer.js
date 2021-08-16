@@ -121,21 +121,25 @@ function xHomeworkReviewer(props) {
     switch (activeModal.type) {
       case MODAL_TYPES.warningBeforeHomeworkSubmission:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Are you sure?'} buttons={[
             {name:'Cancel', onClick: () => setActiveModal(null)},
             {name:'Submit', onClick:submitHomeworkForReview},
           ]}>
             <p>Once submitted, you cannot go back to make additional edits to your assignment.</p>
           </ConfirmationModal>
         )
+
       case MODAL_TYPES.confirmHomeworkSubmitted:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Submitted!'} buttons={[
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Submitted!'} buttons={[
             {name:'Review', onClick:closeModalAndReview},
           ]}>
             <p>You can now review your submitted assignment.</p>
           </ConfirmationModal>
         )
+
+      default:
+        return null;
     }
   }
 

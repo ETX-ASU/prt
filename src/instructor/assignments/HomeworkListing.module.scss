@@ -1,0 +1,44 @@
+.pagination {
+  background-color: #ccd5da;
+  padding: 10px;
+  margin: 0 0 20px;
+
+  button {
+    margin-right: 7px;
+    min-width: 34px;
+  }
+}
+
+button.pageButton {
+  background: #9aabb5 !important;
+  color: #0a334b;
+  border: 1px solid transparent;
+  font-weight: normal;
+
+  &.selected {
+    background: #fff !important;
+    border: 1px solid #0a334b;
+  }
+}
+
+.dropdownButton {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+
+  button {
+    border-radius: 0;
+    background: #fff !important;
+    border: 1px solid #24475d;
+    color: #24475d !important;
+    font-weight: normal;
+    margin-left: 10px;
+
+    &:hover, &:active, &:focus {
+      background-color: #fceae9 !important;
+      color: #24475d !important;
+      box-shadow: none !important;
+    }
+  }
+}

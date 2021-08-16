@@ -21,6 +21,9 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
 import { faPlus, faCopy } from '@fortawesome/free-solid-svg-icons'
 import {reportError} from "../../developer/DevUtils";
+
+import styles from "./AssignmentNewOrDupe.module.scss";
+
 library.add(faCopy, faPlus);
 
 const ASSIGNMENT_CHOICE = {
@@ -192,7 +195,7 @@ function AssignmentNewOrDupe() {
     switch (activeModal.type) {
       case MODAL_TYPES.confirmNewAssignmentPhaseCreated:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Phase Saved'}
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Assignment Phase Saved'}
               buttons={[{name:'Edit New Assignment Phase', onClick:() => closeModalAndEditPhase(activeModal.data[1])}]}>
             {(activeModal.data[0].lineItemId)
               ? <p>Your {activeModal.data[0]} assignment has been saved and it is now accessible in your LMS.</p>
@@ -202,7 +205,7 @@ function AssignmentNewOrDupe() {
         );
       case MODAL_TYPES.confirmAssignmentDuped:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'}
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Assignment Saved'}
               buttons={[{name:'Edit Duplicated Assignment', onClick:() => closeModalAndEditDuped(activeModal.data[1])}]}>
             {(activeModal.data[0].lineItemId)
               ? <p>A new assignment called Copy of {activeModal.data[0]} has been saved! It is now accessible in your
@@ -213,7 +216,7 @@ function AssignmentNewOrDupe() {
         );
       case MODAL_TYPES.confirmAssignmentRecovered:
         return (
-          <ConfirmationModal onHide={() => setActiveModal(null)} title={'Assignment Saved'}
+          <ConfirmationModal isStatic onHide={() => setActiveModal(null)} title={'Assignment Saved'}
               buttons={[{name:'Edit Recovered Assignment', onClick:() => closeModalAndEditDuped(activeModal.data[1])}]}>
             <p>Your assignment "{activeModal.data[0]}" has been recovered. You will now be taken to a screen so you can
               edit and customize this recovered assignment.</p>
@@ -260,9 +263,9 @@ function AssignmentNewOrDupe() {
   return (
     <Fragment>
       {activeModal && renderModal()}
-      <HeaderBar title='Create New Assignment - PRTv2' canCancel={false} canSave={false}>
+      <HeaderBar withLogo title='Create New Assignment - PRTv2' canCancel={false} canSave={false}>
         {/*{!choice && <Button disabled className='mr-2'>Cancel</Button>}*/}
-        {choice && <Button className='mr-2' onClick={() => setChoice('')}>Cancel</Button>}
+        {choice && <Button variant="secondary" className='mr-2' onClick={() => setChoice('')}>Cancel</Button>}
         {/*<Button disabled>Update</Button>*/}
       </HeaderBar>
 
@@ -275,8 +278,8 @@ function AssignmentNewOrDupe() {
 
         {!isFetchingAssignments && (choice === ASSIGNMENT_CHOICE.addRound) &&
         <Fragment>
-          <Row>
-            <Col>
+          <Row className={styles.optionRow}>
+            <Col className={styles.column}>
               <h3 className={'mt-3 mb-2'}>Create new round</h3>
               <p>Select origin assignment.</p>
               <div className="form-group">
@@ -293,18 +296,14 @@ function AssignmentNewOrDupe() {
               </div>
             </Col>
           </Row>
-          <Row>
-            <Col className={'col-12'}>
-              <Container className={'p-4'}>
-                <Row className={'mt-auto'}>
-                  <Col className={'xbg-light text-center p-2'}>
-                    <Button className='align-middle' onClick={handleAddAssignmentPhase} disabled={!allAssignments.length}>
-                      <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                      {(getRootAssignmentDetails().isNextRoundAReviewSession) ? 'Create Peer Review Session' : 'Create New Draft'}
-                    </Button>
-                  </Col>
-                </Row>
-              </Container>
+          <Row className={styles.actionsRow}>
+            <Col className={styles.column}>
+              <div className={styles.actions}>
+                <Button className='align-middle' onClick={handleAddAssignmentPhase} disabled={!allAssignments.length}>
+                  <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
+                  {(getRootAssignmentDetails().isNextRoundAReviewSession) ? 'Create Peer Review Session' : 'Create New Draft'}
+                </Button>
+              </div>
             </Col>
           </Row>
         </Fragment>
@@ -312,8 +311,8 @@ function AssignmentNewOrDupe() {
 
         {!isFetchingAssignments && (choice === ASSIGNMENT_CHOICE.duplicate) &&
         <Fragment>
-          <Row>
-            <Col>
+          <Row className={styles.optionRow}>
+            <Col className={styles.column}>
               <h3 className={'mt-3 mb-2'}>Duplicate an assignment</h3>
               <p>Choose an existing assignment, duplicate it, then customize it.</p>
               <div className="form-group">
@@ -332,18 +331,14 @@ function AssignmentNewOrDupe() {
                 here.</p>}
             </Col>
           </Row>
-          <Row>
-            <Col className={'col-4'}>
-              <Container className={'p-4'}>
-                <Row className={'mt-auto'}>
-                  <Col className={'xbg-light text-center p-2'}>
-                    <Button className='align-middle' onClick={handleDupeAssignment} disabled={!allAssignments.length}>
-                      <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                      {(!allAssignments.length || selectedDupeAssignment?.lineItemId) ? 'Duplicate' : 'Recover'}
-                    </Button>
-                  </Col>
-                </Row>
-              </Container>
+          <Row className={styles.actionsRow}>
+            <Col className={styles.column}>
+              <div className={styles.actions}>
+                <Button className='align-middle' onClick={handleDupeAssignment} disabled={!allAssignments.length}>
+                  <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
+                  {(!allAssignments.length || selectedDupeAssignment?.lineItemId) ? 'Duplicate' : 'Recover'}
+                </Button>
+              </div>
             </Col>
           </Row>
         </Fragment>
@@ -351,107 +346,86 @@ function AssignmentNewOrDupe() {
 
         {!isFetchingAssignments && (!choice) &&
         <Fragment>
-          <Row className={'mt-4 mb-4'}>
+          <Row className={styles.row}>
             <Col>Create a new assignment by selecting one of the following options:</Col>
           </Row>
-          <Row className={'ml-2'}>
-            <Col className={'col-4 splitter-right'}>
-              <Container className={'pt-4 pl-4 pr-4 h-100'}>
-                <Row>
-                  <Col>
-                    <h3 className={'mt-3 mb-2'}>Start a new assignment from scratch</h3>
-                    <p>This will create a new 1st draft writing assignment from scratch.</p>
-                  </Col>
-                </Row>
-              </Container>
+          <Row className={styles.optionRow}>
+            <Col className={styles.column}>
+              <div>
+                <h3 className="mt-3 mb-2">Start a new assignment from scratch</h3>
+                <p>This will create a new 1st draft writing assignment from scratch.</p>
+              </div>
             </Col>
 
-            <div className={'vertical-separator'}>
-              <h3 className={'spacer-word'}>OR</h3>
+            <div className={styles.separator}>
+              <span>OR</span>
             </div>
 
-            <Col className={'col-4 splitter-right'}>
-              <Container className={'pt-4 pl-4 pr-4 h-100'}>
-                <Row>
-                  <Col>
-                    <h3 className={'mt-3 mb-2'}>Create new Draft Round or Peer Review Round</h3>
-                    <p>This option allows you to select a previously created "target" assignment. Doing so allows you to
-                      assign students the task of
-                      writing a new draft of their previous work. OR, alternatively, you can create a peer review
-                      session in which students review
-                      the work of their peers and provide feedback to each other on that target assignment.</p>
-                  </Col>
-                </Row>
-              </Container>
+            <Col className={styles.column}>
+              <div>
+                <h3 className="mt-3 mb-2">Create new Draft Round or Peer Review Round</h3>
+                <p>This option allows you to select a previously created "target" assignment. Doing so allows you to
+                  assign students the task of
+                  writing a new draft of their previous work. OR, alternatively, you can create a peer review
+                  session in which students review
+                  the work of their peers and provide feedback to each other on that target assignment.</p>
+              </div>
             </Col>
 
-            <div className={'vertical-separator right-side'}>
-              <h3 className={'spacer-word'}>OR</h3>
+            <div className={styles.separator}>
+              <span>OR</span>
             </div>
 
-            <Col className={'col-4'}>
-              <Container className={'pt-4 pl-4 pr-4'}>
-                <Row>
-                  <Col>
-                    <h3 className={'mt-3 mb-2'}>Duplicate or Recover an assignment</h3>
-                    <p>Choose an existing assignment, duplicate it, then customize it. OR-- if you tried to create an
-                      assignment and it wasn't properly
-                      generated in your LMS, check here to recover potentially stranded assignments.</p>
-                  </Col>
-                </Row>
-              </Container>
+            <Col className={styles.column}>
+              <div>
+                <h3 className="mt-3 mb-2">Duplicate or Recover an assignment</h3>
+                  <p>Choose an existing assignment, duplicate it, then customize it. OR-- if you tried to create an
+                    assignment and it wasn't properly
+                    generated in your LMS, check here to recover potentially stranded assignments.</p>
+              </div>
             </Col>
           </Row>
 
-          <Row className={'ml-2'}>
-            <Col className={'col-4 splitter-right'}>
-              <Container className={'p-4 h-100'}>
-                <Row className={'mt-auto'}>
-                  <Col className={'xbg-light text-center p-2'}>
-                    <Button className='align-middle' onClick={handleCreateAssignment}>
-                      <FontAwesomeIcon className='btn-icon' icon={faPlus}/>
-                      New Assignment
-                    </Button>
-                  </Col>
-                </Row>
-              </Container>
+          <Row className={styles.actionsRow}>
+            <Col className={styles.column}>
+              <div className={styles.actions}>
+                <Button className="align-middle" onClick={handleCreateAssignment}>
+                  <FontAwesomeIcon className='btn-icon' icon={faPlus} />
+                  New Assignment
+                </Button>
+              </div>
             </Col>
 
-            <Col className={'col-4 splitter-right'}>
-              <Container className={'p-4 h-100'}>
-                <Row className={'mt-auto'}>
-                  {!!nonStrandedAssignments.length &&
-                  <Col className={'xbg-light text-center p-2'}>
-                    <Button className='align-middle' onClick={() => setChoice(ASSIGNMENT_CHOICE.addRound)}>
-                      <FontAwesomeIcon className='btn-icon' icon={faPlus}/>
-                      New Draft or Peer Review
-                    </Button>
-                  </Col>}
-                  {!nonStrandedAssignments.length &&
-                  <Col>
-                    <h4>You currently have no assignments. Additional draft rounds or peer review sessions can't be created
-                    without an original assignment 1st draft to base them on.</h4>
-                  </Col>
-                  }
-                </Row>
-              </Container>
+            <div className={styles.separator}></div>
+
+            <Col className={styles.column}>
+              <div className={styles.actions}>
+                {!!nonStrandedAssignments.length && (
+                  <Button className='align-middle' onClick={() => setChoice(ASSIGNMENT_CHOICE.addRound)}>
+                    <FontAwesomeIcon className='btn-icon' icon={faPlus}/>
+                    New Draft or Peer Review
+                  </Button>
+                )}
+                {!nonStrandedAssignments.length &&
+                  <h4>You currently have no assignments. Additional draft rounds or peer review sessions can't be created
+                  without an original assignment 1st draft to base them on.</h4>
+                }
+              </div>
             </Col>
 
-            <Col className={'col-4'}>
-              <Container className={'p-4'}>
-                <Row className={'mt-auto'}>
-                  <Col className={'xbg-light text-center p-2'}>
-                    <Button className='align-middle' onClick={() => setChoice(ASSIGNMENT_CHOICE.duplicate)}
-                            disabled={!allAssignments.length}>
-                      <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                      Duplicate or Recover
-                    </Button>
-                  </Col>
-                </Row>
-              </Container>
+            <div className={styles.separator}></div>
+
+            <Col className={styles.column}>
+              <div className={styles.actions}>
+                <Button className='align-middle' onClick={() => setChoice(ASSIGNMENT_CHOICE.duplicate)}
+                  disabled={!allAssignments.length}
+                >
+                  <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
+                  Duplicate or Recover
+                </Button>
+              </div>
             </Col>
           </Row>
-
         </Fragment>
         }
       </Container>
