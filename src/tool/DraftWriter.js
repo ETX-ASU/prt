@@ -6,8 +6,6 @@ import "react-quill/dist/quill.snow.css";
 import "./RteStyles.scss";
 import WritersRubricViewer from "../instructor/assignments/WritersRubricViewer";
 
-
-
 // TOOL-DEV: You will provide your own component to act as a UI allowing a student to engage with and view their homework
 function DraftWriter(props) {
   const {isReadOnly, toolHomeworkData, toolbarHeight, assignment} = props;
@@ -35,12 +33,12 @@ function DraftWriter(props) {
         <EditorToolbar isReadOnly={isReadOnly}/>
 
         <ReactQuill
-          id='quill-rte'
+          id="quill-rte"
           theme="snow"
           readOnly={isReadOnly}
           defaultValue={draftContent}
           onChange={handleContentUpdated}
-          placeholder={"Write something awesome..."}
+          placeholder="This is where you will enter your response to the assignment prompt"
           modules={modules}
           formats={formats}
           style={{height: `calc(100% - ${toolbarHeight}px)`}}
