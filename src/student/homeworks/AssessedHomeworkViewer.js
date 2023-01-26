@@ -290,7 +290,7 @@ function AssessedHomeworkViewer(props) {
               defaultValue={toolHomeworkData.draftContent}
               onChange={() => {}}
               onChangeSelection={onSelectionChanged}
-              placeholder={"Write something awesome..."}
+              placeholder="This is where you will enter your response to the assignment prompt"
               modules={modules}
               formats={formats}
             />
