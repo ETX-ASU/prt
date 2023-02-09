@@ -120,7 +120,7 @@ function AssignmentEditor() {
             {name:'Continue Editing', onClick: () => setActiveModal(null)},
           ]}>
             <p>Do you want to cancel editing this assignment or continue?</p>
-            <p>Canceling will loose any changes you may have made to your {activeModal.data[0]} assignment.</p>
+            <p>Canceling will lose any changes you may have made to your {activeModal.data[0]} assignment.</p>
           </ConfirmationModal>
         )
       case MODAL_TYPES.confirmAssignmentSaved:
