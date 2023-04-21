@@ -1,7 +1,9 @@
 import React from "react";
 import "./RteStyles.scss";
 import { Quill } from "react-quill";
+import { Storage } from "aws-amplify";
 import CommentTag from "./CommentTag";
+import {S3_BUCKET} from "../config";
 
 Quill.register('formats/comment-tag', CommentTag);
 
@@ -35,6 +37,37 @@ function undoChange() {
 }
 function redoChange() {
   this.quill.history.redo();
+}
+
+function imageHandler() {
+  const quill = this.quill;
+
+  async function saveToServer(file) {
+    quill.focus();
+    const { index } = quill.getSelection(true);
+    const text = `[uploading ${file.name}]`;
+    quill.insertText(index, text);
+
+    const { key } = await Storage.put(file.name, file, { contentType: file.type, ACL: 'public-read' });
+
+    quill.deleteText(index, text.length);
+    quill.insertEmbed(index, "image", `${S3_BUCKET}/${key}`);
+  }
+
+  const input = document.createElement("input");
+  input.setAttribute("type", "file");
+  input.setAttribute("accept", "image/*");
+  input.click();
+
+  input.onchange = async () => {
+    const file = input.files[0];
+
+    if (/^image\//.test(file.type)) {
+      await saveToServer(file);
+    } else {
+      console.warn("You can only upload images.");
+    }
+  };
 }
 
 // Add sizes to whitelist and register them
@@ -76,7 +109,8 @@ export const modules = {
         } else {
           this.quill.format('link', false);
         }
-      }
+      },
+      image: imageHandler,
     }
   },
   history: {
