@@ -167,15 +167,15 @@ function HomeworkEngager(props) {
   }
 
 
-	return (
+  return (
 		<Fragment>
       {activeModal && renderModal()}
-      <Row ref={headerZoneRef} className={'m-0 p-0 pb-2 position-relative'}>
+      <Row ref={headerZoneRef} className={'m-0 p-0 pb-2 position-relative align-items-center'}>
         <Button className='d-inline mr-2 btn-sm' onClick={onCancelButton}><FontAwesomeIcon icon={faChevronLeft}/></Button>
         {!props.isReadOnly && <h2 id='assignmentTitle' className="inline-header">{assignment.title}</h2>}
         {props.isReadOnly && <h2 id='assignmentTitle' className="inline-header">{assignment.title} <span className="inline-header-sub">(Submitted)</span></h2>}
       </Row>
-
+      <div className="my-1 font-italic small">{`Assignment prompt: ${assignment.summary}`}</div>
       <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight}px - 3em)`}}>
         <DraftWriter
           assignment={assignment}

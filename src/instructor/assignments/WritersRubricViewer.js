@@ -1,12 +1,17 @@
 import React, {Fragment, useState} from 'react';
 import {Button, Col, Container, Row} from "react-bootstrap";
+import {Tooltip} from "react-tippy";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
+import {faInfoCircle} from "@fortawesome/free-solid-svg-icons/faInfoCircle";
 import {faChevronLeft, faChevronRight, faPlus, faEyeSlash} from "@fortawesome/free-solid-svg-icons";
 import {deepCopy} from "../../app/utils/deepCopy";
+import 'react-tippy/dist/tippy.css'
+
 library.add(faPlus, faEyeSlash, faChevronLeft, faChevronRight);
 
+const RUBRIC_INFO_COPY = 'Use this rubric for your draft submission. This rubric will also be used for your peers to review your work and for you to review theirs. Make sure to check out all criteria pages.';
 
 function WritersRubricViewer(props) {
   const {rubricCriteria, rubricRanks} = props;
@@ -25,7 +30,15 @@ function WritersRubricViewer(props) {
 
   return (
     <Container className='rubric-viewer-panel m-0 p-0'>
-      <Row className='criterion-nav m-0 p-2'>
+      <Row className='criterion-nav m-0 pt-2 px-2 text-center align-items-center'>
+        <h3 className='w-100'>
+          Rubric{' '}
+          <Tooltip title={RUBRIC_INFO_COPY} arrow position="left">
+            <FontAwesomeIcon icon={faInfoCircle} />
+          </Tooltip>
+        </h3>
+      </Row>
+      <Row className='criterion-nav m-0 px-2 pb-2 align-items-center'>
         <Col className='p-0 m-0 mb-2 col-8'>
           <h3>{critIndex+1} of {shownCriteria.length}: {shownCriteria[critIndex].name}</h3>
         </Col>
@@ -37,7 +50,7 @@ function WritersRubricViewer(props) {
       <Row className='criterion-content m-0 p-2'>
         <Col className='p-0 m-0'>
           {shownRanks.map((rank, rNum) =>
-            <Fragment key={rNum}><h4 className={'criterion-name'}>{rank.name}: </h4>{shownCriteria[critIndex].rankSummaries[rNum]}</Fragment>
+            <Fragment key={rNum}><h4 className='criterion-name'>{rank.name}: </h4>{shownCriteria[critIndex].rankSummaries[rNum]}</Fragment>
           )}
         </Col>
       </Row>
