@@ -13,21 +13,6 @@ function DraftWriter(props) {
   const {draftContent} = toolHomeworkData || EMPTY_HOMEWORK;
 
   return (
-    // <div className={`h-100 d-flex flex-column text-editor ${(isReadOnly) ? 'no-bar' : ''}`}>
-    //   <EditorToolbar />
-    //   <ReactQuill
-    //     id='quill-rte'
-    //     theme="snow"
-    //     readOnly={isReadOnly}
-    //     value={draftContent}
-    //     onChange={handleContentUpdated}
-    //     placeholder={"Write something awesome..."}
-    //     modules={modules}
-    //     formats={formats}
-    //     style={{height: (props.availableHeight - (toolbarHeight)) + 'px'}}
-    //   />
-    // </div>
-
     <div className={`d-flex flex-row h-auto w-100`}>
       <div className={`d-flex flex-column text-editor`} style={{width: '65%'}}>
         <EditorToolbar isReadOnly={isReadOnly}/>
