@@ -51,7 +51,7 @@ function imageHandler() {
     const { key } = await Storage.put(file.name, file, { contentType: file.type, ACL: 'public-read' });
 
     quill.deleteText(index, text.length);
-    quill.insertEmbed(index, "image", `${S3_BUCKET}/${key}`);
+    quill.insertEmbed(index, "image", `${S3_BUCKET}/${key}`, "user");
   }
 
   const input = document.createElement("input");
