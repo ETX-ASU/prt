@@ -78,6 +78,7 @@ function GradingBar(props) {
     setScoreGiven(parseInt(e.target.value));
   }
 
+  console.log(scoreGiven);
 
   return (
     <Container id={'instructor-grading-bar'} className='p-0 m-0 mt-2 mb-2 login-bar bg-white rounded xt-med xtext-med'>
@@ -148,7 +149,8 @@ function GradingBar(props) {
                   className='form-control'
                   min={0} max={100}
                   onChange={onScoreAdjusted}
-                  value={scoreGiven}
+                  value={scoreGiven || 0}
+                  onFocus={ev => ev.target.select()}
                 />
               </div>
 
