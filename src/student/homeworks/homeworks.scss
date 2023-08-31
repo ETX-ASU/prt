@@ -325,6 +325,11 @@ Button.essay-btn {
   .criterion-nav {
     height: 48px;
     background-color: #9aabb5;
+    gap: 6px;
+
+    button {
+      height: 30px;
+    }
 
     .nav-btn {
       height: 30px;

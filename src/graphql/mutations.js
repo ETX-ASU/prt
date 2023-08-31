@@ -141,6 +141,7 @@ export const createHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
+        documentUrl
       }
       createdAt
       updatedAt
@@ -161,6 +162,7 @@ export const updateHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
+        documentUrl
       }
       createdAt
       updatedAt
@@ -181,6 +183,7 @@ export const deleteHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
+        documentUrl
       }
       createdAt
       updatedAt

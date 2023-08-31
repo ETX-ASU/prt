@@ -48,7 +48,7 @@ function imageHandler() {
     const text = `[uploading ${file.name}]`;
     quill.insertText(index, text);
 
-    const { key } = await Storage.put(file.name, file, { contentType: file.type, ACL: 'public-read' });
+    const { key } = await Storage.put(crypto.randomUUID() + '-' + file.name, file, { contentType: file.type, ACL: 'public-read' });
 
     quill.deleteText(index, text.length);
     quill.insertEmbed(index, "image", `${S3_BUCKET}/${key}`, "user");

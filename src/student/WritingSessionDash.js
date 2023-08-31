@@ -107,7 +107,7 @@ function WritingSessionDash() {
 	const draftName = ['1st', '2nd', '3rd', '4th', '5th'][Math.floor((roundNum)/2)] + ' Draft';
 
 	return (
-		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100 position-relative'>
+		<Container className='p-4 student-dashboard dashboard bg-white rounded h-100 position-relative d-flex flex-column'>
 
 			{isLoading.current &&
 			<Row className='m-0 p-0'>

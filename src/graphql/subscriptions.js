@@ -129,6 +129,7 @@ export const onCreateHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
+        documentUrl
       }
       createdAt
       updatedAt
@@ -146,6 +147,7 @@ export const onUpdateHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
+        documentUrl
       }
       createdAt
       updatedAt
@@ -163,6 +165,7 @@ export const onDeleteHomework = /* GraphQL */ `
       isLocked
       toolHomeworkData {
         draftContent
+        documentUrl
       }
       createdAt
       updatedAt

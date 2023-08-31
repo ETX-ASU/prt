@@ -1,4 +1,3 @@
-
 type Assignment @model {
   id: ID!
   courseId: ID
@@ -15,9 +14,18 @@ type Assignment @model {
   toolAssignmentData: ToolAssignmentData
 }
 
-type Homework @model
-@key(name:"minHomeworkIdsBySubmittedDate", fields:["assignmentId", "submittedOnDate"], queryField:"minHomeworkIdsBySubmittedDate")
-@key(name:"fullHomeworkByAsmntAndStudentId", fields:["assignmentId", "studentOwnerId"], queryField:"fullHomeworkByAsmntAndStudentId") {
+type Homework
+  @model
+  @key(
+    name: "minHomeworkIdsBySubmittedDate"
+    fields: ["assignmentId", "submittedOnDate"]
+    queryField: "minHomeworkIdsBySubmittedDate"
+  )
+  @key(
+    name: "fullHomeworkByAsmntAndStudentId"
+    fields: ["assignmentId", "studentOwnerId"]
+    queryField: "fullHomeworkByAsmntAndStudentId"
+  ) {
   id: ID!
   assignmentId: ID!
   studentOwnerId: ID!
@@ -27,10 +35,19 @@ type Homework @model
   toolHomeworkData: ToolHomeworkData
 }
 
-type Review @model
-@key(name:"reviewsByHmwkAndAssessorId", fields:["homeworkId", "assessorId"], queryField:"reviewsByHmwkAndAssessorId")
-@key(name:"reviewsByAsmntId", fields:["assignmentId"], queryField:"reviewsByAsmntId")
-@key(name:"reviewsByAsmntAndAssessorId", fields:["assignmentId", "assessorId"], queryField:"reviewsByAsmntAndAssessorId") {
+type Review
+  @model
+  @key(
+    name: "reviewsByHmwkAndAssessorId"
+    fields: ["homeworkId", "assessorId"]
+    queryField: "reviewsByHmwkAndAssessorId"
+  )
+  @key(name: "reviewsByAsmntId", fields: ["assignmentId"], queryField: "reviewsByAsmntId")
+  @key(
+    name: "reviewsByAsmntAndAssessorId"
+    fields: ["assignmentId", "assessorId"]
+    queryField: "reviewsByAsmntAndAssessorId"
+  ) {
   id: ID!
   assignmentId: ID! # id of the assignment. Yes, this is accessible via homework data but we need access speed and efficiency
   assessorId: ID! # id of student who must provide a review/assessment for
@@ -70,8 +87,8 @@ type ToolAssignmentData {
 # ===================================================== HOMEWORK
 type ToolHomeworkData {
   draftContent: String # this is the actual essay content. (Might eventually be a url). It is NULL "" if it is a REVIEW round.
+  documentUrl: String
 }
-
 
 # ===================================================== REVIEW
 # An assessment is single review of 1 homework by 1 other user (student or instructor)

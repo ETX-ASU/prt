@@ -17,7 +17,7 @@ import {
 	minHomeworkIdsBySubmittedDate,
 } from "../graphql/customQueries";
 import {
-	listHomeworks,
+	getHomework,
 	reviewsByAsmntId,
 } from "../graphql/queries";
 
@@ -249,7 +249,6 @@ function ReviewSessionDash() {
 		const fetchAndSetDraftsToBeReviewedByUser = async () => {
 			// Get all of the allocated homeworks and sort them according to indexed order of the allocations list
 			const relatedHomeworkIds = (activeUsersReviewedDraftStub) ? [...reviewsByUser.map(r => r.homeworkId), activeUsersReviewedDraftStub.id] : [...reviewsByUser.map(r => r.homeworkId)];
-			const filterIdsArr = relatedHomeworkIds.map(a => ({id: {eq: a}}));
 
 			if (!relatedHomeworkIds?.length) {
 				setAllocationMsg(ALLOCATION_MESSAGES.userDidNotSubmit);
@@ -257,26 +256,39 @@ function ReviewSessionDash() {
 			}
 
 			try {
-				let nextTokenVal = null;
 				let allRelatedHomeworks = [];
-
-				do {
-					const homeworkQueryResults = await API.graphql({
-						query: listHomeworks,
-						variables: {
-							filter: {or: filterIdsArr},
-							nextToken: nextTokenVal
-						},
+				
+				for (let id of relatedHomeworkIds) {
+					const response = await API.graphql({
+						query: getHomework,
+						variables: { id },
 					});
 
-					nextTokenVal = homeworkQueryResults.data.listHomeworks.nextToken;
-					allRelatedHomeworks.push(...homeworkQueryResults.data.listHomeworks.items);
-				} while (nextTokenVal);
+					if (response.errors) continue;
+
+					allRelatedHomeworks.push(response.data.getHomework);
+				}
+			// NOTE: This wouldn't scale AT ALL. DynamoDB applies filters AFTER pagination
+			//       that's why you had to fire off dozens of requests before getting any
+			//       data, even with such a limited data set.
+			//
+			// 	do {
+			// 		const homeworkQueryResults = await API.graphql({
+			// 			query: listHomeworks,
+			// 			variables: {
+			// 				filter: {or: filterIdsArr},
+			// 				nextToken: nextTokenVal
+			// 			},
+			// 		});
+
+			// 		nextTokenVal = homeworkQueryResults.data.listHomeworks.nextToken;
+			// 		allRelatedHomeworks.push(...homeworkQueryResults.data.listHomeworks.items);
+			// 	} while (nextTokenVal);
 
 				await dispatch(setDraftsToBeReviewedByUser(allRelatedHomeworks.filter(h => h.studentOwnerId !== activeUser.id)));
 				await dispatch(setActiveUsersReviewedDraft(allRelatedHomeworks.find(h => h.studentOwnerId === activeUser.id)));
 			} catch (error) {
-				reportError(error, `We're sorry. There was an error while attempting to fetchAndSetDraftsToBeReviewedByUser.`);
+			 	reportError(error, `We're sorry. There was an error while attempting to fetchAndSetDraftsToBeReviewedByUser.`);
 			}
 		}
 

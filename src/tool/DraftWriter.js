@@ -26,8 +26,14 @@ function DraftWriter(props) {
           placeholder="This is where you will enter your response to the assignment prompt"
           modules={modules}
           formats={formats}
-          style={{height: `calc(100% - ${toolbarHeight}px)`}}
+          style={{height: toolHomeworkData.documentUrl ? '150px' : `calc(100% - ${toolbarHeight}px)`}}
         />
+
+        {toolHomeworkData.documentUrl && (
+          <object data={toolHomeworkData.documentUrl} type="application/pdf" width="100%" height="100%">
+            <p>Unable to display PDF file. <a href={toolHomeworkData.documentUrl}>Download</a> instead.</p>
+          </object>
+        )}
       </div>
       <WritersRubricViewer
         className='h-auto'

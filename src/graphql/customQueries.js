@@ -26,6 +26,7 @@ export const fullHomeworkByAsmntAndStudentId = /* GraphQL */ `
         isLocked
         toolHomeworkData {
 					draftContent
+          documentUrl
 				}
         createdAt
         updatedAt
@@ -80,6 +81,7 @@ export const listFullHomeworks = /* GraphQL */ `
         isLocked
         toolHomeworkData {
 					draftContent
+          documentUrl
 				}
         createdAt
         updatedAt

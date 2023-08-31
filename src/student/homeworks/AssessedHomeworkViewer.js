@@ -15,7 +15,7 @@ import {getAvailableContentDims} from "../../tool/ToolUtils";
 
 import RubricAssessorPanel from "../../instructor/assignments/RubricAssessorPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import CommentsPanel from "./CommentsPanel";
+import {CommentsPanel} from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
 import ReactQuill from "react-quill";
 import {API} from "aws-amplify";
@@ -199,15 +199,6 @@ function AssessedHomeworkViewer(props) {
     }
   }
 
-
-  function onCommentRated(comment) {
-    const i = review.comments.findIndex(c => c.id === comment.id);
-    const altComments = [...review.comments];
-    altComments[i] = comment;
-    const altReview = {...review, comments: altComments};
-    saveUpdatesToServer(altReview);
-  }
-
   async function saveUpdatesToServer(data) {
     const inputData = {...data};
     delete inputData.createdAt;
@@ -228,6 +219,11 @@ function AssessedHomeworkViewer(props) {
     } catch (error) {
       reportError(error, `We're sorry. An error occurred while trying to save the rating you gave to the assessment comments. Please wait a moment and try again.`);
     }
+  }
+
+  function handleCommentsChanged(comments) {
+    saveUpdatesToServer({...review, comments});
+    setUserComments(comments);
   }
 
   return (
@@ -297,17 +293,12 @@ function AssessedHomeworkViewer(props) {
           </div>
           <CommentsPanel
             isReadOnly={true}
-            isAssessmentOfReview={props.isAssessmentOfReview}
-            className='h-auto'
-            showPlusButton={false}
-            assessorId={review.assessorId}
-            criteria={assignment.toolAssignmentData.rubricCriteria}
-            activeCommentId={activeCommentId}
             comments={userComments}
-            setActiveCommentId={setActiveCommentId}
+            activeCommentId={activeCommentId}
             isAbleToRateComments={(activeUser.id !== review.assessorId && !isInstructorAssessment)}
             isAbleToSeeRatings={(activeUser.id === assignment.ownerId || (activeUser.id === review.assessorId && review.submittedOnDate))}
-            onCommentRated={onCommentRated}
+            onChangeCommentId={setActiveCommentId}
+            onChange={handleCommentsChanged}
           />
         </div>
       </div>

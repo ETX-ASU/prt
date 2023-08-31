@@ -19,7 +19,7 @@ import {getAvailableContentDims} from "../../tool/ToolUtils";
 
 import RubricAssessorPanel from "../../instructor/assignments/RubricAssessorPanel";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import CommentsPanel from "./CommentsPanel";
+import { CommentsPanel } from "./CommentsPanel";
 import EditorToolbar, {formats, modules} from "../../tool/RteToolbar";
 import ReactQuill from "react-quill";
 import { v4 as uuid } from "uuid";
@@ -47,6 +47,8 @@ function HomeworkAssessor(props) {
   } = props;
   const {toolHomeworkData} = homework;
 
+  const generalCommentId = `general-comment-${homework.id}`;
+
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
   const reactQuillRef = useRef(null);
@@ -57,17 +59,16 @@ function HomeworkAssessor(props) {
   const prevEditorHeight = useRef(0);
 
   const dispatch = useDispatch();
-  const activeUser = useSelector(state => state.app.activeUser);
   const topZonePercent = useSelector(state => state.app.topZonePercent);
 
-  const [userComments, setUserComments] = useState([]);
+  const [userComments, setUserComments] = useState(null);
   const [activeModal, setActiveModal] = useState(null);
   const [availableHeight, setAvailableHeight] = useState(2000);
-  const [showPlusButton, setShowPlusButton] = useState(false);
-  const [activeCommentId, _setActiveCommentId] = useState('');
+  const [activeCommentId, _setActiveCommentId] = useState(null);
   const [origContent, setOrigContent] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChangedSinceLastSave, setHasChangedSinceLastSave] = useState(false);
+  const [range, setRange] = useState(null);
 
   const setActiveCommentId = (id) => {
     prevCommentId.current = activeCommentId || '';
@@ -132,6 +133,10 @@ function HomeworkAssessor(props) {
     setOrigContent(reactQuillRef.current.editor.getContents(0));
     setUserComments(getInitializedUserComments(review.comments));
 
+    if (review.comments.some(c => c.id === generalCommentId)) {
+      setActiveCommentId(generalCommentId);
+    }
+
     onWindowResized();
 
     return () => {
@@ -180,11 +185,17 @@ function HomeworkAssessor(props) {
     if (!editor) return;
     const origSelection = editor.getSelection();
 
+    let tagNumber = 0;
     const altUserComments = comments.map((c, i) => {
+      if (c.id === generalCommentId) {
+        return window.structuredClone(c);
+      }
+      
+      tagNumber++;
       const bounds = editor.getBounds(c.index, c.length);
       const theComment = {
         ...c,
-        tagName: (i + 1 < 10) ? "0" + (i + 1) : "" + (i + 1),
+        tagName: (tagNumber < 10) ? "0" + tagNumber : "" + tagNumber,
         x: bounds.left + bounds.width,
         y: bounds.top + editor.scrollingContainer.scrollTop,
         origContent: editor.getContents(c.index, c.length),
@@ -199,7 +210,7 @@ function HomeworkAssessor(props) {
 
   function onWindowResized() {
     if (throttleCallbackRef.current) window.clearTimeout(throttleCallbackRef.current);
-    setUserComments([]);
+    setUserComments(null);
     const {height} = getAvailableContentDims(headerZoneRef, null, props.excessHeight);
     const availHeight = height - props.excessHeight;
     setAvailableHeight(availHeight);
@@ -228,46 +239,66 @@ function HomeworkAssessor(props) {
     const editor = reactQuillRef?.current?.editor;
     if (!editor || source !== 'user' || !range) return;
 
+    setRange(range);
+
     let sel = range.index;
-    let comment = userComments.find(c => {
+    const comment = userComments.filter(c => c.id !== generalCommentId).find(c => {
       let start = c.index, end = c.index + c.length;
       return ((sel > start) && (sel < end));
     });
     let commentId = (comment) ? comment.id : '';
     if (comment && range.length && range.index + range.length > comment.index + comment.length) {
       commentId = '';
-      setShowPlusButton(false);
-    } else {
-      setShowPlusButton(!commentId && range.length);
     }
     setActiveCommentId(commentId);
   }
 
-  function onAddComment(e) {
+  function onAddComment(isGeneral) {
+    if (isGeneral) {
+      const newComment = {
+        id: generalCommentId,
+        tagNum: 0,
+        tagName: '',
+        content: '',
+        index: 0,
+        length: 0,
+        x: 0,
+        y: 0,
+        origContent: '',
+        commentRating: -1
+      }
+      if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
+      
+      const newComments = [newComment, ...userComments];
+      setUserComments(newComments);
+      saveUpdatesToServer({...review, comments: newComments});
+      return;
+    }
+
     let bounds, newComment, isAvailable;
     const editor = reactQuillRef.current.editor;
 
     let sel = editor.getSelection();
     const selEnd = sel?.index + sel?.length;
+
     if (!sel || !sel.length) {
       // TODO: Notify user of not being a range
       return;
     }
     bounds = editor.getBounds(sel.index, sel.length);
-    isAvailable = userComments.every(c => ((sel.index > c.index + c.length) || (selEnd < c.index)));
+    isAvailable = userComments.every(c => ((sel.index > c.index + c.length) || (selEnd < c.index) || c.id === generalCommentId));
 
     if (!isAvailable) {
       // TODO: Notify user of overlapping comment selection
       return;
     }
 
-    const comCount = userComments.length + 1;
     const maxTagNum = (userComments.length) ? Math.max(...userComments.map(c => c.tagNum)) : 0;
 
     newComment = {
       id: uuid(),
       tagNum: maxTagNum + 1,
-      tagName: (comCount < 10) ? "0" + comCount : "" + comCount,
+      tagName: '',
       content: '',
       index: sel.index,
       length: sel.length,
@@ -279,9 +310,11 @@ function HomeworkAssessor(props) {
     if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
 
     editor.formatText(sel.index, sel.length, 'comment-tag', {id: newComment.id}, 'api');
+    
+    let tagName = 1;
     let altComments = [...userComments, newComment].sort((a, b) => a.index - b.index).map((c, i) => ({
       ...c,
-      tagName: (i + 1 < 10) ? "0" + (i + 1) : "" + (i + 1)
+      tagName: c.id===generalCommentId ? '' : String(tagName++).padStart(2, '0')
     }));
     setUserComments(altComments);
 
@@ -290,50 +323,17 @@ function HomeworkAssessor(props) {
     setActiveCommentId(newComment.id);
   }
 
-  function onDeleteComment(commentId, isOnlyStyleDelete) {
-    if (!commentId) return;
-    if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
+  function handleCommentsChanged(comments) {
+    const newReview = {...review, comments: comments.filter(c => c.content)};
 
-    const editor = reactQuillRef.current.editor;
-
-    let altComments = [...userComments];
-    const cIndex = altComments.findIndex(c => c.id === commentId);
-    if (cIndex < 0) {
-      if (!isOnlyStyleDelete) console.error("comment not found!");
-      return;
+    if (isInstructorAssessment && review.submittedOnDate){
+      dispatch(updateSingleReview(newReview));
+    } else {
+      saveUpdatesToServer(newReview);
     }
 
-    altComments.splice(cIndex, 1);
-    altComments = altComments.map((c, i) => ({
-      ...c,
-      tagNum: i + 1,
-      tagName: (i + 1 < 10) ? "0" + (i + 1) : "" + (i + 1)
-    }));
-    setUserComments(altComments);
-
-    setActiveCommentId('');
-    editor.setContents(origContent);
-    setUserComments(getInitializedUserComments(altComments));
-
-    saveUpdatesToServer({...review, comments: altComments});
-  }
-
-  function onUpdateComment(comment) {
-    let altComments = [...userComments];
-    let index = altComments.findIndex(c => c.id === comment.id);
-
-    if (!userComments[index] || userComments[index].content !== comment.content) {
-      altComments[index] = comment;
-      setUserComments(altComments);
-      let altReview = {...review, comments: altComments};
-
-      // Do not immediately save updates to the server if instructor is making updates to previously submitted review
-      if (isInstructorAssessment && review.submittedOnDate){
-        dispatch(updateSingleReview(altReview));
-      } else {
-        saveUpdatesToServer(altReview);
-      }
-    }
+    reactQuillRef.current.editor.setContents(origContent);
+    setUserComments(getInitializedUserComments(comments));
   }
 
   function onRankSelected(selectedCriterion, rNum) {
@@ -361,26 +361,6 @@ function HomeworkAssessor(props) {
       saveUpdatesToServer(altReview);
     }
   }
-
-  // PRTv2 does not use autograding
-  // async function calcAndSendScore(homework) {
-  //   try {
-  //     const scoreDataObj = {
-  //       assignmentId: assignment.id,
-  //       studentId: activeUser.id,
-  //       scoreGiven: await calcAutoScore(assignment, homework),
-  //       scoreMaximum: await calcMaxScoreForAssignment(assignment),
-  //       comment: '',
-  //       activityProgress: ACTIVITY_PROGRESS.Completed,
-  //       gradingProgress: HOMEWORK_PROGRESS.fullyGraded
-  //     };
-  //
-  //     console.warn('-----> about to send scoreDataObj: ', scoreDataObj);
-  //     await sendAutoGradeToLMS(scoreDataObj);
-  //   } catch(error) {
-  //     reportError(error, `We're sorry. There was a problem posting your grade`);
-  //   }
-  // }
 
   function getValidationResults() {
     if (review.comments.length < MIN_REQUIRED_COMMENTS) {
@@ -420,14 +400,6 @@ function HomeworkAssessor(props) {
         )
       default:
         return;
-      // case MODAL_TYPES.confirmHomeworkSubmitted:
-      //   return (
-      //     <ConfirmationModal onHide={() => setActiveModal(null)} title={'Submitted!'} buttons={[
-      //       {name: 'Review', onClick: closeModalAndReview},
-      //     ]}>
-      //       <p>You can now review your submitted assignment.</p>
-      //     </ConfirmationModal>
-      //   )
     }
   }
 
@@ -446,7 +418,6 @@ function HomeworkAssessor(props) {
       let curY = e.clientY;
       let pixelDeltaY = curY - dragStartY;
       let percentDeltaY = pixelDeltaY / availableHeight * 100;
-      // let btnHeightPerc = 22/availableHeight * 100;
       let btnHeightPerc = 48 / availableHeight * 100;
 
       let newPerc = origTopZonePerc + percentDeltaY;
@@ -461,14 +432,6 @@ function HomeworkAssessor(props) {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     }
-  }
-
-  function onCommentsEdited(e) {
-    if (!hasChangedSinceLastSave) setHasChangedSinceLastSave(true);
-  }
-
-  function handleChange(html, delta, source) {
-    // TODO: is this needed anymore?
   }
 
   return (
@@ -512,7 +475,7 @@ function HomeworkAssessor(props) {
             <EditorToolbar/>
             <div id='comments-layer-wrapper'>
               <div className='comment-buttons-layer'>
-                {userComments.map(c =>
+                {(userComments || []).filter(c => c.id !== generalCommentId).map(c =>
                   <div key={c.id}
                     onClick={() => setActiveCommentId(c.id)}
                     className={`comment-btn${(c.id === activeCommentId) ? ' selected' : ''}`}
@@ -527,28 +490,33 @@ function HomeworkAssessor(props) {
               theme="snow"
               readOnly={true}
               defaultValue={toolHomeworkData.draftContent}
-              onChange={handleChange}
+              // onChange={handleChange}
               onChangeSelection={onSelectionChanged}
               placeholder={"This is where you will enter your response to the assignment prompt"}
               modules={modules}
               formats={formats}
+              style={{height: toolHomeworkData.documentUrl ? '150px' : '100%'}}
             />
+            {toolHomeworkData.documentUrl && (
+              <object data={toolHomeworkData.documentUrl} type="application/pdf" width="100%" height="100%">
+                <p>Unable to display PDF file. <a href={toolHomeworkData.documentUrl}>Download</a> instead.</p>
+              </object>
+            )}
           </div>
-          <CommentsPanel
-            isReadOnly={!isInstructorAssessment && !!review.submittedOnDate}
-            showPlusButton={showPlusButton}
-            assessorId={activeUser.id}
-            criteria={assignment.toolAssignmentData.rubricCriteria}
-            activeCommentId={activeCommentId}
-            comments={userComments}
-            setActiveCommentId={setActiveCommentId}
-            updateComment={onUpdateComment}
-            onAddComment={onAddComment}
-            onDeleteComment={onDeleteComment}
-            onCommentsEdited={onCommentsEdited}
-            isAbleToRateComments={false}
-            isAbleToSeeRatings={(activeUser.id === assignment.ownerId || (activeUser.id === review.assessorId && review.submittedOnDate))}
-          />
+          {userComments !== null && (
+            <CommentsPanel
+              comments={userComments}
+              generalCommentId={generalCommentId}
+              activeCommentId={activeCommentId}
+              newCommentRange={range}
+              onAddComment={onAddComment}
+              onChangeCommentId={setActiveCommentId}
+              onChange={handleCommentsChanged}
+              isAbleToRateComments
+              isAbleToSeeRatings
+              isAssessmentOfReview
+            />
+          )}
         </div>
       </div>
 

@@ -1,6 +1,9 @@
 import React, {Fragment, useEffect, useRef, useState} from 'react';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
+import { Storage } from "aws-amplify";
+import { S3_BUCKET } from "../../config";
+
 import {ACTIVITY_PROGRESS, HOMEWORK_PROGRESS, MODAL_TYPES, UI_SCREEN_MODES} from "../../app/constants";
 import {Button, Row} from 'react-bootstrap';
 import {updateHomework as updateHomeworkMutation} from "../../graphql/mutations";
@@ -36,9 +39,11 @@ function HomeworkEngager(props) {
 
   const headerZoneRef = useRef(null);
   const footerZoneRef = useRef(null);
+  // const documentInputRef = useRef(null);
   const [availableHeight, setAvailableHeight] = useState(300);
   const [toolbarHeight, setToolbarHeight] = useState(64);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [hasChangedSinceLastSave, setHasChangedSinceLastSave] = useState(false);
 
 
@@ -153,6 +158,7 @@ function HomeworkEngager(props) {
             {name:'Review', onClick:closeModalAndReview},
           ]}>
             <p>You can now review your submitted assignment.</p>
+            <p>If there is a peer review round, it will be on a following assignment. Returning to this assignment will only show you your submitted work.</p>
           </ConfirmationModal>
         )
       default:
@@ -166,6 +172,34 @@ function HomeworkEngager(props) {
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.showStudentDashboard));
   }
 
+  const handleDocumentPicked = async (ev) => {
+    const file = ev.target.files[0];
+    if (!file) return;
+    console.log(ev.target.files[0]);
+    setIsUploading(true);
+    const { key } = await Storage.put(
+      crypto.randomUUID() + '-' + file.name,
+      file,
+      { contentType: file.type, ACL: 'public-read' },
+    );
+    setToolHomeworkData(d => ({...d, documentUrl: `${S3_BUCKET}/${key}`}));
+    setHasChangedSinceLastSave(true);
+    setIsUploading(false);
+  };
+  
+  const handleDocumentButtonClick = () => {
+    if (toolHomeworkData.documentUrl) {
+      setToolHomeworkData(d => ({...d, documentUrl: null}));
+      setHasChangedSinceLastSave(true);
+      return;
+    }
+
+    const el = document.createElement('input');
+    el.setAttribute('type', 'file');
+    el.setAttribute('accept', 'application/pdf');
+    el.addEventListener('change', handleDocumentPicked);
+    el.click();
+  }
 
   return (
 		<Fragment>
@@ -176,7 +210,7 @@ function HomeworkEngager(props) {
         {props.isReadOnly && <h2 id='assignmentTitle' className="inline-header">{assignment.title} <span className="inline-header-sub">(Submitted)</span></h2>}
       </Row>
       <div className="my-1 font-italic small">{`Assignment prompt: ${assignment.summary}`}</div>
-      <div className='bottom-zone d-flex flex-row m-0 p-0' style={{height: `calc(${availableHeight}px - 3em)`}}>
+      <div className='bottom-zone d-flex flex-row flex-grow-1 m-0 p-0'>
         <DraftWriter
           assignment={assignment}
           availableHeight={availableHeight}
@@ -194,9 +228,29 @@ function HomeworkEngager(props) {
           {(isSaving) ? "Saving..." : (hasChangedSinceLastSave) ? "Unsaved Changes" : "Up-to-date"}
         </div>
         <div ref={footerZoneRef} className='m-0 p-0 pt-2 text-right'>
+          <Button
+            className='d-inline mr-2 ql-align-right btn-sm'
+            disabled={isUploading}
+            onClick={handleDocumentButtonClick}
+          >
+              {
+                isUploading
+                  ? 'Uploading...'
+                  : toolHomeworkData.documentUrl
+                    ? 'Remove document'
+                    : 'Upload PDF'
+              }
+          </Button>
           <Button className='d-inline mr-2 ql-align-right btn-sm' disabled={isSaving} onClick={() => saveOrSubmitHomework(false)}>{isSaving ? 'Saving...' : 'Save'}</Button>
           <Button className='d-inline ql-align-right btn-sm' onClick={() => setActiveModal({type:MODAL_TYPES.warningBeforeHomeworkSubmission})}>Submit Assignment</Button>
         </div>
+        {/* <input 
+          style={{display:'none'}}
+          type="file"
+          ref={documentInputRef}
+          accept="application/pdf"
+          onChange={handleDocumentPicked}
+        /> */}
       </Fragment>
       }
 

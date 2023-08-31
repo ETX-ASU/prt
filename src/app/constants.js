@@ -73,7 +73,7 @@ export const EMPTY_REVIEW = {
 
 export const ALLOCATION_MESSAGES = {
   notEnoughSubmissions: `Not enough peers have submitted their work for reviews to begin being assigned yet. Please come back soon and check again regularly.`,
-  userDidNotSubmit: `You cannot review peers until you have completed and submitted a draft of your own. Complete the previous draft creation assignment first, then come back to participate in this peer review session assignment.`,
+  userDidNotSubmit: `You cannot review peers until you have completed and submitted a draft of your own. Complete the previous draft creation assignment first, then come back to participate in this peer review session assignment.<br />If you submitted a draft and do not see the option to review your peers, you may need to refresh or wait until more of your peers have submitted their drafts.`,
 
 }
 
