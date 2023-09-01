@@ -18,7 +18,8 @@ export const MODAL_TYPES = {
   warningInvalidSubmission: "warningInvalidSubmission",
   showBatchSubmitOptions: "showBatchSubmitOptions",
   showWaitingForGrades: "showWaitingForGrades",
-  chooseLinkOrDelete: "chooseLinkOrDelete"
+  chooseLinkOrDelete: "chooseLinkOrDelete",
+  notificationBeforeSave: "notificationBeforeSave",
 }
 
 export const SORT_BY = {

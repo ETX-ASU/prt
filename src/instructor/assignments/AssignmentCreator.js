@@ -1,4 +1,4 @@
-import React, {Fragment, useState} from 'react';
+import React, {Fragment, useRef, useState} from 'react';
 import {API} from 'aws-amplify';
 import moment from "moment";
 import {useDispatch, useSelector} from "react-redux";
@@ -54,11 +54,21 @@ function AssignmentCreator() {
   const defaultToolAssignmentData = {...emptyAssignment.toolAssignmentData, rubricCriteria: generateDefaultRubric().criteria, rubricRanks:generateDefaultRubric().ranks}
   const [formData, setFormData] = useState({...emptyAssignment, toolAssignmentData:defaultToolAssignmentData});
   const [activeModal, setActiveModal] = useState(null);
+  const reminderCheckboxRef = useRef(null);
 
 
   async function handleSubmitBtn() {
-    if (!formData.title) return;
+    if (window.localStorage.getItem('newTabReminderSilenced')) {
+      saveAssignment();
+      return;
+    }
 
+    setActiveModal({ type:MODAL_TYPES.notificationBeforeSave });
+  }
+  
+  async function saveAssignment() {
+    if (!formData.title) return;
+  
     const assignmentId = uuid();
     const inputData = Object.assign({}, formData, {
       id: assignmentId,
@@ -67,8 +77,8 @@ function AssignmentCreator() {
       ownerId: activeUser.id,
       lockOnDate: (formData.isLockedOnDate) ? moment(formData.lockOnDate).valueOf() : 0
     });
-
-
+  
+  
     try {
       if (window.isDevMode) inputData.lineItemId = (`FAKE-${uuid()}`);
       const result = await API.graphql({query: createAssignmentMutation, variables: {input: inputData}});
@@ -90,6 +100,15 @@ function AssignmentCreator() {
   function handleReturnToLms() {
     setActiveModal(null);
     dispatch(setActiveUiScreenMode(UI_SCREEN_MODES.returnToLmsScreen))
+  }
+
+  function handleReminderClose() {
+    if (reminderCheckboxRef.current?.checked) {
+      window.localStorage.setItem('newTabReminderSilenced', true);
+    }
+
+    setActiveModal(null);
+    saveAssignment();
   }
 
   function renderModal() {
@@ -117,6 +136,22 @@ function AssignmentCreator() {
             <p>Assignment has been saved! In order to access it, use this assignmentId: {activeModal.id}</p>
           </ConfirmationModal>
         );
+      case MODAL_TYPES.notificationBeforeSave:
+        return (
+          <ConfirmationModal 
+            isStatic
+            title="Important"
+            buttons={[{ name: 'Got it', onClick: handleReminderClose }]}
+          >
+            <p>In your LMS, we strongly recommend for you to set this Tool to open in a new tab for a better viewing experience. For example, Canvas has a checkbox labeled “open in a new tab” that you can check.</p>
+            <div className="d-flex align-items-center gap-2">
+              <input type="checkbox" id="newTabReminder" ref={reminderCheckboxRef} />
+              <label htmlFor="newTabReminder">
+                Do not show this message again
+              </label>
+            </div>
+          </ConfirmationModal>
+        )
       default:
         return;
     }
@@ -128,7 +163,7 @@ function AssignmentCreator() {
       {activeModal && renderModal()}
       <HeaderBar withLogo title='Create New Assignment'>
         <Button variant="secondary" onClick={() => setActiveModal({type: MODAL_TYPES.cancelNewAssignmentEditsWarning})} className='mr-2'>Cancel</Button>
-        <Button onClick={handleSubmitBtn}>Create</Button>
+        <Button disabled={!formData.title} onClick={handleSubmitBtn}>Create</Button>
       </HeaderBar>
 
       <form>

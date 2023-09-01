@@ -2,13 +2,8 @@ import React, {Fragment} from "react";
 import {Col, Row} from "react-bootstrap";
 import styles from "./BasicAssignmentSettings.module.scss";
 
-
 function BasicAssignmentSettings(props) {
 	const {isLimitedEditing, formData, setFormData} = props;
-
-	// function toggleUseAutoScore() {
-	// 	setFormData({...formData, isUseAutoScore: !formData.isUseAutoScore, isUseAutoSubmit: false});
-	// }
 
 	return (
 		<Fragment>
@@ -37,18 +32,6 @@ function BasicAssignmentSettings(props) {
 					</div>
 				</Col>
 			</Row>
-
-			{/*<Row className={'ml-2'}>*/}
-			{/*	<Col className='col-12'>*/}
-			{/*		<label><h3>Autoscore</h3></label>*/}
-			{/*		<div className="custom-control custom-switch d-inline-block" style={{top: `3px`}}>*/}
-			{/*			<ToggleSwitch id='dataUseAutoscore'*/}
-			{/*				small={true}*/}
-			{/*				value={formData.isUseAutoScore}*/}
-			{/*				handleToggle={toggleUseAutoScore}/>*/}
-			{/*		</div>*/}
-			{/*	</Col>*/}
-			{/*</Row>*/}
 
 			{formData.isUseAutoScore &&
 			<Row className={'ml-2'}>

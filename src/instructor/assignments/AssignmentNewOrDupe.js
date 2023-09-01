@@ -2,6 +2,7 @@ import React, {Fragment, useCallback, useEffect, useState} from 'react';
 import {API, graphqlOperation} from 'aws-amplify';
 import {useDispatch, useSelector} from "react-redux";
 import { v4 as uuid } from "uuid";
+import classNames from "classnames";
 
 import {
   createAssignment,
@@ -16,6 +17,7 @@ import {getAssignment, listAssignments} from "../../graphql/queries";
 import LoadingIndicator from "../../app/components/LoadingIndicator";
 import HeaderBar from "../../app/components/HeaderBar";
 import ConfirmationModal from "../../app/components/ConfirmationModal";
+import { Select } from "../../app/components/Select";
 
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {library} from "@fortawesome/fontawesome-svg-core";
@@ -25,6 +27,51 @@ import {reportError} from "../../developer/DevUtils";
 import styles from "./AssignmentNewOrDupe.module.scss";
 
 library.add(faCopy, faPlus);
+
+/**
+ * @param {Date} date - The Date object to format.
+ * @returns {string} The formatted date string.
+ */
+function formatDate(date) {
+  const options = { day: '2-digit', month: 'short', year: 'numeric' };
+  return date.toLocaleDateString('en-US', options);
+}
+
+/**
+ * @param {{title: string; formattedDate: string; lineItemId?: string}} assignment
+ * @param {boolean} isActive
+ * @returns {React.Element}
+ */
+const assignmentItemRenderer = ({ title, formattedDate, lineItemId }, isActive) => {
+  return (
+    <div className={classNames(styles.item, isActive && styles.active)}>
+      <div className={styles.title}>
+        {lineItemId && <span className={styles.asterisk}>*</span>}
+        {title}
+      </div>
+      <div className={styles.date}>{formattedDate || '-'}</div>
+    </div>
+  );
+};
+
+/**
+ *
+ * @param {string} searchQuery
+ * @returns {(assignment: {title: string; formattedDate: string}) => boolean}
+ */
+const assignmentFilterStrategy = (searchQuery) => {
+  const normalizedSearchQuery = searchQuery.toLowerCase();
+
+  return ({ title, formattedDate }) =>
+    title.toLowerCase().includes(normalizedSearchQuery) || formattedDate.toLowerCase().includes(normalizedSearchQuery);
+};
+
+/**
+ *
+ * @param {{title: string}} assignment
+ * @returns {string}
+ */
+const assignmentToQuery = ({ title }) => title;
 
 const ASSIGNMENT_CHOICE = {
   fromScratch: "fromScratch",
@@ -58,7 +105,15 @@ function AssignmentNewOrDupe() {
         const assignmentQueryResults = await API.graphql(graphqlOperation(listAssignments,
             {filter:{ownerId:{eq:activeUserId}}, nextToken:nextTokenVal}));
         nextTokenVal = assignmentQueryResults.data.listAssignments.nextToken;
-        allAssignments.push(...assignmentQueryResults.data.listAssignments.items);
+        allAssignments.push(
+          ...assignmentQueryResults.data.listAssignments.items
+            .map((item) => ({
+              ...item,
+              timestamp: new Date(item.createdAt).getTime(),
+              formattedDate: item.createdAt ? formatDate(new Date(item.createdAt)) : null,
+            }))
+            .sort((a, b) => b.timestamp - a.timestamp),
+        );
       } while (nextTokenVal);
 
       if (window.isDevMode) console.log("------> assignmentIds: ", allAssignments.map(a => a.id));
@@ -71,14 +126,13 @@ function AssignmentNewOrDupe() {
       // until that phase is deleted or recovered
 
       if (allAssignments.length) {
-        const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: allAssignments[0].id}));
-        setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
+        // const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: allAssignments[0].id}));
+        // setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
         const nonStrandeds = allAssignments.filter((a) => (!!a.lineItemId && !a.toolAssignmentData.sequenceIds.length));
 
         // TODO: when showing options for a target assignment, filter out any previous rounds. That is, only show root assignments
 
         setNonStrandedAssignments(nonStrandeds);
-        if (nonStrandeds.length) setSelectedRootAssignment(nonStrandeds[0]);
       }
 
       setIsFetchingAssignments(false);
@@ -108,17 +162,37 @@ function AssignmentNewOrDupe() {
     dispatch(editAssignmentPhase(phaseAssignmentData));
   }
 
-  async function handleDupeSelectionMade() {
-    const selectedId = document.getElementById('dupeAssignmentSelector').value;
-    const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: selectedId}));
-    setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
+  async function handleDupeAssignmentSelected(assignment) {
+    if (assignment) {
+      const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, { id: assignment.id }));
+      setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
+      return;
+    }
+
+    setSelectedDupeAssignment(null);
   }
 
-  async function handleRootSelectionMade() {
-    const selectedId = document.getElementById('targetAssignmentSelector').value;
-    const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: selectedId}));
-    setSelectedRootAssignment(assignmentQueryResults.data.getAssignment);
+  async function handleRootAssignmentSelected(assignment) {
+    if (assignment) {
+      const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, { id: assignment.id }));
+      setSelectedRootAssignment(assignmentQueryResults.data.getAssignment);
+      return;
+    }
+
+    setSelectedRootAssignment(null);
   }
+
+  // async function handleDupeSelectionMade() {
+  //   const selectedId = document.getElementById('dupeAssignmentSelector').value;
+  //   const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: selectedId}));
+  //   setSelectedDupeAssignment(assignmentQueryResults.data.getAssignment);
+  // }
+
+  // async function handleRootSelectionMade() {
+  //   const selectedId = document.getElementById('targetAssignmentSelector').value;
+  //   const assignmentQueryResults = await API.graphql(graphqlOperation(getAssignment, {id: selectedId}));
+  //   setSelectedRootAssignment(assignmentQueryResults.data.getAssignment);
+  // }
 
   async function handleAddAssignmentPhase(e) {
     // TODO: Look at handleSubmitBtn line 60 from AssignmentCreator.js -- we must hook it up to LMS upon creation
@@ -239,6 +313,8 @@ function AssignmentNewOrDupe() {
   }
 
   function getNewRoundSummary() {
+    if (!selectedRootAssignment) return;
+
     let details = getRootAssignmentDetails();
 
     const draftRoundNames = ['no', '1st', '1st and 2nd', '1st, 2nd, and 3rd', '1st, 2nd, 3rd, and 4th', '1st, 2nd, 3rd, 4th, and 5th'];
@@ -283,11 +359,21 @@ function AssignmentNewOrDupe() {
               <h3 className={'mt-3 mb-2'}>Create new round</h3>
               <p>Select origin assignment.</p>
               <div className="form-group">
-                <select onChange={handleRootSelectionMade} className="form-control" id="targetAssignmentSelector" disabled={!allAssignments.length}>
+                {/* <select onChange={handleRootSelectionMade} className="form-control" id="targetAssignmentSelector" disabled={!allAssignments.length}>
                   {nonStrandedAssignments.map((a, i) =>
                     <option key={i} value={a.id}>{a.title}</option>
                   )}
-                </select>
+                </select> */}
+                {nonStrandedAssignments.length && (
+                  <Select
+                    placeholder="Select an assignment"
+                    items={nonStrandedAssignments}
+                    onChange={handleRootAssignmentSelected}
+                    itemRenderer={assignmentItemRenderer}
+                    filterStrategy={assignmentFilterStrategy}
+                    itemToQuery={assignmentToQuery}
+                  />
+                )}
                 {!nonStrandedAssignments.length &&
                 <h4 className='mt-2'>*You must have at least 1 existing assignment before you can create an additional draft or review
                   session round.</h4>
@@ -296,16 +382,18 @@ function AssignmentNewOrDupe() {
               </div>
             </Col>
           </Row>
-          <Row className={styles.actionsRow}>
-            <Col className={styles.column}>
-              <div className={styles.actions}>
-                <Button className='align-middle' onClick={handleAddAssignmentPhase} disabled={!allAssignments.length}>
-                  <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
-                  {(getRootAssignmentDetails().isNextRoundAReviewSession) ? 'Create Peer Review Session' : 'Create New Draft'}
-                </Button>
-              </div>
-            </Col>
-          </Row>
+          {selectedRootAssignment && (
+            <Row className={styles.actionsRow}>
+              <Col className={styles.column}>
+                <div className={styles.actions}>
+                  <Button className='align-middle' onClick={handleAddAssignmentPhase} disabled={!allAssignments.length}>
+                    <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
+                    {(getRootAssignmentDetails().isNextRoundAReviewSession) ? 'Create Peer Review Session' : 'Create New Draft'}
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+          )}
         </Fragment>
         }
 
@@ -316,12 +404,22 @@ function AssignmentNewOrDupe() {
               <h3 className={'mt-3 mb-2'}>Duplicate an assignment</h3>
               <p>Choose an existing assignment, duplicate it, then customize it.</p>
               <div className="form-group">
-                <select onChange={handleDupeSelectionMade} className="form-control" id="dupeAssignmentSelector"
+                {allAssignments.length && (
+                  <Select
+                    placeholder="Select an assignment"
+                    items={allAssignments}
+                    onChange={handleDupeAssignmentSelected}
+                    itemRenderer={assignmentItemRenderer}
+                    filterStrategy={assignmentFilterStrategy}
+                    itemToQuery={assignmentToQuery}
+                  />
+                )}
+                {/* <select onChange={handleDupeSelectionMade} className="form-control" id="dupeAssignmentSelector"
                         disabled={!allAssignments.length}>
                   {allAssignments.map((a, i) =>
                     <option key={i} value={a.id}>{!a.lineItemId && '*'}{a.title}</option>
                   )}
-                </select>
+                </select> */}
                 {!allAssignments.length &&
                 <h4>*You must have at least 1 existing assignment before you can duplicate anything.</h4>
                 }
@@ -334,7 +432,7 @@ function AssignmentNewOrDupe() {
           <Row className={styles.actionsRow}>
             <Col className={styles.column}>
               <div className={styles.actions}>
-                <Button className='align-middle' onClick={handleDupeAssignment} disabled={!allAssignments.length}>
+                <Button className='align-middle' onClick={handleDupeAssignment} disabled={!selectedDupeAssignment}>
                   <FontAwesomeIcon className='btn-icon' icon={faCopy}/>
                   {(!allAssignments.length || selectedDupeAssignment?.lineItemId) ? 'Duplicate' : 'Recover'}
                 </Button>

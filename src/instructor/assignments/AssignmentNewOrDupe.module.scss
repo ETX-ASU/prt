@@ -61,3 +61,27 @@
     color: #708197;
   }
 }
+
+.item {
+  display: flex;
+  gap: 3px;
+  padding: .375rem .75rem;
+  align-items: center;
+  text-align: left;
+
+  .title {
+    flex-basis: 100%;
+    flex-shrink: 1;
+  }
+
+  .date {
+    color: #708197;
+    font-style: italic;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .asterisk {
+    color: red;
+  }
+}

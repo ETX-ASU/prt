@@ -17,6 +17,7 @@ import ReviewPhaseSettings from "../../tool/ReviewPhaseSettings";
 import {deepCopy} from "../../app/utils/deepCopy";
 import {v4 as uuid} from "uuid";
 import {handleConnectToLMS} from "../../lmsConnection/RingLeader";
+import { IGNORE_LIMITED_EDITING } from '../../config';
 
 
 function AssignmentEditor() {
@@ -161,24 +162,18 @@ function AssignmentEditor() {
           <BasicAssignmentSettings
             formData={formData}
             setFormData={setFormData}
-            isLimitedEditing={isLimitedEditing}
+            isLimitedEditing={isLimitedEditing && !IGNORE_LIMITED_EDITING}
           />
 
           {(formData.toolAssignmentData.sequenceIds.length === 0) && <RootPhaseSettings
             formData={formData}
             setFormData={setFormData}
-            isLimitedEditing={isLimitedEditing} />}
-
-          {/*THERE ARE NO DRAFT PHASE SPECIFIC PROPERTIES, SO THIS ISN'T USED IN BASIC PRTv2*/}
-          {/*{(formData.toolAssignmentData.sequenceIds.length%2 === 0) && <DraftPhaseSettings*/}
-          {/*  formData={formData}*/}
-          {/*  setFormData={setFormData}*/}
-          {/*  isLimitedEditing={isLimitedEditing} />}*/}
+            isLimitedEditing={isLimitedEditing && !IGNORE_LIMITED_EDITING} />}
 
           {(formData.toolAssignmentData.sequenceIds.length%2 === 1) && <ReviewPhaseSettings
             formData={formData}
             setFormData={setFormData}
-            isLimitedEditing={isLimitedEditing} />}
+            isLimitedEditing={isLimitedEditing && !IGNORE_LIMITED_EDITING} />}
         </Container>
       </form>
     </Fragment>
