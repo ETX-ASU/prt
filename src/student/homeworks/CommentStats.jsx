@@ -31,7 +31,7 @@ function getAverageRating(comments) {
 function getWordCount(text) {
   // eslint-disable-next-line no-control-regex
   let regexpBMPWord = /([\u0000-\u0019\u0021-\uFFFF])+/gu;
-  return !text ? 0 : text.match(regexpBMPWord).length;
+  return !text ? 0 : text.trim().match(regexpBMPWord).length;
 }
 
 /**
